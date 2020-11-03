@@ -12,7 +12,7 @@ GraphQL Helix is a collection of utility functions for building your own GraphQL
 
 ## Features
 
-- **Framework and runtime agnostic.** Use whatever HTTP library you want. GraphQL Helix currently works on Node, but Deno support is coming soon :)
+- **Framework and runtime agnostic.** Use whatever HTTP library you want. GraphQL Helix works in Node, Deno and in the browser.
 - **HTTP first.** GraphQL Helix allows you to create a [GraphQL over HTTP](https://github.com/graphql/graphql-over-http) specification-compliant server, while exposing a single HTTP endpoint for everything from documentation to subscriptions.
 - **Server push and client pull.** GraphQL Helix supports real-time requests with both subscriptions and `@defer` and `@stream` directives.
 - **Flexible.** GraphQL Helix abstracts away logic that's common to all GraphQL HTTP servers, while leaving the implementation to you. Implement the features you want and take full control of your transport layer.
