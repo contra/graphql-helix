@@ -260,7 +260,7 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
             const response = [];
             const onNext = opts.next;
             const onError = opts.error;
-            const url = new URL("graphqlEndpoint", window.location.href)
+            const url = new URL(graphqlEndpoint, window.location.href)
             const searchParams = new URLSearchParams({ query: graphQLParams.query });
 
             if (graphQLParams.variables) {
