@@ -39,7 +39,7 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
     window.process = { env: {} };
   </script>
   <script type="module">
-    import { getOperationAST, parse } from "//cdn.jsdelivr.net/npm/graphql@15.4.0-experimental-stream-defer.1/index.mjs";
+    import { getOperationAST, parse } from "//cdn.jsdelivr.net/npm/graphql@${GRAPHQL_VERSION}/index.mjs";
 
     const graphqlEndpoint = "${graphqlEndpoint}";
 

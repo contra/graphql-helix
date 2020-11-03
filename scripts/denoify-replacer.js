@@ -2,33 +2,26 @@ const {
   makeThisModuleAnExecutableReplacer,
   ParsedImportExportStatement,
 } = require("denoify");
-const manifest = require("../package.json");
 
-const graphqlVersion = manifest.devDependencies.graphql;
-
-const replaceModuleName = (parsedImportExportStatement, nodeModuleName) => {
+const replaceImportArgument = (parsedImportExportStatement, url) => {
   return ParsedImportExportStatement.stringify({
     ...parsedImportExportStatement,
     parsedArgument: {
-      ...parsedImportExportStatement.parsedArgument,
-      nodeModuleName,
+      type: "URL",
+      url
     },
-  }).replace(/\\n/g, "\n");
+  });
 };
 
 makeThisModuleAnExecutableReplacer(
-  async ({ importExportStatement, parsedImportExportStatement }) => {
-    // Ignore the graphql import inside `renderGraphiQL` template
-    if (importExportStatement.includes("cdn.jsdelivr.net/npm/graphql")) {
-      return `import { getOperationAST, parse } from "//cdn.jsdelivr.net/npm/graphql@${graphqlVersion}/index.mjs"`;
-    }
+  async ({ parsedImportExportStatement, version }) => {
 
     if (
       parsedImportExportStatement.parsedArgument.nodeModuleName === "graphql"
     ) {
-      return replaceModuleName(
+      return replaceImportArgument(
         parsedImportExportStatement,
-        `https://cdn.skypack.dev/graphql@${graphqlVersion}?dts`
+        `https://cdn.skypack.dev/graphql@${version}?dts`
       );
     }
 
