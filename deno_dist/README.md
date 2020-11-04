@@ -318,7 +318,7 @@ Follow the instructions [here](https://github.com/jaydenseric/graphql-upload) fo
 
 ### @defer and @stream
 
-The examples used in this repo are compatible with the [fetch-multipart-graphql](https://github.com/relay-tools/fetch-multipart-graphql) library.
+The examples used in this repo are compatible with client-side libraries like [meros](https://github.com/maraisr/meros) and [fetch-multipart-graphql](https://github.com/relay-tools/fetch-multipart-graphql).
 
 ### Subscriptions over SSE
 

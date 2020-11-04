@@ -31,6 +31,7 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
   <script src="//cdn.jsdelivr.net/npm/react-dom@${REACT_VERSION}/umd/react-dom.production.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/graphiql@${GRAPHIQL_VERSION}/graphiql.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/lodash@4.17.20/lodash.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/meros@0.0.3/dist/index.min.js"></script>
 </head>
 <body>
   <div id="graphiql">Loading...</div>
@@ -82,175 +83,6 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
       history.replaceState(null, null, newSearch);
     }
 
-    const getDelimiter = (boundary) => {
-      return "\\r\\n--" + boundary + "\\r\\n";
-    }
-    
-    const getFinalDelimiter = (boundary) => {
-      return "\\r\\n--" + boundary + "--\\r\\n";
-    }
-    
-    const splitWithRest = (string, delim) => {
-      const index = string.indexOf(delim);
-      if (index < 0) {
-        return [string];
-      }
-      return [string.substring(0, index), string.substring(index + delim.length)];
-    }
-    
-    const parseMultipartHttp = (buffer, boundary, previousParts = []) => {
-      const delimeter = getDelimiter(boundary);
-      let [, rest] = splitWithRest(buffer, delimeter);
-      if (!(rest && rest.length)) {
-        // we did not finish receiving the initial delimeter
-        return {
-          newBuffer: buffer,
-          parts: previousParts,
-        };
-      }
-      const parts = splitWithRest(rest, '\\r\\n\\r\\n');
-      const headers = parts[0];
-      rest = parts[1];
-    
-      if (!(rest && rest.length)) {
-        // we did not finish receiving the headers
-        return {
-          newBuffer: buffer,
-          parts: previousParts,
-        };
-      }
-    
-      const headersArr = headers.split('\\r\\n');
-      const contentLengthHeader = headersArr.find(
-        (headerLine) => headerLine.toLowerCase().indexOf('content-length:') >= 0
-      );
-      if (contentLengthHeader === undefined) {
-        throw new Error('Invalid MultiPart Response, no content-length header');
-      }
-      const contentLengthArr = contentLengthHeader.split(':');
-      let contentLength;
-      if (contentLengthArr.length === 2 && !isNaN(parseInt(contentLengthArr[1]))) {
-        contentLength = parseInt(contentLengthArr[1]);
-      } else {
-        throw new Error('Invalid MultiPart Response, could not parse content-length');
-      }
-    
-      // Strip out the final delimiter
-      const finalDelimeter = getFinalDelimiter(boundary);
-      rest = rest.replace(finalDelimeter, '');
-      const uint = new TextEncoder().encode(rest);
-    
-      if (uint.length < contentLength) {
-        // still waiting for more body to be sent;
-        return {
-          newBuffer: buffer,
-          parts: previousParts,
-        };
-      }
-  
-      const body = new TextDecoder().decode(uint.subarray(0, contentLength));
-      const nextBuffer = new TextDecoder().decode(uint.subarray(contentLength));
-      const part = JSON.parse(body);
-      const newParts = [...previousParts, part];
-    
-      if (nextBuffer.length) {
-        return parseMultipartHttp(nextBuffer, boundary, newParts);
-      }
-      return { parts: newParts, newBuffer: '' };
-    }
-
-    class PatchResolver {
-      constructor ({ onResponse, boundary }) {
-        this.boundary = boundary || '-';
-        this.onResponse = onResponse;
-        this.processedChunks = 0;
-        this.chunkBuffer = '';
-      }
-
-      handleChunk (data) {
-        this.chunkBuffer += data;
-        const { newBuffer, parts } = parseMultipartHttp(this.chunkBuffer, this.boundary);
-        this.chunkBuffer = newBuffer;
-        if (parts.length) {
-          this.onResponse(parts);
-        }
-      }
-    }
-
-    const getBoundary = (contentType = '') => {
-      const contentTypeParts = contentType.split(';');
-      for (const contentTypePart of contentTypeParts) {
-        const [key, value] = (contentTypePart || '').trim().split('=');
-        if (key === 'boundary' && !!value) {
-          if (value[0] === '"' && value[value.length - 1] === '"') {
-            return value.substr(1, value.length - 2);
-          }
-          return value;
-        }
-      }
-      return '-';
-    }
-
-    const fetchMultipart = (
-      url,
-      { method, headers, credentials, body, onNext, onError, onComplete }
-    ) => {
-      const controller = new AbortController();
-      const signal = controller.signal;
-      
-      fetch(url, { method, headers, body, credentials, signal })
-        .then((response) => {
-          const contentType =
-            (!!response.headers && response.headers.get("Content-Type")) || "";
-          // @defer uses multipart responses to stream patches over HTTP
-          if (
-            response.status < 300 &&
-            contentType.indexOf("multipart/mixed") >= 0
-          ) {
-            const boundary = getBoundary(contentType);
-    
-            // For the majority of browsers with support for ReadableStream and TextDecoder
-            const reader = response.body.getReader();
-            const textDecoder = new TextDecoder();
-            const patchResolver = new PatchResolver({
-              onResponse: (r) => {
-                onNext(r)
-              },
-              boundary,
-            });
-            return reader.read().then(function sendNext({ value, done }) {
-              if (!done) {
-                let plaintext;
-                try {
-                  plaintext = textDecoder.decode(value);
-                  // Read the header to get the Content-Length
-                  patchResolver.handleChunk(plaintext);
-                } catch (err) {
-                  const parseError = err;
-                  parseError.response = response;
-                  parseError.statusCode = response.status;
-                  parseError.bodyText = plaintext;
-                  onError(parseError);
-                }
-                reader.read().then(sendNext);
-              } else {
-                onComplete();
-              }
-            });
-          } else {
-            return response.json().then((json) => {
-              onNext([json]);
-              onComplete();
-            });
-          }
-        })
-        .catch(onError);
-      
-      return {
-        unsubscribe: () => controller.abort(),
-      };
-    }
-
     const fetcher = (graphQLParams) => {
       const operationAst = getOperationAST(parse(graphQLParams.query), graphQLParams.operationName);
       const isSubscription = operationAst && operationAst.operation === "subscription";
@@ -260,7 +92,7 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
             const response = [];
             const onNext = opts.next;
             const onError = opts.error;
-            const url = new URL("graphqlEndpoint", window.location.href)
+            const url = new URL(graphqlEndpoint, window.location.href)
             const searchParams = new URLSearchParams({ query: graphQLParams.query });
 
             if (graphQLParams.variables) {
@@ -301,8 +133,10 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
           const onNext = isIntrospectionQuery ? arguments[0] : arguments[0].next;
           const onError = isIntrospectionQuery ? arguments[1] : arguments[0].error;
           const onComplete = isIntrospectionQuery ? arguments[2] : arguments[0].complete;
-          let response = {};
-          return fetchMultipart(graphqlEndpoint, {
+
+          const controller = new AbortController();
+          const signal = controller.signal;
+          const stream = meros.fetchMultipart(() => fetch(graphqlEndpoint, {
             body: JSON.stringify(graphQLParams),
             credentials: "include",
             headers: {
@@ -310,15 +144,13 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
               "Content-Type": "application/json",
             },
             method: "POST",
-            onNext: (parts) => {
-              let chunks = isIntrospectionQuery ? parts[0] : parts;
-              
-              if (!Array.isArray(chunks)) {
-                chunks = [chunks]
-              }
+            signal,
+          }))
 
-              chunks.forEach((chunk) => {
-                console.log(chunk)
+          Promise.resolve().then(async () => {
+            let response = {};
+            try {
+              for await (let chunk of stream) {
                 if (chunk.path) {
                   if (chunk.data) {
                     _.merge(response, _.set({}, ['data'].concat(chunk.path),chunk.data));
@@ -335,13 +167,19 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
                     response.errors = chunk.errors;
                   }
                 }
-              })
-
-              onNext(response)
-            },
-            onError,
-            onComplete,
+                onNext(response)
+              }
+            } catch (error) {
+              onError(error)
+            }
+            onComplete()
           })
+
+          return {
+            unsubscribe() {
+              controller.abort()
+            }
+          }
         },
       };
     }
