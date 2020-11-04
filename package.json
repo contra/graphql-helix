@@ -1,6 +1,6 @@
 {
   "name": "graphql-helix",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A highly evolved GraphQL HTTP Server 🧬",
   "keywords": [
     "graphql",
@@ -23,6 +23,10 @@
   },
   "homepage": "https://github.com/danielrearden/graphql-helix",
   "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build-deno": "del-cli deno_lib && denoify",
     "build-node": "del-cli dist && tsc",
