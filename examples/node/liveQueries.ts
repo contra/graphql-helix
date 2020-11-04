@@ -1,3 +1,6 @@
+import { GraphQLLiveDirective } from "@n1ru4l/graphql-live-query";
+import { InMemoryLiveQueryStore } from "@n1ru4l/in-memory-live-query-store";
+import { GraphQLInt, GraphQLObjectType, GraphQLSchema } from "graphql";
 import express from "express";
 import {
   getGraphQLParameters,
@@ -5,7 +8,45 @@ import {
   renderGraphiQL,
   shouldRenderGraphiQL,
 } from "../../lib";
-import { schema } from "./common/schema";
+
+const liveQueryStore = new InMemoryLiveQueryStore();
+
+let favoriteNumber = 42;
+
+export const schema = new GraphQLSchema({
+  mutation: new GraphQLObjectType({
+    name: "Mutation",
+    fields: () => ({
+      setFavoriteNumber: {
+        args: {
+          number: {
+            type: GraphQLInt,
+          },
+        },
+        type: GraphQLInt,
+        resolve: (_root, args, context) => {
+          favoriteNumber = args.number;
+
+          context.liveQueryStore.invalidate(`Query.favoriteNumber`);
+
+          return args.number;
+        },
+      },
+    }),
+  }),
+  query: new GraphQLObjectType({
+    name: "Query",
+    fields: () => ({
+      favoriteNumber: {
+        type: GraphQLInt,
+        resolve: () => {
+          return favoriteNumber;
+        },
+      },
+    }),
+  }),
+  directives: [GraphQLLiveDirective],
+});
 
 const app = express();
 
@@ -34,6 +75,10 @@ app.use("/graphql", async (req, res) => {
       variables,
       request,
       schema,
+      contextFactory: () => ({
+        liveQueryStore,
+      }),
+      execute: liveQueryStore.execute,
     });
 
     // processRequest will return one of three types of results
