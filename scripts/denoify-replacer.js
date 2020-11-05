@@ -8,14 +8,13 @@ const replaceImportArgument = (parsedImportExportStatement, url) => {
     ...parsedImportExportStatement,
     parsedArgument: {
       type: "URL",
-      url
+      url,
     },
   });
 };
 
 makeThisModuleAnExecutableReplacer(
   async ({ parsedImportExportStatement, version }) => {
-
     if (
       parsedImportExportStatement.parsedArgument.nodeModuleName === "graphql"
     ) {

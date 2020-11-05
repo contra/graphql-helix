@@ -1,0 +1,5 @@
+coverage
+deno_dist
+dist
+node_modules
+package-lock.json
