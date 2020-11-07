@@ -1,8 +1,4 @@
 import {
-  execute,
-  parse,
-  subscribe,
-  validate,
   DocumentNode,
   ExecutionResult,
   GraphQLSchema,
@@ -39,7 +35,7 @@ export interface ProcessRequestOptions {
   /**
    * An optional function which will be used to execute instead of default `execute` from `graphql-js`.
    */
-  execute?: typeof execute;
+  execute?: (...args: any[]) => any;
   /**
    * The name of the Operation in the Document to execute.
    */
@@ -47,7 +43,7 @@ export interface ProcessRequestOptions {
   /**
    * An optional function which will be used to create a document instead of the default `parse` from `graphql-js`.
    */
-  parse?: typeof parse;
+  parse?: (...args: any[]) => any;
   /**
    * A Document containing GraphQL Operations and Fragments to execute.
    */
@@ -69,11 +65,11 @@ export interface ProcessRequestOptions {
   /**
    * An optional function which will be used to subscribe instead of default `subscribe` from `graphql-js`.
    */
-  subscribe?: typeof subscribe;
+  subscribe?: (...args: any[]) => any;
   /**
    * An optional function which will be used to validate instead of default `validate` from `graphql-js`.
    */
-  validate?: typeof validate;
+  validate?: (...args: any[]) => any;
   /**
    * An optional array of validation rules that will be applied to the document
    * in place of those defined by the GraphQL specification.

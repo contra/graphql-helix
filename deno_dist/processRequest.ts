@@ -9,6 +9,7 @@ import {
   GraphQLSchema,
   OperationDefinitionNode,
   ValidationRule,
+  ExecutionResult,
 } from "https://cdn.skypack.dev/graphql@15.4.0-experimental-stream-defer.1?dts";
 import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index.ts";
 import { HttpError } from "./errors.ts";
@@ -142,7 +143,7 @@ export const processRequest = async (
 
         // If errors are encountered while subscribing to the operation, an execution result
         // instead of an AsyncIterable. We only return a PUSH object if we have an AsyncIterable.
-        if (isAsyncIterable(result)) {
+        if (isAsyncIterable<ExecutionResult>(result)) {
           return {
             type: "PUSH",
             subscribe: async (onResult) => {
@@ -174,7 +175,7 @@ export const processRequest = async (
 
         // Operations that use @defer and @stream will return an `AsyncIterable` instead of an
         // execution result.
-        if (isAsyncIterable(result)) {
+        if (isAsyncIterable<ExecutionResult>(result)) {
           return {
             type: "MULTIPART_RESPONSE",
             subscribe: async (onResult) => {

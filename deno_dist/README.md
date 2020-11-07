@@ -318,7 +318,11 @@ Follow the instructions [here](https://github.com/jaydenseric/graphql-upload) fo
 
 ### @defer and @stream
 
-The examples used in this repo are compatible with client-side libraries like [meros](https://github.com/maraisr/meros) and [fetch-multipart-graphql](https://github.com/relay-tools/fetch-multipart-graphql).
+GraphQL Helix supports `@defer` and `@stream` directives out-of-the-box, provided you use the appropriate version of `graphql-js`. The examples used in this repo are compatible with client-side libraries like [meros](https://github.com/maraisr/meros) and [fetch-multipart-graphql](https://github.com/relay-tools/fetch-multipart-graphql).
+
+### @live
+
+Live queries using the `@live` directive provide an alternative to subscriptions for handling real-time updates. You can add support for live queries to your server by following the instructions [here](https://github.com/n1ru4l/graphql-live-queries). With GraphQL Helix, it's as simple as adding the directive to your schema and utilizing the alternative `execute` function provided by [@n1ru4l/in-memory-live-query-store](https://github.com/n1ru4l/graphql-live-queries/tree/main/packages/in-memory-live-query-store). You can checkout the runnable example [here](examples/node/liveQueries.ts).
 
 ### Subscriptions over SSE
 
