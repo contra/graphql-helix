@@ -326,4 +326,4 @@ Live queries using the `@live` directive provide an alternative to subscriptions
 
 ### Subscriptions over SSE
 
-A complementary client library is in progress. In the meantime, you can check out the `fetcher` implementation inside `renderGraphiQL` to see how to easily implement SSE subscriptions on the client side.
+Client-side, you can use [sse-z](https://github.com/contrawork/sse-z), which provides an abstraction over the EventSource API. Check out the `fetcher` implementation inside `renderGraphiQL` to see how to easily implement SSE subscriptions on the client side.
