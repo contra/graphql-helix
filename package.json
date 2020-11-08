@@ -31,7 +31,7 @@
     "build-deno": "del-cli deno_lib && denoify",
     "build-node": "del-cli dist && tsc",
     "build": "npm run build-deno && npm run build-node",
-    "lint": "prettier --check .",
+    "lint": "prettier --check . && tsc --noEmit",
     "test": "jest test/integration.test.ts"
   },
   "dependencies": {},
