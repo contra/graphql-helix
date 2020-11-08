@@ -155,7 +155,12 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
                 onNext(response)
               }
             } catch (error) {
-              onError(error)
+              if (typeof error.json === "function") {
+                const response = await error.json()
+                return onError(response)
+              } else {
+                onError(error)
+              }
             }
             onComplete()
           })
