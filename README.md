@@ -1,6 +1,6 @@
 <h1 align="center">
 	<br>
-	<img width="400" src="./logo.png" alt="GraphQL Helix">
+	<img width="400" src="./logo.svg" alt="GraphQL Helix">
 	<br>
 	<br>
 	<br>
