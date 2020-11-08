@@ -31,6 +31,7 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
   <script src="//cdn.jsdelivr.net/npm/react-dom@${REACT_VERSION}/umd/react-dom.production.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/graphiql@${GRAPHIQL_VERSION}/graphiql.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/lodash@4.17.20/lodash.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/sse-z@0.3.0/dist/sse-z.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/meros@0.0.3/dist/index.min.js"></script>
 </head>
 <body>
@@ -89,40 +90,24 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
       if (isSubscription) {
         return {
           subscribe(opts) {
-            const response = [];
-            const onNext = opts.next;
-            const onError = opts.error;
-            const url = new URL(graphqlEndpoint, window.location.href)
-            const searchParams = new URLSearchParams({ query: graphQLParams.query });
-
-            if (graphQLParams.variables) {
-              searchParams.set('variables', JSON.stringify(graphQLParams.variables))
-            }
-
-            if (graphQLParams.operationName) {
-              searchParams.set('operationName', graphQLParams.operationName)
-            }
-
-            url.search = searchParams.toString()
-            
-            const eventSource = new EventSource(url.toString(), {
-              withCredentials: true,
-            });
-
-            eventSource.addEventListener('message', (event) => {
-              response.push(JSON.parse(event.data));
-              onNext(response);
-            });
-
-            eventSource.addEventListener('error', () => {
-              onError(new Error('EventSource error.'))
-            });
-
-            return {
-              unsubscribe() {
-                eventSource.close()
-              }
-            }
+            return new SSEZ.Subscription({
+              url: graphqlEndpoint.startsWith("/")
+                ? window.location.protocol + "//" + window.location.host + graphqlEndpoint
+                : graphqlEndpoint,
+              searchParams: {
+                query: graphQLParams.query,
+                variables: graphQLParams.variables
+                  ? JSON.stringify(graphQLParams.variables)
+                  : undefined,
+                operationName: graphQLParams.operationName,
+              },
+              eventSourceOptions: {
+                withCredentials: true,
+              },
+              onNext: (data) => {
+                opts.next(JSON.parse(data))
+              },
+            })
           }
         }
       }
