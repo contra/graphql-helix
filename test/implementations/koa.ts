@@ -31,7 +31,7 @@ const graphqlHandler = async (ctx: Context) => {
     ctx.status = result.status;
     ctx.body = result.payload;
   } else if (result.type === "PUSH") {
-    ctx.request.socket.setTimeout(0);
+    ctx.req.socket.setTimeout(0);
     ctx.req.socket.setNoDelay(true);
     ctx.req.socket.setKeepAlive(true);
 
@@ -50,7 +50,7 @@ const graphqlHandler = async (ctx: Context) => {
     ctx.status = 200;
     ctx.body = stream;
 
-    await result.subscribe((result) => {
+    result.subscribe((result) => {
       stream.write(`data: ${JSON.stringify(result)}\n\n`);
     });
   } else {

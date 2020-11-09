@@ -1,6 +1,6 @@
 <h1 align="center">
 	<br>
-	<img width="400" src="./logo.png" alt="GraphQL Helix">
+	<img width="400" src="./logo.svg" alt="GraphQL Helix">
 	<br>
 	<br>
 	<br>
@@ -291,14 +291,56 @@ export type ProcessRequestResult = Response | MultipartResponse | Push;
 
 ## Recipes
 
-### Capturing and formatting responses
+<details>
+<summary>Formatting and logging responses</summary>
 
-As you can see in the examples, GraphQL Helix leaves it up to you to send the appropriate response back to the client. While this requires a little more boilerplate, it means you're free to do whatever
+GraphQL Helix leaves it up to you to send the appropriate response back to the client. While this requires a little more boilerplate, it means you're free to do whatever
 you want with the execution result before it's sent to the client:
 
 - Log the response using your [favorite logger](https://github.com/gajus/roarr).
 - Format your errors and mask them in production.
 - Add an `extensions` field to the response with additional metadata to send to the client
+
+</details>
+
+<details>
+<summary>Authentication and authorization</summary>
+When calling `processRequest`, you can provide a `contextFactory` that will be called to generate the execution context that is passed to your resolvers. You can pass whatever values to the context that are available in the scope where `contextFactory` is called. For example, if we're using Express, we could pass in the entire `req` object:
+
+```ts
+app.use("/graphql", async (req, res) => {
+  ...
+
+  const result = await processRequest({
+    operationName,
+    query,
+    variables,
+    request,
+    schema,
+    contextFactory: () => ({
+      req,
+    }),
+  });
+}
+```
+
+The `contextFactory` can be asyncronous and return a Promise. The function is called with a single parameter, an object with the following properties:
+
+```ts
+export interface ExecutionContext {
+  document: DocumentNode;
+  operation: OperationDefinitionNode;
+  variables?: { readonly [name: string]: unknown };
+}
+```
+
+GraphQL Helix provides this information to `contextFactory` in case you want to modify the context based on the operation that will be executed.
+
+With `contextFactory`, we have a mechanism for doing authentication and authorization inside our application. We can determine who is accessing our API and capture that information inside the context. Our resolvers can then use the context to determine _whether_ a particular field can be resolved and how to resolve it. Check out [this example](examples/authentication.ts) for a very basic authentication implementation. If you're looking for a robust _authorization_ solution, I highly recommend [GraphQL Shield](https://github.com/maticzav/graphql-shield).
+
+Bonus: If you're SSE for your subscriptions, you can use the same endpoint and same handler for all of your operations. That means you don't have to worry about [varying handler parameters](https://www.apollographql.com/docs/apollo-server/data/subscriptions/#context-with-subscriptions) and the [resulting bugs](https://github.com/apollographql/apollo-server/issues/1597) unlike in some other libraries.
+
+</details>
 
 ### Customizing GraphiQL
 
@@ -326,4 +368,4 @@ Live queries using the `@live` directive provide an alternative to subscriptions
 
 ### Subscriptions over SSE
 
-A complementary client library is in progress. In the meantime, you can check out the `fetcher` implementation inside `renderGraphiQL` to see how to easily implement SSE subscriptions on the client side.
+Client-side, you can use [sse-z](https://github.com/contrawork/sse-z), which provides an abstraction over the EventSource API. Check out the `fetcher` implementation inside `renderGraphiQL` to see how to easily implement SSE subscriptions on the client side.

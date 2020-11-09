@@ -1,0 +1,17 @@
+{
+  "name": "graphql-helix-context-example",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "ts-node server"
+  },
+  "devDependencies": {
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.5"
+  },
+  "dependencies": {
+    "fastify": "^3.7.0",
+    "graphql": "^15.4.0-experimental-stream-defer.1",
+    "graphql-helix": "^0.3.0"
+  }
+}

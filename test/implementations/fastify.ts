@@ -72,6 +72,7 @@ const graphqlHandler: RouteHandlerMethod = async (req, res) => {
 };
 
 const graphiqlHandler: RouteHandlerMethod = async (_req, res) => {
+  res.type("text/html");
   res.send(renderGraphiQL({}));
 };
 
