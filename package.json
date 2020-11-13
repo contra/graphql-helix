@@ -33,7 +33,8 @@
     "build-node": "del-cli dist && tsc",
     "lint": "prettier --check . && tsc --noEmit",
     "prepublishOnly": "npm run build-node",
-    "test": "jest test/integration.test.ts"
+    "test": "jest test/integration.test.ts",
+    "update-examples": "node scripts/update-examples"
   },
   "dependencies": {},
   "peerDependencies": {
