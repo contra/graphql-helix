@@ -8,7 +8,7 @@
 
 > A highly evolved GraphQL HTTP Server 🧬
 
-GraphQL Helix is a collection of utility functions for building your own GraphQL HTTP server.
+GraphQL Helix is a collection of utility functions for building your own GraphQL HTTP server. You can check out [Building a GraphQL server with GraphQL Helix](https://dev.to/danielrearden/building-a-graphql-server-with-graphql-helix-2k44) on DEV for a detailed tutorial on getting started.
 
 ## Features
 
@@ -293,7 +293,7 @@ export type ProcessRequestResult = Response | MultipartResponse | Push;
 
 <details>
 <summary>Formatting and logging responses</summary>
-
+</br>
 GraphQL Helix leaves it up to you to send the appropriate response back to the client. While this requires a little more boilerplate, it means you're free to do whatever
 you want with the execution result before it's sent to the client:
 
@@ -301,10 +301,13 @@ you want with the execution result before it's sent to the client:
 - Format your errors and mask them in production.
 - Add an `extensions` field to the response with additional metadata to send to the client
 
+See [here](examples/errorHandling) for a basic example of error handling.
+
 </details>
 
 <details>
 <summary>Authentication and authorization</summary>
+</br>
 When calling `processRequest`, you can provide a `contextFactory` that will be called to generate the execution context that is passed to your resolvers. You can pass whatever values to the context that are available in the scope where `contextFactory` is called. For example, if we're using Express, we could pass in the entire `req` object:
 
 ```ts
@@ -336,36 +339,177 @@ export interface ExecutionContext {
 
 GraphQL Helix provides this information to `contextFactory` in case you want to modify the context based on the operation that will be executed.
 
-With `contextFactory`, we have a mechanism for doing authentication and authorization inside our application. We can determine who is accessing our API and capture that information inside the context. Our resolvers can then use the context to determine _whether_ a particular field can be resolved and how to resolve it. Check out [this example](examples/authentication.ts) for a very basic authentication implementation. If you're looking for a robust _authorization_ solution, I highly recommend [GraphQL Shield](https://github.com/maticzav/graphql-shield).
-
-Bonus: If you're SSE for your subscriptions, you can use the same endpoint and same handler for all of your operations. That means you don't have to worry about [varying handler parameters](https://www.apollographql.com/docs/apollo-server/data/subscriptions/#context-with-subscriptions) and the [resulting bugs](https://github.com/apollographql/apollo-server/issues/1597) unlike in some other libraries.
+With `contextFactory`, we have a mechanism for doing authentication and authorization inside our application. We can determine who is accessing our API and capture that information inside the context. Our resolvers can then use the context to determine _whether_ a particular field can be resolved and how to resolve it. Check out [this example](examples/context) for basic `contextFactory` usage. If you're looking for a robust _authorization_ solution, I highly recommend [GraphQL Shield](https://github.com/maticzav/graphql-shield).
 
 </details>
 
-### Customizing GraphiQL
+<details>
+<summary>Subscriptions over SSE</summary>
+</br>
+GraphQL Helix is transport-agnostic and could be used with any network protocol. However, it was designed with HTTP in mind, which makes Server Sent Events (SSE) a good fit for implementing subscriptions. You can read more about the advantages and caveats of using SSE [here](https://wundergraph.com/blog/deprecate_graphql_subscriptions_over_websockets).
 
-By using `shouldRenderGraphiQL`, you can expose a GraphiQL interface through the same endpoint as your API. However, you can also use the `renderGraphiQL` function to create a separate endpoint for the interface. In fact, you could use it to create a GraphiQL instance for an entirely separate server if you so chose. Not happy with the way the GraphiQL interface returned by `renderGraphiQL` looks or behaves? You can copy and paste the source code and create your own template.
+When the operation being executed is a subscription, `processRequest` will return a `PUSH` result, which you can then use to return a `text/event-stream` response. Here's what a basic implementation looks like:
 
-### Persisted queries and request batching
+```ts
+if (result.type === "PUSH") {
+  // Indicate that we're sending a stream of events and should keep the connection open.
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    Connection: "keep-alive",
+    "Cache-Control": "no-cache",
+  });
 
-While you can use `getGraphQLParameters` to extract the `query`, `variables` and `operationName` values from your request, and subsequently let `processRequest` parse the `query` for you, you don't have to. In fact, you can pass in an already parsed query (i.e. a `DocumentNode` object) as the `query` when calling `processRequest`, in which case the "parse" step will be skipped altogether.
+  // If the client closes the connection, we unsubscribe to prevent memory leaks.
+  req.on("close", () => {
+    result.unsubscribe();
+  });
 
-What's the advantage of this? For one, you can let your clients provide a query ID instead of the query itself. The clients could pass this ID in as a `queryId` search parameter in the the URL, for example. The queries themselves could be mapped to the IDs and stored in-memory, already parsed. This not only means a smaller payload for the client, but also a faster execution time for each request since the same query doesn't have to be parsed repeatedly. Once you've got the pre-parsed query, you can pass it to `processRequest` like normal. Voilà -- persisted queries!
+  // We subscribe to any new events and push them down to the client that initiated the subscription.
+  await result.subscribe((result) => {
+    res.write(`data: ${JSON.stringify(result)}\n\n`);
+  });
+}
+```
 
-You can implement request batching in a similar fashion. In request batching, the client to send multiple GraphQL requests through a single call to the server. If the request body is an array instead of an object, you can just call `processRequest` for each item in the array.
+On the client-side, we use the EventSource API to listen to these events. Our EventSource instance _should_ reconnect in the event the connection is closed, but this behavior varies widely from browser to browser. Therefore, it's a good idea to implement a keep-alive mechanism in production to ensure your connection stays persistent. Check out [this StackOverflow post](https://stackoverflow.com/a/20060461/6024220) for additional details. On the back end, you can just use `setInterval` to periodically send the keep alive message to the client (just make sure to clear the timer when you `unsubscribe`).
 
-### File uploads
+Implementing SSE on the client-side is equally simple, but you can use [sse-z](https://github.com/contrawork/sse-z) to make it even easier. If you're adding keep-alive to your implementation, `sse-z` provides a nice abstraction for that as well.
 
-Follow the instructions [here](https://github.com/jaydenseric/graphql-upload) for adding the Upload scalar to your schema and the appropriate middleware to your server.
+</details>
 
-### @defer and @stream
+<details>
+<summary>File uploads</summary>
+</br>
+File uploads, like serving static content, are generally best handled outside of your GraphQL schema. However, if you want to add support for uploads to your server, you can use the [graphql-upload](https://github.com/jaydenseric/graphql-upload) package. You need to add the Upload scalar to your schema and then add the appropriate middleware to your server.
 
-GraphQL Helix supports `@defer` and `@stream` directives out-of-the-box, provided you use the appropriate version of `graphql-js`. The examples used in this repo are compatible with client-side libraries like [meros](https://github.com/maraisr/meros) and [fetch-multipart-graphql](https://github.com/relay-tools/fetch-multipart-graphql).
+See [here](examples/fileUpload) for an example.
 
-### @live
+</details>
 
-Live queries using the `@live` directive provide an alternative to subscriptions for handling real-time updates. You can add support for live queries to your server by following the instructions [here](https://github.com/n1ru4l/graphql-live-queries). With GraphQL Helix, it's as simple as adding the directive to your schema and utilizing the alternative `execute` function provided by [@n1ru4l/in-memory-live-query-store](https://github.com/n1ru4l/graphql-live-queries/tree/main/packages/in-memory-live-query-store). You can checkout the runnable example [here](examples/node/liveQueries.ts).
+<details>
+<summary>Using the `@defer` and `@stream` directives</summary>
+</br>
+GraphQL Helix supports `@defer` and `@stream` directives out-of-the-box, provided you use the appropriate version of `graphql-js`. When either directive is used, `processRequest` will return a `MULTIPART_RESPONSE` result, which you can then use to return a `multipart/mixed` response.
 
-### Subscriptions over SSE
+```ts
+if (result.type === "MULTIPART_RESPONSE") {
+  // Indicate that this is a multipart response and the connection should be kept open.
+  res.writeHead(200, {
+    Connection: "keep-alive",
+    "Content-Type": 'multipart/mixed; boundary="-"',
+    "Transfer-Encoding": "chunked",
+  });
 
-Client-side, you can use [sse-z](https://github.com/contrawork/sse-z), which provides an abstraction over the EventSource API. Check out the `fetcher` implementation inside `renderGraphiQL` to see how to easily implement SSE subscriptions on the client side.
+  // If the client closes the connection, we unsubscribe to prevent memory leaks.
+  req.on("close", () => {
+    result.unsubscribe();
+  });
+
+  // Subscribe to new results. The callback will be called with the
+  // ExecutionResult object that should be sent back to the client for each chunk.
+  await result.subscribe((result) => {
+    const chunk = Buffer.from(JSON.stringify(formatResult(result)), "utf8");
+    const data = [
+      "",
+      "---",
+      "Content-Type: application/json; charset=utf-8",
+      "Content-Length: " + String(chunk.length),
+      "",
+      chunk,
+      "",
+    ].join("\r\n");
+    res.write(data);
+  });
+
+  // The Promise returned by `subscribe` will only resolve once all chunks have been emitted,
+  // at which point we can end the request.
+  res.write("\r\n-----\r\n");
+  res.end();
+}
+```
+
+See the [here](examples/express) for a complete example.
+
+The examples used in this repo are compatible with client-side libraries like [meros](https://github.com/maraisr/meros) and [fetch-multipart-graphql](https://github.com/relay-tools/fetch-multipart-graphql).
+
+</details>
+
+<details>
+<summary>Using the `@live` directive</summary>
+</br>
+Live queries using the `@live` directive provide an alternative to subscriptions for handling real-time updates. You can add support for live queries to your server by following the instructions [here](https://github.com/n1ru4l/graphql-live-queries).
+
+With GraphQL Helix, it's as simple as adding the directive to your schema and utilizing the alternative `execute` function provided by [@n1ru4l/in-memory-live-query-store](https://github.com/n1ru4l/graphql-live-queries/tree/main/packages/in-memory-live-query-store).
+
+```ts
+import { InMemoryLiveQueryStore } from "@n1ru4l/in-memory-live-query-store";
+
+const liveQueryStore = new InMemoryLiveQueryStore();
+
+...
+
+const result = await processRequest({
+  operationName,
+  query,
+  variables,
+  request,
+  schema,
+  contextFactory: () => ({
+    liveQueryStore,
+  }),
+  execute: liveQueryStore.execute,
+});
+```
+
+You can checkout the complete example [here](examples/liveQueries).
+
+</details>
+
+<details>
+<summary>Persisted queries</summary>
+</br>
+Persisted queries are useful because they reduce the payload sent from client to server and can also be used to only allow specific queries. Persisted queries are also a performance optimization since they allow us to skip parsing the query when executing a request.
+
+The `query` value that's passed to `processQuery` can be an already-parsed DocumentNode object instead of a string. This lets us fetch the query from memory based on some other value, like a `queryId` parameter. A rudimentary implementation could be as simple as this:
+
+```ts
+let queryId: string;
+let operationName: string | undefined;
+let variables: any;
+
+if (req.method === "POST") {
+  queryId = req.body.queryId;
+  operationName = req.body.operationName;
+  variables = req.body.variables;
+} else {
+  queryId = req.query.queryId as string;
+  operationName = req.query.operationName as string;
+  variables = req.query.variables;
+}
+
+const query = queryMap[queryId];
+
+if (!query) {
+  res.status(400);
+  res.json({
+    errors: [
+      new GraphQLError(
+        `Could not find a persisted query with an id of ${queryId}`
+      ),
+    ],
+  });
+  return;
+}
+
+const result = await processRequest({
+  operationName,
+  query,
+  variables,
+  request,
+  schema,
+});
+```
+
+See [here](examples/persistedQueries) for a more complete example. A more robust solution can be implemented using a library like [relay-compiler-plus](https://github.com/yusinto/relay-compiler-plus).
+
+</details>
