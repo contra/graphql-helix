@@ -55,8 +55,7 @@ export const schema = new GraphQLSchema({
             },
           }),
         }),
-        resolve: () =>
-          new Promise((resolve) => setTimeout(() => resolve("goodbye"), 1000)),
+        resolve: () => ({}),
       },
     }),
   }),
