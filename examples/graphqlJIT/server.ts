@@ -92,6 +92,22 @@ app.use("/graphql", async (req, res) => {
       result.headers.forEach(({ name, value }) => res.setHeader(name, value));
       res.status(result.status);
       res.json(result.payload);
+    } else if (result.type === "PUSH") {
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        Connection: "keep-alive",
+        "Cache-Control": "no-cache",
+      });
+
+      req.on("close", () => {
+        result.unsubscribe();
+      });
+
+      await result.subscribe((result) => {
+        res.write(`data: ${JSON.stringify(result)}\n\n`);
+      });
+    } else {
+      // GraphQL JIT does not currently support @defer and @stream
     }
   }
 });
