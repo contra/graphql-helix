@@ -301,7 +301,7 @@ you want with the execution result before it's sent to the client:
 - Format your errors and mask them in production.
 - Add an `extensions` field to the response with additional metadata to send to the client
 
-See [here](examples/errorHandling) for a basic example of error handling.
+See [here](examples/error-handling) for a basic example of error handling.
 
 </details>
 
@@ -382,7 +382,7 @@ Implementing SSE on the client-side is equally simple, but you can use [sse-z](h
 </br>
 File uploads, like serving static content, are generally best handled outside of your GraphQL schema. However, if you want to add support for uploads to your server, you can use the [graphql-upload](https://github.com/jaydenseric/graphql-upload) package. You need to add the Upload scalar to your schema and then add the appropriate middleware to your server.
 
-See [here](examples/fileUpload) for an example.
+See [here](examples/file-upload) for an example.
 
 </details>
 
@@ -461,7 +461,7 @@ const result = await processRequest({
 });
 ```
 
-You can checkout the complete example [here](examples/liveQueries).
+You can checkout the complete example [here](examples/live-queries).
 
 </details>
 
@@ -510,7 +510,7 @@ const result = await processRequest({
 });
 ```
 
-See [here](examples/persistedQueries) for a more complete example. A more robust solution can be implemented using a library like [relay-compiler-plus](https://github.com/yusinto/relay-compiler-plus).
+See [here](examples/persisted-queries) for a more complete example. A more robust solution can be implemented using a library like [relay-compiler-plus](https://github.com/yusinto/relay-compiler-plus).
 
 </details>
 
@@ -574,6 +574,6 @@ const result = await processRequest({
 });
 ```
 
-We can take a similar approach with `validate` and even cache the result of `compileQuery` if we're using GraphQL JIT. See [this example](examples/graphqlJIT) for a more complete implementation.
+We can take a similar approach with `validate` and even cache the result of `compileQuery` if we're using GraphQL JIT. See [this example](examples/graphql-jit) for a more complete implementation.
 
 </details>

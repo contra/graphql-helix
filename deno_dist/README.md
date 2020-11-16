@@ -301,7 +301,7 @@ you want with the execution result before it's sent to the client:
 - Format your errors and mask them in production.
 - Add an `extensions` field to the response with additional metadata to send to the client
 
-See [here](examples/errorHandling) for a basic example of error handling.
+See [here](examples/error-handling) for a basic example of error handling.
 
 </details>
 
@@ -382,7 +382,7 @@ Implementing SSE on the client-side is equally simple, but you can use [sse-z](h
 </br>
 File uploads, like serving static content, are generally best handled outside of your GraphQL schema. However, if you want to add support for uploads to your server, you can use the [graphql-upload](https://github.com/jaydenseric/graphql-upload) package. You need to add the Upload scalar to your schema and then add the appropriate middleware to your server.
 
-See [here](examples/fileUpload) for an example.
+See [here](examples/file-upload) for an example.
 
 </details>
 
@@ -461,7 +461,7 @@ const result = await processRequest({
 });
 ```
 
-You can checkout the complete example [here](examples/liveQueries).
+You can checkout the complete example [here](examples/live-queries).
 
 </details>
 
@@ -510,6 +510,70 @@ const result = await processRequest({
 });
 ```
 
-See [here](examples/persistedQueries) for a more complete example. A more robust solution can be implemented using a library like [relay-compiler-plus](https://github.com/yusinto/relay-compiler-plus).
+See [here](examples/persisted-queries) for a more complete example. A more robust solution can be implemented using a library like [relay-compiler-plus](https://github.com/yusinto/relay-compiler-plus).
+
+</details>
+
+<details>
+<summary>Performance optimization</summary>
+</br>
+GraphQL Helix allows you to provide your own `parse`, `validate`, `execute` and `subscribe` functions in place of the default ones provided by `graphql-js`. This makes it possible to utilize libraries like [GraphQL JIT](https://github.com/zalando-incubator/graphql-jit) by providing an appropriate `validate` function:
+
+```ts
+const result = await processRequest({
+  // ...
+  execute: (
+    schema,
+    documentAst,
+    rootValue,
+    contextValue,
+    variableValues,
+    operationName
+  ) => {
+    const compiledQuery = compileQuery(schema, documentAst, operationName);
+
+    if (isCompiledQuery(compiledQuery)) {
+      return compiledQuery.query(rootValue, contextValue, variableValues || {});
+    }
+
+    return compiledQuery;
+  },
+});
+```
+
+> ⚠️ GraphQL JIT is an experimental library that is still lacking some features required by the GraphQL specification. You probably should not use it in production unless you know what you're getting yourself into.
+
+The ability to provide custom implementations of `parse` and `validate` means we can also optimize the performance of those individual steps by introducing caching. This allows us to bypass these steps for queries we've processed before.
+
+For example, we can create a simple in-memory cache
+
+```ts
+import lru from "tiny-lru";
+
+const cache = lru(1000, 3600000);
+```
+
+and then use it to cache our parsed queries so we can skip that step for subsequent requests:
+
+```ts
+import { parse } from "graphql";
+
+const result = await processRequest({
+  operationName,
+  query,
+  variables,
+  request,
+  schema,
+  parse: (source, options) => {
+    if (!cache.get(query)) {
+      cache.set(query, parse(source, options));
+    }
+
+    return cache.get(query);
+  },
+});
+```
+
+We can take a similar approach with `validate` and even cache the result of `compileQuery` if we're using GraphQL JIT. See [this example](examples/graphql-jit) for a more complete implementation.
 
 </details>

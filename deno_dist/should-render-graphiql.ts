@@ -1,4 +1,4 @@
-import { isHttpMethod } from "./util/isHttpMethod.ts";
+import { isHttpMethod } from "./util/is-http-method.ts";
 import { Request } from "./types.ts";
 
 export const shouldRenderGraphiQL = ({ headers, method }: Request): boolean => {
