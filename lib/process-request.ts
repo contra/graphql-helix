@@ -76,6 +76,12 @@ export const processRequest = async (
     variables,
   } = options;
 
+  const accept =
+    typeof request.headers.get === "function"
+      ? request.headers.get("accept")
+      : (request.headers as any).accept;
+  const isEventStream = accept === "text/event-stream";
+
   try {
     if (
       !isHttpMethod("GET", request.method) &&
@@ -142,7 +148,7 @@ export const processRequest = async (
         );
 
         // If errors are encountered while subscribing to the operation, an execution result
-        // instead of an AsyncIterable. We only return a PUSH object if we have an AsyncIterable.
+        // instead of an AsyncIterable.
         if (isAsyncIterable<ExecutionResult>(result)) {
           return {
             type: "PUSH",
@@ -156,12 +162,22 @@ export const processRequest = async (
             },
           };
         } else {
-          return {
-            type: "RESPONSE",
-            payload: result,
-            status: 200,
-            headers: [],
-          };
+          if (isEventStream) {
+            return {
+              type: "PUSH",
+              subscribe: async (onResult) => {
+                onResult(result);
+              },
+              unsubscribe: () => undefined,
+            };
+          } else {
+            return {
+              type: "RESPONSE",
+              payload: result,
+              status: 200,
+              headers: [],
+            };
+          }
         }
       } else {
         const result = await execute(
@@ -206,14 +222,24 @@ export const processRequest = async (
       );
     }
   } catch (error) {
-    return {
-      type: "RESPONSE",
-      status: error.status || 500,
-      headers: error.headers || [],
-      payload: {
-        data: null,
-        errors: error.graphqlErrors || [new GraphQLError(error.message)],
-      },
+    const payload = {
+      errors: error.graphqlErrors || [new GraphQLError(error.message)],
     };
+    if (isEventStream) {
+      return {
+        type: "PUSH",
+        subscribe: async (onResult) => {
+          onResult(payload);
+        },
+        unsubscribe: () => undefined,
+      };
+    } else {
+      return {
+        type: "RESPONSE",
+        status: error.status || 500,
+        headers: error.headers || [],
+        payload,
+      };
+    }
   }
 };

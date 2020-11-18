@@ -328,6 +328,21 @@ implementations.forEach((implementation) => {
         expect(data.eventEmitted).toBeDefined();
       });
 
+      test("GET malformed subscription", async () => {
+        const eventSource = new EventSource(
+          `http://localhost:${port}/graphql?query=subscription{eventEmitted}}`
+        );
+        const payload = await new Promise<any>((resolve) => {
+          eventSource.addEventListener("message", (event: any) => {
+            resolve(event.data);
+            eventSource.close();
+          });
+        });
+        const { data, errors } = JSON.parse(payload);
+        expect(data).toBeUndefined();
+        expect(errors.length).toEqual(1);
+      });
+
       test("GET query with @defer", async () => {
         const stream = got.stream.get(`http://localhost:${port}/graphql`, {
           searchParams: {
