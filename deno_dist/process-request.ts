@@ -189,11 +189,11 @@ export const processRequest = async (
           operationName
         );
 
-        // Operations that use @defer and @stream will return an `AsyncIterable` instead of an
+        // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
         // execution result.
         if (isAsyncIterable<ExecutionResult>(result)) {
           return {
-            type: "MULTIPART_RESPONSE",
+            type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
             subscribe: async (onResult) => {
               for await (const payload of result) {
                 onResult(payload);
