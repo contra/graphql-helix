@@ -378,6 +378,55 @@ Implementing SSE on the client-side is equally simple, but you can use [sse-z](h
 </details>
 
 <details>
+<summary>Subscriptions over WebSocket</summary>
+</br>
+
+If SSE is not your cup of tea and you want to use WebSocket as the transport for your subscriptions instead, you can still do that. For example, we can use both GraphQL Helix and [graphql-ws](https://github.com/enisdenjo/graphql-ws)
+
+```ts
+import express from "express";
+import {
+  getGraphQLParameters,
+  processRequest,
+  renderGraphiQL,
+  shouldRenderGraphiQL,
+} from "graphql-helix";
+import { execute, subscribe } from "graphql";
+import { createServer } from "graphql-ws";
+import { schema } from "./schema";
+
+const app = express();
+
+app.use(express.json());
+
+app.use("/graphql", async (req, res) => {
+  // handle the request using processRequest as shown before
+});
+
+const port = process.env.PORT || 4000;
+
+const server = app.listen(port, () => {
+  createServer(
+    {
+      schema,
+      execute,
+      subscribe,
+    },
+    {
+      server,
+      path: "/graphql",
+    }
+  );
+
+  console.log(`GraphQL server is running on port ${port}.`);
+});
+```
+
+A complete example can be found [here](examples/graphql-ws). If you'd prefer you use socket.io, take a look at [socket-io-graphql-server](https://github.com/n1ru4l/graphql-live-query/tree/main/packages/socket-io-graphql-server) instead.
+
+</details>
+
+<details>
 <summary>File uploads</summary>
 </br>
 File uploads, like serving static content, are generally best handled outside of your GraphQL schema. However, if you want to add support for uploads to your server, you can use the [graphql-upload](https://github.com/jaydenseric/graphql-upload) package. You need to add the Upload scalar to your schema and then add the appropriate middleware to your server.
