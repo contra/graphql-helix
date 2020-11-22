@@ -89,6 +89,8 @@ app.use("/graphql", async (req, res) => {
         result.unsubscribe();
       });
 
+      res.write("---");
+
       // Subscribe and send back each result as a separate chunk. We await the subscribe
       // call. Once we're done executing the request and there are no more results to send
       // to the client, the Promise returned by subscribe will resolve and we can end the response.
@@ -96,14 +98,17 @@ app.use("/graphql", async (req, res) => {
         const chunk = Buffer.from(JSON.stringify(result), "utf8");
         const data = [
           "",
-          "---",
           "Content-Type: application/json; charset=utf-8",
           "Content-Length: " + String(chunk.length),
           "",
           chunk,
-          "",
-        ].join("\r\n");
-        res.write(data);
+        ];
+
+        if (result.hasNext) {
+          data.push("---");
+        }
+
+        res.write(data.join("\r\n"));
       });
 
       res.write("\r\n-----\r\n");
@@ -454,20 +459,24 @@ if (result.type === "MULTIPART_RESPONSE") {
     result.unsubscribe();
   });
 
+  res.write("---");
+
   // Subscribe to new results. The callback will be called with the
   // ExecutionResult object that should be sent back to the client for each chunk.
   await result.subscribe((result) => {
     const chunk = Buffer.from(JSON.stringify(formatResult(result)), "utf8");
     const data = [
-      "",
-      "---",
       "Content-Type: application/json; charset=utf-8",
       "Content-Length: " + String(chunk.length),
       "",
       chunk,
-      "",
-    ].join("\r\n");
-    res.write(data);
+    ];
+
+    if (result.hasNext) {
+      data.push("---");
+    }
+
+    res.write(data.join("\r\n"));
   });
 
   // The Promise returned by `subscribe` will only resolve once all chunks have been emitted,

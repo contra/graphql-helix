@@ -73,19 +73,24 @@ const graphqlHandler = async (ctx: Context) => {
     ctx.status = 200;
     ctx.body = stream;
 
+    stream.write("---");
+
     result
       .subscribe((result) => {
         const chunk = Buffer.from(JSON.stringify(result), "utf8");
         const data = [
           "",
-          "---",
           "Content-Type: application/json; charset=utf-8",
           "Content-Length: " + String(chunk.length),
           "",
           chunk,
-          "",
-        ].join("\r\n");
-        stream.write(data);
+        ];
+
+        if (result.hasNext) {
+          data.push("---");
+        }
+
+        stream.write(data.join("\r\n"));
       })
       .then(() => {
         stream.write("\r\n-----\r\n");

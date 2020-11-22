@@ -41,18 +41,23 @@ app.use("/graphql", async (req, res) => {
       result.unsubscribe();
     });
 
+    res.write("---");
+
     await result.subscribe((result) => {
       const chunk = Buffer.from(JSON.stringify(result), "utf8");
       const data = [
         "",
-        "---",
         "Content-Type: application/json; charset=utf-8",
         "Content-Length: " + String(chunk.length),
         "",
         chunk,
-        "",
-      ].join("\r\n");
-      res.write(data);
+      ];
+
+      if (result.hasNext) {
+        data.push("---");
+      }
+
+      res.write(data.join("\r\n"));
     });
 
     res.write("\r\n-----\r\n");

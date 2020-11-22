@@ -52,18 +52,23 @@ const graphqlHandler: RouteHandlerMethod = async (req, res) => {
       result.unsubscribe();
     });
 
+    res.raw.write("---");
+
     await result.subscribe((result) => {
       const chunk = Buffer.from(JSON.stringify(result), "utf8");
       const data = [
         "",
-        "---",
         "Content-Type: application/json; charset=utf-8",
         "Content-Length: " + String(chunk.length),
         "",
         chunk,
-        "",
-      ].join("\r\n");
-      res.raw.write(data);
+      ];
+
+      if (result.hasNext) {
+        data.push("---");
+      }
+
+      res.raw.write(data.join("\r\n"));
     });
 
     res.raw.write("\r\n-----\r\n");
