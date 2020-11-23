@@ -112,7 +112,7 @@ const subscribeWithMultipart = (
       body: JSON.stringify(graphqlParams),
       credentials: "include",
       headers: {
-        Accept: "application/json",
+        Accept: "application/json, multipart/mixed",
         "Content-Type": "application/json",
         ...(fetcherOptions?.headers || {}),
       },
@@ -122,8 +122,9 @@ const subscribeWithMultipart = (
 
     try {
       if (isAsyncIterable(maybeStream)) {
-        for await (const { body: chunk } of maybeStream) {
-          if (typeof chunk !== "string") {
+        for await (const part of maybeStream) {
+          if (part.json) {
+            const chunk = part.body;
             if (chunk.path) {
               if (chunk.data) {
                 const path: Array<string | number> = ["data"];
