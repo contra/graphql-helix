@@ -1,6 +1,6 @@
 {
   "name": "graphql-helix",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "A highly evolved GraphQL HTTP Server 🧬",
   "keywords": [
     "graphql",
@@ -43,7 +43,6 @@
     "*.{js,ts}": "prettier --write",
     "lib/*.ts": "npm run build-deno"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/chance": "^1.1.0",
     "@types/eventsource": "^1.1.4",
