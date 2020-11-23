@@ -8,8 +8,7 @@
   "author": "Daniel Rearden <danielrearden@gmail.com>",
   "main": "index.js",
   "workspaces": [
-    "packages/*",
-    "examples/*"
+    "packages/*"
   ],
   "scripts": {
     "build": "lerna run build",
