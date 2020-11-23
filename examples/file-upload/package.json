@@ -14,7 +14,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "graphql": "^15.4.0-experimental-stream-defer.1",
-    "graphql-helix": "^0.5.0",
+    "graphql-helix": "^0.5.2",
     "graphql-upload": "^11.0.0"
   }
 }

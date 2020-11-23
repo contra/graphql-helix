@@ -325,10 +325,10 @@ fs-capacitor@^6.1.0:
   resolved "https://registry.yarnpkg.com/fs-capacitor/-/fs-capacitor-6.2.0.tgz#fa79ac6576629163cb84561995602d8999afb7f5"
   integrity sha512-nKcE1UduoSKX27NSZlg879LdQc94OtbOsEmKMN2MBNudXREvijRKx2GEBsTMTfws+BrbkJoEuynbGSVRSpauvw==
 
-graphql-helix@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/graphql-helix/-/graphql-helix-0.5.0.tgz#d53711200f2a178014061775e235723ae885a6ff"
-  integrity sha512-wM8yRGHWetl8+Mi7w6Cz2l4swEmLwp/jIbBmk/g3dU4F2hLwveCcV7GKrgVVeM9UUSqRfdWBPWyow5IevEXJbA==
+graphql-helix@^0.5.2:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/graphql-helix/-/graphql-helix-0.5.2.tgz#ded9f628d822f4932e9a5c0c1fb5bac0f6a936e2"
+  integrity sha512-JcVXj15a/n4D96UlXOoKQST3CnXpoivUKk4+L8lZATRhLSElXecsicZQPcZMWp/dOuyu5l5FvCog36lCJeT+/A==
 
 graphql-upload@^11.0.0:
   version "11.0.0"
