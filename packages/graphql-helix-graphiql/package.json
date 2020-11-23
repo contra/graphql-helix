@@ -6,8 +6,11 @@
   "license": "MIT",
   "author": "Daniel Rearden <danielrearden@gmail.com>",
   "main": "dist/graphiql.min.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "webpack",
+    "build": "webpack && cpy ../../node_modules/graphiql/graphiql.min.css dist/",
     "lint": "prettier --check . && tsc --noEmit"
   },
   "dependencies": {
@@ -28,6 +31,7 @@
     "@types/lodash": "4.14.165",
     "@types/react": "16.8.0",
     "@types/react-dom": "16.8.0",
+    "cpy-cli": "^3.1.1",
     "prettier": "2.2.0",
     "terser-webpack-plugin": "5.0.3",
     "ts-loader": "8.0.11",
