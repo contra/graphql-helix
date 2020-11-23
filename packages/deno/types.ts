@@ -21,9 +21,25 @@ export interface RenderGraphiQLOptions {
    */
   defaultQuery?: string;
   /**
-   * The endpoint requests should be sent. Defaults to `/graphql`.
+   * Whether to open the variable editor by default. Defaults to `true`.
    */
-  graphqlEndpoint?: string;
+  defaultVariableEditorOpen?: boolean;
+  /**
+   * The endpoint requests should be sent. Defaults to `"/graphql"`.
+   */
+  endpoint?: string;
+  /**
+   * The initial headers to render inside the header editor. Defaults to `"{}"`.
+   */
+  headers?: string;
+  /**
+   * Whether the header editor is enabled. Defaults to `true`.
+   */
+  headerEditorEnabled?: boolean;
+  /**
+   * The endpoint subscription requests should be sent to. Defaults to the value of the `endpoint` parameter.
+   */
+  subscriptionsEndpoint?: string;
 }
 
 export interface ProcessRequestOptions {

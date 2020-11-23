@@ -289,10 +289,10 @@ graphql-jit@^0.4.3:
     lodash.merge "4.6.2"
     lodash.mergewith "4.6.2"
 
-graphql@^15.1.0:
-  version "15.4.0"
-  resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.4.0.tgz#e459dea1150da5a106486ba7276518b5295a4347"
-  integrity sha512-EB3zgGchcabbsU9cFe1j+yxdzKQKAbGUWRb13DsrsMN1yyfmmIq+2+L5MqVWcDCE4V89R5AyUOi7sMOGxdsYtA==
+graphql@15.4.0-experimental-stream-defer.1:
+  version "15.4.0-experimental-stream-defer.1"
+  resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.4.0-experimental-stream-defer.1.tgz#46ae3fd2b532284575e7ddcf6c4f08aa7fe53fa3"
+  integrity sha512-zlGgY7aLlIofjO0CfTpCYK/tMccnj+5jvjnkTnW5qOxYhgEltuCvpMNYOJ67gz6L1flTIigt5BVEM8JExgtW3w==
 
 http-errors@1.7.2:
   version "1.7.2"

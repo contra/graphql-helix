@@ -10,7 +10,7 @@
     "typescript": "^4.0.5"
   },
   "dependencies": {
-    "graphql": "^15.4.0-experimental-stream-defer.1",
+    "graphql": "15.4.0-experimental-stream-defer.1",
     "graphql-helix": "^0.5.2"
   }
 }

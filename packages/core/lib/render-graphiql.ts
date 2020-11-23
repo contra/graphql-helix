@@ -1,196 +1,58 @@
 import { RenderGraphiQLOptions } from "./types";
 
-export const GRAPHQL_VERSION = "15.4.0-experimental-stream-defer.1";
-export const GRAPHIQL_VERSION = "1.0.6";
-export const REACT_VERSION = "17.0.1";
+const HELIX_GRAPHIQL_VERSION = "1.0.0";
+
+const safeSerialize = (value: any) => {
+  return value != null
+    ? JSON.stringify(value).replace(/\//g, "\\/")
+    : "undefined";
+};
 
 export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
-  const { defaultQuery, graphqlEndpoint = "/graphql" } = options;
+  const {
+    defaultQuery,
+    defaultVariableEditorOpen,
+    endpoint,
+    headers,
+    headerEditorEnabled,
+    subscriptionsEndpoint,
+  } = options;
 
   return `
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8" />
-  <title>GraphiQL</title>
-  <meta name="robots" content="noindex" />
-  <meta name="referrer" content="origin" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-    }
-    #graphiql {
-      height: 100vh;
-    }
-  </style>
-  <link type="text/css" href="//cdn.jsdelivr.net/npm/graphiql@${GRAPHIQL_VERSION}/graphiql.min.css" rel="stylesheet" />
-
-  <script src="//cdn.jsdelivr.net/npm/react@${REACT_VERSION}/umd/react.production.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/react-dom@${REACT_VERSION}/umd/react-dom.production.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/graphiql@${GRAPHIQL_VERSION}/graphiql.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/lodash@4.17.20/lodash.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/sse-z@0.3.0/dist/sse-z.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/meros@0.0.3/dist/index.min.js"></script>
-</head>
-<body>
-  <div id="graphiql">Loading...</div>
-  <script>
-    // See https://github.com/graphql/graphql-js/issues/2676
-    window.process = { env: {} };
-  </script>
-  <script type="module">
-    import { getOperationAST, parse } from "//cdn.jsdelivr.net/npm/graphql@${GRAPHQL_VERSION}/index.mjs";
-
-    const graphqlEndpoint = "${graphqlEndpoint}";
-
-    // Parse the search string to get url parameters.
-    const search = window.location.search;
-    const parameters = search.substr(1).split("&").reduce((acc, entry) => {
-      const eq = entry.indexOf("=");
-      if (eq >= 0) {
-        acc[decodeURIComponent(entry.slice(0, eq))] = decodeURIComponent(
-          entry.slice(eq + 1)
-        );
+  <head>
+    <meta charset="utf-8" />
+    <title>GraphiQL</title>
+    <meta name="robots" content="noindex" />
+    <meta name="referrer" content="origin" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link type="text/css" href="//cdn.jsdelivr.net/npm/@graphql-helix/graphiql@${HELIX_GRAPHIQL_VERSION}/dist/graphiql.min.css" rel="stylesheet" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Cpath fill='%23E535AB' d='M57.468 302.66l-14.376-8.3 160.15-277.38 14.376 8.3z'/%3E%3Cpath fill='%23E535AB' d='M39.8 272.2h320.3v16.6H39.8z'/%3E%3Cpath fill='%23E535AB' d='M206.348 374.026l-160.21-92.5 8.3-14.376 160.21 92.5zM345.522 132.947l-160.21-92.5 8.3-14.376 160.21 92.5z'/%3E%3Cpath fill='%23E535AB' d='M54.482 132.883l-8.3-14.375 160.21-92.5 8.3 14.376z'/%3E%3Cpath fill='%23E535AB' d='M342.568 302.663l-160.15-277.38 14.376-8.3 160.15 277.38zM52.5 107.5h16.6v185H52.5z'/%3E%3Cpath fill='%23E535AB' d='M330.9 107.5h16.6v185h-16.6z'/%3E%3Cpath fill='%23E535AB' d='M203.522 367l-7.25-12.558 139.34-80.45 7.25 12.557z'/%3E%3Cpath fill='%23E535AB' d='M369.5 297.9c-9.6 16.7-31 22.4-47.7 12.8-16.7-9.6-22.4-31-12.8-47.7 9.6-16.7 31-22.4 47.7-12.8 16.8 9.7 22.5 31 12.8 47.7M90.9 137c-9.6 16.7-31 22.4-47.7 12.8-16.7-9.6-22.4-31-12.8-47.7 9.6-16.7 31-22.4 47.7-12.8 16.7 9.7 22.4 31 12.8 47.7M30.5 297.9c-9.6-16.7-3.9-38 12.8-47.7 16.7-9.6 38-3.9 47.7 12.8 9.6 16.7 3.9 38-12.8 47.7-16.8 9.6-38.1 3.9-47.7-12.8M309.1 137c-9.6-16.7-3.9-38 12.8-47.7 16.7-9.6 38-3.9 47.7 12.8 9.6 16.7 3.9 38-12.8 47.7-16.7 9.6-38.1 3.9-47.7-12.8M200 395.8c-19.3 0-34.9-15.6-34.9-34.9 0-19.3 15.6-34.9 34.9-34.9 19.3 0 34.9 15.6 34.9 34.9 0 19.2-15.6 34.9-34.9 34.9M200 74c-19.3 0-34.9-15.6-34.9-34.9 0-19.3 15.6-34.9 34.9-34.9 19.3 0 34.9 15.6 34.9 34.9 0 19.3-15.6 34.9-34.9 34.9'/%3E%3C/svg%3E"
+    />
+    <script src="//cdn.jsdelivr.net/npm/@graphql-helix/graphiql@${HELIX_GRAPHIQL_VERSION}/dist/graphiql.min.js"></script>
+    <style>
+      body {
+        height: 100vh;
+        margin: 0;
       }
-      return acc
-    }, {})
-    
-    // When the query and variables string is edited, update the URL bar so
-    // that it can be easily shared
-    const onEditQuery = (newQuery) => {
-      parameters.query = newQuery;
-      updateURL();
-    }
-
-    const onEditVariables = (newVariables) => {
-      parameters.variables = newVariables;
-      updateURL();
-    }
-
-    const onEditOperationName = (newOperationName) => {
-      parameters.operationName = newOperationName;
-      updateURL();
-    }
-
-    const updateURL = () => {
-      const newSearch =
-        "?" +
-        Object.keys(parameters)
-          .filter((key) => Boolean(parameters[key]))
-          .map((key) => encodeURIComponent(key) + "=" + encodeURIComponent(parameters[key]))
-          .join("&");
-      history.replaceState(null, null, newSearch);
-    }
-
-    const fetcher = (graphQLParams) => {
-      const operationAst = getOperationAST(parse(graphQLParams.query), graphQLParams.operationName);
-      const isSubscription = operationAst && operationAst.operation === "subscription";
-      if (isSubscription) {
-        return {
-          subscribe(opts) {
-            return new SSEZ.Subscription({
-              url: graphqlEndpoint.startsWith("/")
-                ? window.location.protocol + "//" + window.location.host + graphqlEndpoint
-                : graphqlEndpoint,
-              searchParams: {
-                query: graphQLParams.query,
-                variables: graphQLParams.variables
-                  ? JSON.stringify(graphQLParams.variables)
-                  : undefined,
-                operationName: graphQLParams.operationName,
-              },
-              eventSourceOptions: {
-                withCredentials: true,
-              },
-              onNext: (data) => {
-                opts.next(JSON.parse(data))
-              },
-            })
-          }
-        }
-      }
-
-      return {
-        subscribe() {
-          const isIntrospectionQuery = arguments.length === 3;
-          const onNext = isIntrospectionQuery ? arguments[0] : arguments[0].next;
-          const onError = isIntrospectionQuery ? arguments[1] : arguments[0].error;
-          const onComplete = isIntrospectionQuery ? arguments[2] : arguments[0].complete;
-
-          const controller = new AbortController();
-          const signal = controller.signal;
-          const stream = meros.fetchMultipart(() => fetch(graphqlEndpoint, {
-            body: JSON.stringify(graphQLParams),
-            credentials: "include",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-            method: "POST",
-            signal,
-          }))
-
-          Promise.resolve().then(async () => {
-            let response = {};
-            try {
-              for await (let chunk of stream) {
-                if (chunk.path) {
-                  if (chunk.data) {
-                    _.merge(response, _.set({}, ['data'].concat(chunk.path),chunk.data));
-                  }
-  
-                  if (chunk.errors) {
-                    response.errors = (response.errors || []).concat(chunk.errors);
-                  }
-                } else {
-                  if (chunk.data) {
-                    response.data = chunk.data;
-                  }
-                  if (chunk.errors) {
-                    response.errors = chunk.errors;
-                  }
-                }
-                onNext(response)
-              }
-            } catch (error) {
-              if (typeof error.json === "function") {
-                const response = await error.json()
-                return onError(response)
-              } else {
-                onError(error)
-              }
-            }
-            onComplete()
-          })
-
-          return {
-            unsubscribe() {
-              controller.abort()
-            }
-          }
-        },
-      };
-    }
-
-    ReactDOM.render(
-      React.createElement(GraphiQL, {
-        fetcher,
-        onEditQuery,
-        onEditVariables,
-        onEditOperationName,
-        query: parameters.query,
-        variables: parameters.variables,
-        operationName: parameters.operationName,    
-        defaultQuery: ${
-          defaultQuery ? JSON.stringify(defaultQuery) : "undefined"
-        },
-      }),
-      document.getElementById('graphiql')
-    );
-  </script>
-</body>
+    </style>
+  </head>
+  <body>
+    <script>
+      GraphQLHelixGraphiQL.init({
+        defaultQuery: ${safeSerialize(defaultQuery)},
+        defaultVariableEditorOpen: ${safeSerialize(defaultVariableEditorOpen)},
+        endpoint: ${safeSerialize(endpoint)},
+        headers: ${safeSerialize(headers)},
+        headerEditorEnabled: ${safeSerialize(headerEditorEnabled)},
+        subscriptionsEndpoint: ${safeSerialize(subscriptionsEndpoint)},
+      });
+    </script>
+  </body>
 </html>
 `;
 };

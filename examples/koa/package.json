@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@types/koa": "^2.11.6",
-    "graphql": "^15.4.0-experimental-stream-defer.1",
+    "graphql": "15.4.0-experimental-stream-defer.1",
     "graphql-helix": "^0.5.2",
     "koa": "^2.13.0",
     "koa-bodyparser": "^4.3.0"

@@ -236,10 +236,10 @@ graphql-helix@^0.5.2:
   resolved "https://registry.yarnpkg.com/graphql-helix/-/graphql-helix-0.5.2.tgz#ded9f628d822f4932e9a5c0c1fb5bac0f6a936e2"
   integrity sha512-JcVXj15a/n4D96UlXOoKQST3CnXpoivUKk4+L8lZATRhLSElXecsicZQPcZMWp/dOuyu5l5FvCog36lCJeT+/A==
 
-graphql@^15.4.0-experimental-stream-defer.1:
-  version "15.4.0"
-  resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.4.0.tgz#e459dea1150da5a106486ba7276518b5295a4347"
-  integrity sha512-EB3zgGchcabbsU9cFe1j+yxdzKQKAbGUWRb13DsrsMN1yyfmmIq+2+L5MqVWcDCE4V89R5AyUOi7sMOGxdsYtA==
+graphql@15.4.0-experimental-stream-defer.1:
+  version "15.4.0-experimental-stream-defer.1"
+  resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.4.0-experimental-stream-defer.1.tgz#46ae3fd2b532284575e7ddcf6c4f08aa7fe53fa3"
+  integrity sha512-zlGgY7aLlIofjO0CfTpCYK/tMccnj+5jvjnkTnW5qOxYhgEltuCvpMNYOJ67gz6L1flTIigt5BVEM8JExgtW3w==
 
 http-errors@1.7.2:
   version "1.7.2"
