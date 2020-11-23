@@ -10,10 +10,15 @@ import {
   OperationDefinitionNode,
   ValidationRule,
   ExecutionResult,
+  ExecutionPatchResult,
 } from "graphql";
 import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util";
 import { HttpError } from "./errors";
-import { ProcessRequestOptions, ProcessRequestResult } from "./types";
+import {
+  MultipartResponse,
+  ProcessRequestOptions,
+  ProcessRequestResult,
+} from "./types";
 
 const parseQuery = (
   query: string | DocumentNode,
@@ -191,7 +196,7 @@ export const processRequest = async (
 
         // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
         // execution result.
-        if (isAsyncIterable<ExecutionResult>(result)) {
+        if (isAsyncIterable<ExecutionPatchResult>(result)) {
           return {
             type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
             subscribe: async (onResult) => {
@@ -202,7 +207,7 @@ export const processRequest = async (
             unsubscribe: () => {
               stopAsyncIteration(result);
             },
-          };
+          } as MultipartResponse;
         } else {
           return {
             type: "RESPONSE",

@@ -1,5 +1,6 @@
 import {
   DocumentNode,
+  ExecutionPatchResult,
   ExecutionResult,
   GraphQLSchema,
   OperationDefinitionNode,
@@ -107,7 +108,9 @@ export interface Response {
 
 export interface MultipartResponse {
   type: "MULTIPART_RESPONSE";
-  subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
+  subscribe: (
+    onResult: (result: ExecutionPatchResult) => void
+  ) => Promise<void>;
   unsubscribe: () => void;
 }
 
