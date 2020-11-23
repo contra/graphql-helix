@@ -1,5 +1,5 @@
 {
-  "name": "graphql-helix-example",
+  "name": "graphql-helix-example-koa",
   "version": "1.0.0",
   "private": true,
   "scripts": {

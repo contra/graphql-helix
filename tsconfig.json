@@ -14,7 +14,5 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true
-  },
-  "exclude": ["deno_dist", "dist", "examples", "node_modules", "test"],
-  "include": ["lib"]
+  }
 }

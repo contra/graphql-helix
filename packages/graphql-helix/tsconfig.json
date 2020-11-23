@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "exclude": [
+    "deno_dist",
+    "dist",
+    "examples",
+    "node_modules",
+    "packages/graphql-helix/test"
+  ],
+  "include": ["lib"]
+}

@@ -1,81 +1,23 @@
 {
   "name": "graphql-helix",
-  "version": "0.5.0",
+  "version": "1.0.0",
+  "private": true,
   "description": "A highly evolved GraphQL HTTP Server 🧬",
-  "keywords": [
-    "graphql",
-    "graphiql",
-    "server",
-    "http",
-    "sse",
-    "multipart",
-    "defer",
-    "stream"
-  ],
-  "author": "Daniel Rearden",
+  "repository": "git@github.com:contrawork/graphql-helix.git",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/contrawork/graphql-helix.git"
-  },
-  "bugs": {
-    "url": "https://github.com/contrawork/graphql-helix/issues"
-  },
-  "homepage": "https://github.com/contrawork/graphql-helix",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
-  "files": [
-    "dist"
+  "author": "Daniel Rearden <danielrearden@gmail.com>",
+  "main": "index.js",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
   ],
   "scripts": {
-    "build": "npm run build-deno && npm run build-node",
-    "build-deno": "del-cli deno_lib && denoify",
-    "build-node": "del-cli dist && tsc",
-    "lint": "prettier --check . && tsc --noEmit",
-    "prepublishOnly": "npm run build-node",
-    "test": "jest test/integration.test.ts",
+    "build": "lerna run build",
+    "lint": "lerna run lint",
+    "test": "lerna run test",
     "update-examples": "node scripts/update-examples"
   },
-  "dependencies": {},
-  "peerDependencies": {
-    "graphql": "^15.3.0"
-  },
   "devDependencies": {
-    "@types/chance": "^1.1.0",
-    "@types/eventsource": "^1.1.4",
-    "@types/express": "^4.17.8",
-    "@types/jest": "^26.0.15",
-    "@types/koa": "^2.11.6",
-    "@types/koa-bodyparser": "^4.3.0",
-    "chance": "^1.1.7",
-    "del-cli": "^3.0.1",
-    "denoify": "^0.5.12",
-    "eventsource": "^1.0.7",
-    "express": "^4.17.1",
-    "fastify": "^3.7.0",
-    "get-port": "^5.1.1",
-    "got": "^11.8.0",
-    "graphql": "15.4.0-experimental-stream-defer.1",
-    "husky": "^4.3.0",
-    "jest": "^26.6.1",
-    "koa": "^2.13.0",
-    "koa-bodyparser": "^4.3.0",
-    "lint-staged": "^10.5.1",
-    "prettier": "^2.1.2",
-    "ts-jest": "^26.4.2",
-    "ts-node": "^9.0.0",
-    "typescript": "^4.0.3"
-  },
-  "denoify": {
-    "replacer": "scripts/denoify-replacer.js"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{js,ts}": "prettier --write",
-    "lib/*.ts": "npm run build-deno"
+    "lerna": "^3.22.1"
   }
 }
