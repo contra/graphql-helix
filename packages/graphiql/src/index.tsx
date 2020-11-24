@@ -14,7 +14,7 @@ import {
   FetcherOpts,
   FetcherParams,
 } from "graphiql/dist/components/GraphiQL";
-import { createClient as createWSClient } from "graphql-ws/lib/client";
+import { createClient as createWSClient, Client as WSClient } from "graphql-ws";
 import debounce from "lodash/debounce";
 import merge from "lodash/merge";
 import set from "lodash/set";
@@ -230,11 +230,10 @@ const subscribeWithEventSource = (
 };
 
 const subscribeWithWebSocket = (
-  url: string,
+  client: WSClient,
   sink: Sink,
   { query, operationName, variables }: FetcherParams
 ) => {
-  const client = createWSClient({ url });
   const unsubscribe = client.subscribe(
     {
       operationName,
@@ -243,12 +242,7 @@ const subscribeWithWebSocket = (
     },
     sink
   );
-  return {
-    unsubscribe() {
-      unsubscribe();
-      client.dispose();
-    },
-  };
+  return { unsubscribe };
 };
 
 export const init = async ({
@@ -263,6 +257,9 @@ export const init = async ({
   const isWebSocket =
     subscriptionsEndpointOrDefault.startsWith("ws://") ||
     subscriptionsEndpointOrDefault.startsWith("wss://");
+  const webSocketClient = isWebSocket
+    ? createWSClient({ url: subscriptionsEndpointOrDefault })
+    : null;
 
   const fetcher: Fetcher = (graphqlParams, fetcherOptions) => {
     const operationAst = getOperationAST(
@@ -278,12 +275,8 @@ export const init = async ({
       subscribe() {
         const sink = getSinkFromArguments(arguments);
         return isSubscription || isLiveQuery
-          ? isWebSocket
-            ? subscribeWithWebSocket(
-                subscriptionsEndpointOrDefault,
-                sink,
-                graphqlParams
-              )
+          ? webSocketClient
+            ? subscribeWithWebSocket(webSocketClient, sink, graphqlParams)
             : subscribeWithEventSource(
                 subscriptionsEndpointOrDefault,
                 sink,
