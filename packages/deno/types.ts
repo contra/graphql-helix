@@ -37,6 +37,10 @@ export interface RenderGraphiQLOptions {
    */
   headerEditorEnabled?: boolean;
   /**
+   * A cryptographic nonce for use with Content-Security-Policy.
+   */
+  nonce?: string;
+  /**
    * The endpoint subscription requests should be sent to. Defaults to the value of the `endpoint` parameter.
    */
   subscriptionsEndpoint?: string;
