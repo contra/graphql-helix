@@ -1,5 +1,6 @@
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import { isLiveQueryOperationDefinitionNode } from "@n1ru4l/graphql-live-query";
+import copyToClipboard from "copy-to-clipboard";
 import {
   buildClientSchema,
   getIntrospectionQuery,
@@ -15,7 +16,6 @@ import {
   FetcherParams,
 } from "graphiql/dist/components/GraphiQL";
 import { createClient as createWSClient, Client as WSClient } from "graphql-ws";
-import debounce from "lodash/debounce";
 import merge from "lodash/merge";
 import set from "lodash/set";
 import { meros } from "meros/browser";
@@ -58,33 +58,36 @@ interface Sink<T = unknown> {
   complete: () => void;
 }
 
-const searchParams = new URLSearchParams(window.location.search);
-
-const updateUrl = debounce(() => {
-  history.replaceState(null, "", "?" + searchParams.toString());
-}, 500);
-
-const onEditOperationName = (operationName: string) => {
-  searchParams.set("operationName", operationName);
-  updateUrl();
-};
-
-const onEditQuery = (query?: string) => {
-  searchParams.set("query", query || "");
-  updateUrl();
-};
-
-const onEditVariables = (variables: string) => {
-  searchParams.set("variables", variables);
-  updateUrl();
-};
-
 const noop = () => undefined;
 
 const isAsyncIterable = (input: unknown): input is AsyncIterable<unknown> => {
   return (
     typeof input === "object" && input != null && Symbol.asyncIterator in input
   );
+};
+
+const buildGraphQLUrl = (
+  baseUrl: string,
+  query: string | undefined,
+  variables: string | undefined,
+  operationName: string | undefined
+): string => {
+  const url = new URL(baseUrl);
+  const searchParams = new URLSearchParams();
+
+  if (query) {
+    searchParams.set("query", query);
+  }
+  if (operationName) {
+    searchParams.set("operationName", operationName);
+  }
+  if (variables) {
+    searchParams.set("variables", variables);
+  }
+
+  url.search = searchParams.toString();
+
+  return url.toString();
 };
 
 const getSinkFromArguments = (args: IArguments): Sink => {
@@ -173,22 +176,9 @@ const subscribeWithEventSource = (
   fetcherOptions?: FetcherOpts
 ) => {
   const controller = new AbortController();
-  const url = new URL(baseUrl);
-  const searchParams = new URLSearchParams();
+  const url = buildGraphQLUrl(baseUrl, query, variables, operationName);
 
-  if (query) {
-    searchParams.set("query", query);
-  }
-  if (operationName) {
-    searchParams.set("operationName", operationName);
-  }
-  if (variables) {
-    searchParams.set("variables", JSON.stringify(variables));
-  }
-
-  url.search = searchParams.toString();
-
-  fetchEventSource(url.toString(), {
+  fetchEventSource(url, {
     credentials: "include",
     headers: fetcherOptions?.headers || {},
     method: "GET",
@@ -315,8 +305,34 @@ export const init = async ({
     console.error(error);
   }
 
+  const searchParams = new URLSearchParams(window.location.search);
+  const initialOperationName = searchParams.get("operationName") || undefined;
+  const initialQuery = searchParams.get("query") || undefined;
+  const initialVariables = searchParams.get("variables") || "{}";
+
   ReactDOM.render(
     React.createElement(() => {
+      const graphiqlRef = React.useRef<GraphiQL | null>(null);
+
+      const onShare = () => {
+        const state = graphiqlRef.current?.state;
+
+        console.log({
+          a: state?.query,
+          b: state?.variables,
+          c: state?.operationName,
+        });
+
+        copyToClipboard(
+          buildGraphQLUrl(
+            window.location.href,
+            state?.query,
+            state?.variables,
+            state?.operationName
+          )
+        );
+      };
+
       return (
         <GraphiQL
           defaultQuery={defaultQuery}
@@ -324,12 +340,18 @@ export const init = async ({
           fetcher={fetcher}
           headers={headers}
           headerEditorEnabled={headerEditorEnabled}
-          onEditOperationName={onEditOperationName}
-          onEditQuery={onEditQuery}
-          onEditVariables={onEditVariables}
-          query={searchParams.get("query") || undefined}
+          operationName={initialOperationName}
+          query={initialQuery}
+          ref={graphiqlRef}
           schema={schema}
-          variables="{}"
+          toolbar={{
+            additionalContent: (
+              <button className="toolbar-button" onClick={onShare}>
+                Share
+              </button>
+            ),
+          }}
+          variables={initialVariables}
         />
       );
     }, {}),

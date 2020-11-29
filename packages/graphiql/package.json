@@ -10,15 +10,17 @@
     "dist"
   ],
   "scripts": {
-    "build": "webpack && cpy ../../node_modules/graphiql/graphiql.min.css dist/",
+    "build": "webpack && cpy src/css/graphiql.min.css dist/",
     "lint": "prettier --check . && tsc --noEmit"
   },
   "dependencies": {
     "@microsoft/fetch-event-source": "1.0.1",
     "@n1ru4l/graphql-live-query": "0.7.0",
-    "assert": "2.0.0",
-    "graphiql": "1.0.6",
+    "assert": "^2.0.0",
+    "copy-to-clipboard": "^3.3.1",
+    "graphiql": "^1.1.0",
     "graphql": "15.4.0",
+    "graphql-language-service-interface": "^2.4.3",
     "graphql-ws": "^2.0.0",
     "lodash": "4.17.20",
     "meros": "1.0.0-beta.9",
