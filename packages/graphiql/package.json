@@ -1,6 +1,6 @@
 {
   "name": "@graphql-helix/graphiql",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A highly evolved GraphQL HTTP Server 🧬",
   "repository": "https://github.com/contrawork/graphql-helix.git",
   "license": "MIT",
