@@ -12,9 +12,7 @@
     "packages/graphiql"
   ],
   "scripts": {
-    "build": "lerna run build",
-    "lint": "lerna run lint",
-    "test": "lerna run test",
+    "publish": "node scripts/publish",
     "update-examples": "node scripts/update-examples"
   },
   "husky": {
@@ -27,7 +25,6 @@
   },
   "devDependencies": {
     "husky": "^4.3.0",
-    "lerna": "^3.22.1",
     "lint-staged": "^10.5.1",
     "prettier": "^2.2.0"
   }
