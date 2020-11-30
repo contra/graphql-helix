@@ -154,9 +154,9 @@ Extracts the `query`, `variables` and `operationName` values from the request.
 ### `processRequest`
 
 ```ts
-function processRequest(
-  options: ProcessRequestOptions
-): Promise<ProcessRequestResult>;
+function processRequest<TContext, TRootValue>(
+  options: ProcessRequestOptions<TContext, TRootValue>
+): Promise<ProcessRequestResult<TContext, TRootValue>>;
 ```
 
 Takes the `schema`, `request`, `query`, `variables`, `operationName` and a number of other optional parameters and returns one of three kinds of results, depending on the sort of response the server should send back.
@@ -219,13 +219,13 @@ export interface RenderGraphiQLOptions {
   subscriptionsEndpoint?: string;
 }
 
-export interface ProcessRequestOptions {
+export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * A function whose return value is passed in as the `context` to `execute`.
    */
   contextFactory?: (
     executionContext: ExecutionContext
-  ) => Promise<unknown> | unknown;
+  ) => Promise<TContext> | TContext;
   /**
    * An optional function which will be used to execute instead of default `execute` from `graphql-js`.
    */
@@ -251,7 +251,7 @@ export interface ProcessRequestOptions {
    */
   rootValueFactory?: (
     executionContext: ExecutionContext
-  ) => Promise<unknown> | unknown;
+  ) => Promise<TRootValue> | TRootValue;
   /**
    * The GraphQL schema used to process the request.
    */
@@ -292,26 +292,41 @@ export type Headers =
   | Record<string, string | string[] | undefined>
   | { get(name: string): string | null };
 
-export interface Response {
+export interface Response<TContext, TRootValue> {
   type: "RESPONSE";
   status: number;
   headers: { name: string; value: string }[];
   payload: ExecutionResult;
+  context?: TContext;
+  rootValue?: TRootValue;
+  document?: DocumentNode;
+  operation?: OperationDefinitionNode;
 }
 
-export interface MultipartResponse {
+export interface MultipartResponse<TContext, TRootValue> {
   type: "MULTIPART_RESPONSE";
   subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
   unsubscribe: () => void;
+  context?: TContext;
+  rootValue?: TRootValue;
+  document?: DocumentNode;
+  operation?: OperationDefinitionNode;
 }
 
-export interface Push {
+export interface Push<TContext, TRootValue> {
   type: "PUSH";
   subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
   unsubscribe: () => void;
+  context?: TContext;
+  rootValue?: TRootValue;
+  document?: DocumentNode;
+  operation?: OperationDefinitionNode;
 }
 
-export type ProcessRequestResult = Response | MultipartResponse | Push;
+export type ProcessRequestResult<TContext, TRootValue> =
+  | Response<TContext, TRootValue>
+  | MultipartResponse<TContext, TRootValue>
+  | Push<TContext, TRootValue>;
 ```
 
 ## Recipes

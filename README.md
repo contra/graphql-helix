@@ -306,6 +306,8 @@ you want with the execution result before it's sent to the client:
 - Format your errors and mask them in production.
 - Add an `extensions` field to the response with additional metadata to send to the client
 
+In addition to the payload itself, `processRequest` will also return additional information about the request itself, like the parsed document, the operation that was executed and the context and root values that were generated. This makes it easy to provide additional information when logging requests or exceptions.
+
 See [here](examples/error-handling) for a basic example of error handling.
 
 </details>

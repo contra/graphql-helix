@@ -63,9 +63,9 @@ const getExecutableOperation = (
   return operation;
 };
 
-export const processRequest = async (
-  options: ProcessRequestOptions
-): Promise<ProcessRequestResult> => {
+export const processRequest = async <TContext = {}, TRootValue = {}>(
+  options: ProcessRequestOptions<TContext, TRootValue>
+): Promise<ProcessRequestResult<TContext, TRootValue>> => {
   const {
     contextFactory,
     execute = defaultExecute,
@@ -81,170 +81,191 @@ export const processRequest = async (
     variables,
   } = options;
 
-  const accept =
-    typeof request.headers.get === "function"
-      ? request.headers.get("accept")
-      : (request.headers as any).accept;
-  const isEventStream = accept === "text/event-stream";
+  let context: TContext | undefined;
+  let rootValue: TRootValue | undefined;
+  let document: DocumentNode | undefined;
+  let operation: OperationDefinitionNode | undefined;
 
-  try {
-    if (
-      !isHttpMethod("GET", request.method) &&
-      !isHttpMethod("POST", request.method)
-    ) {
-      throw new HttpError(405, "GraphQL only supports GET and POST requests.", {
-        headers: [{ name: "Allow", value: "GET, POST" }],
-      });
-    }
-
-    if (query == null) {
-      throw new HttpError(400, "Must provide query string.");
-    }
-
-    const document = parseQuery(query, parse);
-
-    validateDocument(schema, document, validate, validationRules);
-
-    const operation = getExecutableOperation(document, operationName);
-
-    if (
-      operation.operation === "mutation" &&
-      isHttpMethod("GET", request.method)
-    ) {
-      throw new HttpError(
-        405,
-        "Can only perform a mutation operation from a POST request.",
-        { headers: [{ name: "Allow", value: "POST" }] }
-      );
-    }
-
-    let variableValues: { [name: string]: any } | undefined;
+  const result = await (async (): Promise<
+    ProcessRequestResult<TContext, TRootValue>
+  > => {
+    const accept =
+      typeof request.headers.get === "function"
+        ? request.headers.get("accept")
+        : (request.headers as any).accept;
+    const isEventStream = accept === "text/event-stream";
 
     try {
-      if (variables) {
-        variableValues =
-          typeof variables === "string" ? JSON.parse(variables) : variables;
-      }
-    } catch (_error) {
-      throw new HttpError(400, "Variables are invalid JSON.");
-    }
-
-    try {
-      const executionContext = {
-        document,
-        operation,
-        variables: variableValues,
-      };
-      const contextValue = contextFactory
-        ? await contextFactory(executionContext)
-        : {};
-      const rootValue = rootValueFactory
-        ? await rootValueFactory(executionContext)
-        : {};
-
-      if (operation.operation === "subscription") {
-        const result = await subscribe(
-          schema,
-          document,
-          rootValue,
-          contextValue,
-          variableValues,
-          operationName
+      if (
+        !isHttpMethod("GET", request.method) &&
+        !isHttpMethod("POST", request.method)
+      ) {
+        throw new HttpError(
+          405,
+          "GraphQL only supports GET and POST requests.",
+          {
+            headers: [{ name: "Allow", value: "GET, POST" }],
+          }
         );
+      }
 
-        // If errors are encountered while subscribing to the operation, an execution result
-        // instead of an AsyncIterable.
-        if (isAsyncIterable<ExecutionResult>(result)) {
-          return {
-            type: "PUSH",
-            subscribe: async (onResult) => {
-              for await (const executionResult of result) {
-                onResult(executionResult);
-              }
-            },
-            unsubscribe: () => {
-              stopAsyncIteration(result);
-            },
-          };
-        } else {
-          if (isEventStream) {
+      if (query == null) {
+        throw new HttpError(400, "Must provide query string.");
+      }
+
+      document = parseQuery(query, parse);
+
+      validateDocument(schema, document, validate, validationRules);
+
+      operation = getExecutableOperation(document, operationName);
+
+      if (
+        operation.operation === "mutation" &&
+        isHttpMethod("GET", request.method)
+      ) {
+        throw new HttpError(
+          405,
+          "Can only perform a mutation operation from a POST request.",
+          { headers: [{ name: "Allow", value: "POST" }] }
+        );
+      }
+
+      let variableValues: { [name: string]: any } | undefined;
+
+      try {
+        if (variables) {
+          variableValues =
+            typeof variables === "string" ? JSON.parse(variables) : variables;
+        }
+      } catch (_error) {
+        throw new HttpError(400, "Variables are invalid JSON.");
+      }
+
+      try {
+        const executionContext = {
+          document,
+          operation,
+          variables: variableValues,
+        };
+        context = contextFactory
+          ? await contextFactory(executionContext)
+          : ({} as TContext);
+        rootValue = rootValueFactory
+          ? await rootValueFactory(executionContext)
+          : ({} as TRootValue);
+
+        if (operation.operation === "subscription") {
+          const result = await subscribe(
+            schema,
+            document,
+            rootValue,
+            context,
+            variableValues,
+            operationName
+          );
+
+          // If errors are encountered while subscribing to the operation, an execution result
+          // instead of an AsyncIterable.
+          if (isAsyncIterable<ExecutionResult>(result)) {
             return {
               type: "PUSH",
               subscribe: async (onResult) => {
-                onResult(result);
+                for await (const executionResult of result) {
+                  onResult(executionResult);
+                }
               },
-              unsubscribe: () => undefined,
+              unsubscribe: () => {
+                stopAsyncIteration(result);
+              },
             };
+          } else {
+            if (isEventStream) {
+              return {
+                type: "PUSH",
+                subscribe: async (onResult) => {
+                  onResult(result);
+                },
+                unsubscribe: () => undefined,
+              };
+            } else {
+              return {
+                type: "RESPONSE",
+                payload: result,
+                status: 200,
+                headers: [],
+              };
+            }
+          }
+        } else {
+          const result = await execute(
+            schema,
+            document,
+            rootValue,
+            context,
+            variableValues,
+            operationName
+          );
+
+          // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
+          // execution result.
+          if (isAsyncIterable<ExecutionPatchResult>(result)) {
+            return {
+              type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
+              subscribe: async (onResult) => {
+                for await (const payload of result) {
+                  onResult(payload);
+                }
+              },
+              unsubscribe: () => {
+                stopAsyncIteration(result);
+              },
+            } as MultipartResponse<TContext, TRootValue>;
           } else {
             return {
               type: "RESPONSE",
-              payload: result,
               status: 200,
               headers: [],
+              payload: result,
             };
           }
         }
-      } else {
-        const result = await execute(
-          schema,
-          document,
-          rootValue,
-          contextValue,
-          variableValues,
-          operationName
+      } catch (executionError) {
+        throw new HttpError(
+          500,
+          "Unexpected error encountered while executing GraphQL request.",
+          {
+            graphqlErrors: [new GraphQLError(executionError.message)],
+          }
         );
-
-        // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
-        // execution result.
-        if (isAsyncIterable<ExecutionPatchResult>(result)) {
-          return {
-            type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
-            subscribe: async (onResult) => {
-              for await (const payload of result) {
-                onResult(payload);
-              }
-            },
-            unsubscribe: () => {
-              stopAsyncIteration(result);
-            },
-          } as MultipartResponse;
-        } else {
-          return {
-            type: "RESPONSE",
-            status: 200,
-            headers: [],
-            payload: result,
-          };
-        }
       }
-    } catch (executionError) {
-      throw new HttpError(
-        500,
-        "Unexpected error encountered while executing GraphQL request.",
-        {
-          graphqlErrors: [new GraphQLError(executionError.message)],
-        }
-      );
-    }
-  } catch (error) {
-    const payload = {
-      errors: error.graphqlErrors || [new GraphQLError(error.message)],
-    };
-    if (isEventStream) {
-      return {
-        type: "PUSH",
-        subscribe: async (onResult) => {
-          onResult(payload);
-        },
-        unsubscribe: () => undefined,
+    } catch (error) {
+      const payload = {
+        errors: error.graphqlErrors || [new GraphQLError(error.message)],
       };
-    } else {
-      return {
-        type: "RESPONSE",
-        status: error.status || 500,
-        headers: error.headers || [],
-        payload,
-      };
+      if (isEventStream) {
+        return {
+          type: "PUSH",
+          subscribe: async (onResult) => {
+            onResult(payload);
+          },
+          unsubscribe: () => undefined,
+        };
+      } else {
+        return {
+          type: "RESPONSE",
+          status: error.status || 500,
+          headers: error.headers || [],
+          payload,
+        };
+      }
     }
-  }
+  })();
+
+  return {
+    ...result,
+    context,
+    rootValue,
+    document,
+    operation,
+  };
 };

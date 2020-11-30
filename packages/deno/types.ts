@@ -46,13 +46,13 @@ export interface RenderGraphiQLOptions {
   subscriptionsEndpoint?: string;
 }
 
-export interface ProcessRequestOptions {
+export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * A function whose return value is passed in as the `context` to `execute`.
    */
   contextFactory?: (
     executionContext: ExecutionContext
-  ) => Promise<unknown> | unknown;
+  ) => Promise<TContext> | TContext;
   /**
    * An optional function which will be used to execute instead of default `execute` from `graphql-js`.
    */
@@ -78,7 +78,7 @@ export interface ProcessRequestOptions {
    */
   rootValueFactory?: (
     executionContext: ExecutionContext
-  ) => Promise<unknown> | unknown;
+  ) => Promise<TRootValue> | TRootValue;
   /**
    * The GraphQL schema used to process the request.
    */
@@ -119,14 +119,23 @@ export type Headers =
   | Record<string, string | string[] | undefined>
   | { get(name: string): string | null };
 
-export interface Response {
+export interface Result<TContext, TRootValue> {
+  context?: TContext;
+  document?: DocumentNode;
+  operation?: OperationDefinitionNode;
+  rootValue?: TRootValue;
+}
+
+export interface Response<TContext, TRootValue>
+  extends Result<TContext, TRootValue> {
   type: "RESPONSE";
   status: number;
   headers: { name: string; value: string }[];
   payload: ExecutionResult;
 }
 
-export interface MultipartResponse {
+export interface MultipartResponse<TContext, TRootValue>
+  extends Result<TContext, TRootValue> {
   type: "MULTIPART_RESPONSE";
   subscribe: (
     onResult: (result: ExecutionPatchResult) => void
@@ -134,10 +143,14 @@ export interface MultipartResponse {
   unsubscribe: () => void;
 }
 
-export interface Push {
+export interface Push<TContext, TRootValue>
+  extends Result<TContext, TRootValue> {
   type: "PUSH";
   subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
   unsubscribe: () => void;
 }
 
-export type ProcessRequestResult = Response | MultipartResponse | Push;
+export type ProcessRequestResult<TContext, TRootValue> =
+  | Response<TContext, TRootValue>
+  | MultipartResponse<TContext, TRootValue>
+  | Push<TContext, TRootValue>;
