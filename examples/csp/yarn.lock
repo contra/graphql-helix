@@ -238,10 +238,10 @@ fresh@0.5.2:
   resolved "https://registry.yarnpkg.com/fresh/-/fresh-0.5.2.tgz#3d8cadd90d976569fa835ab1f8e4b23a105605a7"
   integrity sha1-PYyt2Q2XZWn6g1qx+OSyOhBWBac=
 
-graphql-helix@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/graphql-helix/-/graphql-helix-1.0.0.tgz#f215c8012f5f0a154552f9b50bba7c1f8dbc6717"
-  integrity sha512-OesjN0xsz57H3RlYlW+/Ssl8ikUYA63y1N/0DasyP+gJaBF66os9W0X08gw0gI1ZzIgPE4TgBlqGomBkTClNZw==
+graphql-helix@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/graphql-helix/-/graphql-helix-1.1.0.tgz#de5e8b74868b4f930536d767ff4502a0cf86c158"
+  integrity sha512-sFRBE+LPB4k9BKu9wUKXUJx1r9HbbnLrB1iEFvOI3hBLHuGrQ8vck+kfmFGGTEB7QPl8UO15r77K1BApzEjTuQ==
 
 graphql@15.4.0-experimental-stream-defer.1:
   version "15.4.0-experimental-stream-defer.1"
