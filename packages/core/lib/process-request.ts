@@ -69,6 +69,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
   const {
     contextFactory,
     execute = defaultExecute,
+    formatPayload = ({ payload }) => payload,
     operationName,
     parse = defaultParse,
     query,
@@ -170,8 +171,16 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             return {
               type: "PUSH",
               subscribe: async (onResult) => {
-                for await (const executionResult of result) {
-                  onResult(executionResult);
+                for await (const payload of result) {
+                  onResult(
+                    formatPayload({
+                      payload,
+                      context,
+                      rootValue,
+                      document,
+                      operation,
+                    })
+                  );
                 }
               },
               unsubscribe: () => {
@@ -183,14 +192,28 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
               return {
                 type: "PUSH",
                 subscribe: async (onResult) => {
-                  onResult(result);
+                  onResult(
+                    formatPayload({
+                      payload: result,
+                      context,
+                      rootValue,
+                      document,
+                      operation,
+                    })
+                  );
                 },
                 unsubscribe: () => undefined,
               };
             } else {
               return {
                 type: "RESPONSE",
-                payload: result,
+                payload: formatPayload({
+                  payload: result,
+                  context,
+                  rootValue,
+                  document,
+                  operation,
+                }),
                 status: 200,
                 headers: [],
               };
@@ -213,7 +236,15 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
               type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
               subscribe: async (onResult) => {
                 for await (const payload of result) {
-                  onResult(payload);
+                  onResult(
+                    formatPayload({
+                      payload,
+                      context,
+                      rootValue,
+                      document,
+                      operation,
+                    })
+                  );
                 }
               },
               unsubscribe: () => {
@@ -225,7 +256,13 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
               type: "RESPONSE",
               status: 200,
               headers: [],
-              payload: result,
+              payload: formatPayload({
+                payload: result,
+                context,
+                rootValue,
+                document,
+                operation,
+              }),
             };
           }
         }
@@ -246,7 +283,15 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         return {
           type: "PUSH",
           subscribe: async (onResult) => {
-            onResult(payload);
+            onResult(
+              formatPayload({
+                payload,
+                context,
+                rootValue,
+                document,
+                operation,
+              })
+            );
           },
           unsubscribe: () => undefined,
         };
@@ -255,7 +300,13 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           type: "RESPONSE",
           status: error.status || 500,
           headers: error.headers || [],
-          payload,
+          payload: formatPayload({
+            payload,
+            context,
+            rootValue,
+            document,
+            operation,
+          }),
         };
       }
     }

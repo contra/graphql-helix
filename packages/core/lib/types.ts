@@ -58,6 +58,11 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
    */
   execute?: (...args: any[]) => any;
   /**
+   * An optional function that can be used to transform every payload (i.e. the `data` object and `errors` array) that's
+   * emitted by `processRequest`.
+   */
+  formatPayload?: (params: FormatPayloadParams<TContext, TRootValue>) => any;
+  /**
    * The name of the Operation in the Document to execute.
    */
   operationName?: string;
@@ -100,6 +105,14 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
    * Values for any Variables defined by the Operation.
    */
   variables?: string | { [name: string]: any };
+}
+
+export interface FormatPayloadParams<TContext, TRootValue> {
+  payload: ExecutionResult | ExecutionPatchResult;
+  context?: TContext;
+  document?: DocumentNode;
+  operation?: OperationDefinitionNode;
+  rootValue?: TRootValue;
 }
 
 export interface ExecutionContext {
