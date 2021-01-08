@@ -1,11 +1,23 @@
 import {
   DocumentNode,
-  ExecutionPatchResult,
   ExecutionResult,
+  GraphQLError,
   GraphQLSchema,
   OperationDefinitionNode,
   ValidationRule,
 } from "graphql";
+
+export interface ExecutionPatchResult<
+  TData = { [key: string]: any },
+  TExtensions = { [key: string]: any }
+> {
+  errors?: ReadonlyArray<GraphQLError>;
+  data?: TData | null;
+  path?: ReadonlyArray<string | number>;
+  label?: string;
+  hasNext: boolean;
+  extensions?: TExtensions;
+}
 
 export interface GraphQLParams {
   operationName?: string;

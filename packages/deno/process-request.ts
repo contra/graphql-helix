@@ -10,7 +10,6 @@ import {
   OperationDefinitionNode,
   ValidationRule,
   ExecutionResult,
-  ExecutionPatchResult,
 } from "https://cdn.skypack.dev/graphql@15.4.0-experimental-stream-defer.1?dts";
 import {
   stopAsyncIteration,
@@ -19,6 +18,7 @@ import {
 } from "./util/index.ts";
 import { HttpError } from "./errors.ts";
 import {
+  ExecutionPatchResult,
   MultipartResponse,
   ProcessRequestOptions,
   ProcessRequestResult,

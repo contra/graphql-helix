@@ -10,11 +10,11 @@ import {
   OperationDefinitionNode,
   ValidationRule,
   ExecutionResult,
-  ExecutionPatchResult,
 } from "graphql";
 import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util";
 import { HttpError } from "./errors";
 import {
+  ExecutionPatchResult,
   MultipartResponse,
   ProcessRequestOptions,
   ProcessRequestResult,
