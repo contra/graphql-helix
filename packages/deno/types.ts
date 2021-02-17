@@ -1,6 +1,7 @@
 import {
   DocumentNode,
   ExecutionResult,
+  getOperationAST,
   GraphQLError,
   GraphQLSchema,
   OperationDefinitionNode,
@@ -117,6 +118,16 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
    * Values for any Variables defined by the Operation.
    */
   variables?: string | { [name: string]: any };
+  /**
+   * Allow you to override the extraction of the operation to execute
+   */
+  getOperationAstFn?: typeof getOperationAST;
+  /**
+   *
+   */
+  variablesFactory?: (
+    variables: string | { [name: string]: any } | undefined
+  ) => { [name: string]: any } | undefined;
 }
 
 export interface FormatPayloadParams<TContext, TRootValue> {

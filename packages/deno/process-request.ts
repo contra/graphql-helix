@@ -11,11 +11,7 @@ import {
   ValidationRule,
   ExecutionResult,
 } from "https://cdn.skypack.dev/graphql@15.4.0-experimental-stream-defer.1?dts";
-import {
-  stopAsyncIteration,
-  isAsyncIterable,
-  isHttpMethod,
-} from "./util/index.ts";
+import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index.ts";
 import { HttpError } from "./errors.ts";
 import {
   ExecutionPatchResult,
@@ -56,15 +52,36 @@ export const validateDocument = (
 
 const getExecutableOperation = (
   document: DocumentNode,
-  operationName?: string
+  operationName?: string,
+  getOperationAstFn: typeof getOperationAST = getOperationAST
 ): OperationDefinitionNode => {
-  const operation = getOperationAST(document, operationName);
+  const operation = getOperationAstFn(document, operationName);
 
   if (!operation) {
     throw new HttpError(400, "Could not determine what operation to execute.");
   }
 
   return operation;
+};
+
+const defaultVariablesParser = (
+  variables: string | { [name: string]: any } | undefined
+) =>
+  variables
+    ? typeof variables === "string"
+      ? JSON.parse(variables)
+      : variables
+    : undefined;
+
+const parseVariables = (
+  variables: string | { [name: string]: any } | undefined,
+  variablesFactoryFn = defaultVariablesParser
+) => {
+  try {
+    return variablesFactoryFn(variables);
+  } catch (_error) {
+    throw new HttpError(400, "Variables are invalid JSON.");
+  }
 };
 
 export const processRequest = async <TContext = {}, TRootValue = {}>(
@@ -84,6 +101,8 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
     validate = defaultValidate,
     validationRules,
     variables,
+    getOperationAstFn,
+    variablesFactory,
   } = options;
 
   let context: TContext | undefined;
@@ -122,7 +141,11 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
 
       validateDocument(schema, document, validate, validationRules);
 
-      operation = getExecutableOperation(document, operationName);
+      operation = getExecutableOperation(
+        document,
+        operationName,
+        getOperationAstFn
+      );
 
       if (
         operation.operation === "mutation" &&
@@ -135,16 +158,10 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         );
       }
 
-      let variableValues: { [name: string]: any } | undefined;
-
-      try {
-        if (variables) {
-          variableValues =
-            typeof variables === "string" ? JSON.parse(variables) : variables;
-        }
-      } catch (_error) {
-        throw new HttpError(400, "Variables are invalid JSON.");
-      }
+      let variableValues: { [name: string]: any } | undefined = parseVariables(
+        variables,
+        variablesFactory
+      );
 
       try {
         const executionContext = {
