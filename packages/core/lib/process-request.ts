@@ -75,12 +75,16 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
     query,
     request,
     rootValueFactory,
-    schema,
+    schema: sourceSchema,
     subscribe = defaultSubscribe,
     validate = defaultValidate,
     validationRules,
     variables,
   } = options;
+
+  const schema = await (typeof sourceSchema === "function"
+    ? sourceSchema(request)
+    : sourceSchema);
 
   let context: TContext | undefined;
   let rootValue: TRootValue | undefined;

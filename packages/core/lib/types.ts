@@ -99,7 +99,10 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * The GraphQL schema used to process the request.
    */
-  schema: GraphQLSchema;
+  schema:
+    | GraphQLSchema
+    | Promise<GraphQLSchema>
+    | ((request: Request) => Promise<GraphQLSchema> | GraphQLSchema);
   /**
    * An optional function which will be used to subscribe instead of default `subscribe` from `graphql-js`.
    */
