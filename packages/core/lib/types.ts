@@ -58,6 +58,10 @@ export interface RenderGraphiQLOptions {
   subscriptionsEndpoint?: string;
 }
 
+export type ExternalOptionsProviderFn<TContext, TRootValue> = () =>
+  | ProcessRequestOptions<TContext, TRootValue>
+  | Promise<ProcessRequestOptions<TContext, TRootValue>>;
+
 export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * A function whose return value is passed in as the `context` to `execute`.

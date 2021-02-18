@@ -15,6 +15,7 @@ import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util";
 import { HttpError } from "./errors";
 import {
   ExecutionPatchResult,
+  ExternalOptionsProviderFn,
   MultipartResponse,
   ProcessRequestOptions,
   ProcessRequestResult,
@@ -64,7 +65,9 @@ const getExecutableOperation = (
 };
 
 export const processRequest = async <TContext = {}, TRootValue = {}>(
-  options: ProcessRequestOptions<TContext, TRootValue>
+  options:
+    | ProcessRequestOptions<TContext, TRootValue>
+    | ExternalOptionsProviderFn<TContext, TRootValue>
 ): Promise<ProcessRequestResult<TContext, TRootValue>> => {
   const {
     contextFactory,
@@ -80,7 +83,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
     validate = defaultValidate,
     validationRules,
     variables,
-  } = options;
+  } = typeof options === "function" ? await options() : options;
 
   let context: TContext | undefined;
   let rootValue: TRootValue | undefined;
