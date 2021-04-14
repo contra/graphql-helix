@@ -128,6 +128,7 @@ export interface FormatPayloadParams<TContext, TRootValue> {
 }
 
 export interface ExecutionContext {
+  request: Request;
   document: DocumentNode;
   operation: OperationDefinitionNode;
   variables?: { readonly [name: string]: unknown };
