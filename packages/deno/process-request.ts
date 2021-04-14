@@ -18,6 +18,7 @@ import {
 } from "./util/index.ts";
 import { HttpError } from "./errors.ts";
 import {
+  ExecutionContext,
   ExecutionPatchResult,
   MultipartResponse,
   ProcessRequestOptions,
@@ -147,7 +148,8 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
       }
 
       try {
-        const executionContext = {
+        const executionContext: ExecutionContext = {
+          request,
           document,
           operation,
           variables: variableValues,
