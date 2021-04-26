@@ -69,7 +69,7 @@ const isAsyncIterable = (input: unknown): input is AsyncIterable<unknown> => {
 const buildGraphQLUrl = (
   baseUrl: string,
   query: string | undefined,
-  variables: string | undefined,
+  variables: string | object | undefined,
   operationName: string | undefined
 ): string => {
   const url = new URL(baseUrl);
@@ -82,7 +82,10 @@ const buildGraphQLUrl = (
     searchParams.set("operationName", operationName);
   }
   if (variables) {
-    searchParams.set("variables", variables);
+    searchParams.set(
+      "variables",
+      typeof variables === "object" ? JSON.stringify(variables) : variables
+    );
   }
 
   url.search = searchParams.toString();
