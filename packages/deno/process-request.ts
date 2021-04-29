@@ -28,12 +28,21 @@ import {
 const parseQuery = (
   query: string | DocumentNode,
   parse: typeof defaultParse
-): DocumentNode => {
+): DocumentNode | Promise<DocumentNode> => {
   if (typeof query !== "string" && query.kind === "Document") {
     return query;
   }
   try {
-    return parse(query as string);
+    const parseResult = parse(query as string);
+
+    if (parseResult instanceof Promise) {
+      return parseResult.catch((syntaxError) => {
+        throw new HttpError(400, "GraphQL syntax error.", {
+          graphqlErrors: [syntaxError],
+        });
+      });
+    }
+    return parseResult;
   } catch (syntaxError) {
     throw new HttpError(400, "GraphQL syntax error.", {
       graphqlErrors: [syntaxError],
@@ -119,7 +128,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         throw new HttpError(400, "Must provide query string.");
       }
 
-      document = parseQuery(query, parse);
+      document = await parseQuery(query, parse);
 
       validateDocument(schema, document, validate, validationRules);
 
