@@ -72,7 +72,6 @@ const buildGraphQLUrl = (
   variables: string | object | undefined,
   operationName: string | undefined
 ): string => {
-  const url = new URL(baseUrl);
   const searchParams = new URLSearchParams();
 
   if (query) {
@@ -88,9 +87,7 @@ const buildGraphQLUrl = (
     );
   }
 
-  url.search = searchParams.toString();
-
-  return url.toString();
+  return `${baseUrl}?${searchParams.toString()}`;
 };
 
 const getSinkFromArguments = (args: IArguments): Sink => {
