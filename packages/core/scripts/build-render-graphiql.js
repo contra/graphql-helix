@@ -65,7 +65,6 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
     <style \${nonceAttribute}>\${css}</style>
   </head>
   <body>
-    <script>setImmediate = setTimeout</script>
     <script \${nonceAttribute}>\${javascript}</script>
     <script \${nonceAttribute}>
       GraphQLHelixGraphiQL.init({

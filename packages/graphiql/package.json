@@ -14,7 +14,7 @@
     "lint": "prettier --check . && tsc --noEmit"
   },
   "dependencies": {
-    "@graphql-tools/url-loader": "6.10.0-alpha-827de7dd.0",
+    "@graphql-tools/url-loader": "6.10.0-alpha-3fd76310.0",
     "@microsoft/fetch-event-source": "1.0.1",
     "@n1ru4l/graphql-live-query": "0.7.0",
     "assert": "^2.0.0",

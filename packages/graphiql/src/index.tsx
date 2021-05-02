@@ -102,7 +102,7 @@ export const init = async ({
           fetcher={(graphQLParams, opts) => {
             return {
               subscribe(sink) {
-                let unsubscribe = () => {};
+                let stopSubscription = () => {};
                 Promise.resolve().then(async () => {
                   try {
                     const operationAst = getOperationAST(
@@ -125,8 +125,12 @@ export const init = async ({
                       isSubscription || isLiveQuery ? subscriber : executor;
                     const res = await queryFn(executionParams);
                     if (isAsyncIterable(res)) {
-                      if ("return" in res) {
-                        unsubscribe = res!.return!.bind(res);
+                      const asyncIterable = res[Symbol.asyncIterator]();
+                      if ("return" in asyncIterable) {
+                        stopSubscription = () => {
+                          asyncIterable.return();
+                          sink.complete();
+                        };
                       }
                       for await (const part of res) {
                         sink.next(part);
@@ -145,7 +149,7 @@ export const init = async ({
                     }
                   }
                 });
-                return { unsubscribe };
+                return { unsubscribe: () => stopSubscription() };
               },
             };
           }}
