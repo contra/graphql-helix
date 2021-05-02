@@ -1,23 +1,19 @@
 import { isLiveQueryOperationDefinitionNode } from "@n1ru4l/graphql-live-query";
 import copyToClipboard from "copy-to-clipboard";
-import {
-  getOperationAST,
-  parse,
-  print,
-} from "graphql";
+import { getOperationAST, parse, print } from "graphql";
 import GraphiQL from "graphiql";
 import React from "react";
 import ReactDOM from "react-dom";
 import { UrlLoader, LoadFromUrlOptions } from "@graphql-tools/url-loader";
 
-export type Options = Omit<LoadFromUrlOptions, 'headers'> & {
+export type Options = Omit<LoadFromUrlOptions, "headers"> & {
   defaultQuery?: string;
   defaultVariableEditorOpen?: boolean;
   endpoint?: string;
   headers?: string;
   headerEditorEnabled?: boolean;
   subscriptionsEndpoint?: string;
-}
+};
 
 const isAsyncIterable = (input: unknown): input is AsyncIterable<unknown> => {
   return (
@@ -58,13 +54,17 @@ export const init = async ({
   ...options
 }: Options = {}) => {
   const urlLoader = new UrlLoader();
-  const { schema, executor, subscriber } = await urlLoader.getSubschemaConfigAsync(endpoint, {
-    useSSEForSubscription: !options?.subscriptionsEndpoint?.startsWith('ws'),
+  const {
+    schema,
+    executor,
+    subscriber,
+  } = await urlLoader.getSubschemaConfigAsync(endpoint, {
+    useSSEForSubscription: !options?.subscriptionsEndpoint?.startsWith("ws"),
     specifiedByUrl: true,
     directiveIsRepeatable: true,
     schemaDescription: true,
     ...options,
-    headers: (executionParams) => executionParams?.context?.headers || {}
+    headers: (executionParams) => executionParams?.context?.headers || {},
   });
 
   const searchParams = new URLSearchParams(window.location.search);
@@ -105,12 +105,15 @@ export const init = async ({
                 let unsubscribe = () => {};
                 Promise.resolve().then(async () => {
                   try {
-                  const operationAst = getOperationAST(
-                    parse(graphQLParams.query),
-                    graphQLParams.operationName
-                  )!;
-                  const isLiveQuery = isLiveQueryOperationDefinitionNode(operationAst);
-                  const isSubscription = operationAst.operation === "subscription";
+                    const operationAst = getOperationAST(
+                      parse(graphQLParams.query),
+                      graphQLParams.operationName
+                    )!;
+                    const isLiveQuery = isLiveQueryOperationDefinitionNode(
+                      operationAst
+                    );
+                    const isSubscription =
+                      operationAst.operation === "subscription";
                     const executionParams: Parameters<typeof subscriber>[0] = {
                       document: parse(print(operationAst!)),
                       variables: graphQLParams.variables,
@@ -118,10 +121,11 @@ export const init = async ({
                         headers: opts?.headers,
                       },
                     };
-                    const queryFn: any = (isSubscription || isLiveQuery) ? subscriber : executor
+                    const queryFn: any =
+                      isSubscription || isLiveQuery ? subscriber : executor;
                     const res = await queryFn(executionParams);
                     if (isAsyncIterable(res)) {
-                      if ('return' in res) {
+                      if ("return" in res) {
                         unsubscribe = res!.return!.bind(res);
                       }
                       for await (const part of res) {
@@ -134,7 +138,7 @@ export const init = async ({
                     }
                   } catch (error) {
                     if (typeof error.json === "function") {
-                      const errRes = await error.json()
+                      const errRes = await error.json();
                       sink.error(errRes);
                     } else {
                       sink.error(error);
