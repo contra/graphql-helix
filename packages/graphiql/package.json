@@ -14,12 +14,13 @@
     "lint": "prettier --check . && tsc --noEmit"
   },
   "dependencies": {
+    "@graphql-tools/url-loader": "6.10.0-alpha-827de7dd.0",
     "@microsoft/fetch-event-source": "1.0.1",
     "@n1ru4l/graphql-live-query": "0.7.0",
     "assert": "^2.0.0",
     "copy-to-clipboard": "^3.3.1",
     "graphiql": "^1.1.0",
-    "graphql": "15.4.0",
+    "graphql": "15.4.0-experimental-stream-defer.1",
     "graphql-language-service-interface": "^2.4.3",
     "graphql-ws": "^2.0.0",
     "lodash": "4.17.20",
