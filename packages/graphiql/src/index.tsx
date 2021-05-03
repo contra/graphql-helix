@@ -24,7 +24,7 @@ export const init = async ({
   headers = "{}",
   headerEditorEnabled = true,
   subscriptionsEndpoint = endpoint,
-  useWebSocketLegacyProtocol
+  useWebSocketLegacyProtocol,
 }: Options = {}) => {
   const urlLoader = new UrlLoader();
   const {
