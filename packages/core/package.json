@@ -29,7 +29,7 @@
   ],
   "scripts": {
     "build": "yarn build-render-graphiql && yarn build-deno && yarn run build-node",
-    "build-deno": "denoify && del-cli ../deno --force && move-file deno_dist ../deno",
+    "build-deno": "denoify && del-cli ../deno --force && move-file deno_dist ../deno && cp ../../README.md ../deno",
     "build-node": "del-cli dist && tsc",
     "build-render-graphiql": "node scripts/build-render-graphiql",
     "lint": "prettier --check . && tsc --noEmit",

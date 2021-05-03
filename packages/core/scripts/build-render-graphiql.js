@@ -33,6 +33,7 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
     headerEditorEnabled,
     nonce,
     subscriptionsEndpoint,
+    useWebSocketLegacyProtocol,
   } = options;
   const nonceAttribute = nonce ? \`nonce="\${nonce}"\` : "";
   const css = ${JSON.stringify(css)};
@@ -74,6 +75,7 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
         headers: \${safeSerialize(headers)},
         headerEditorEnabled: \${safeSerialize(headerEditorEnabled)},
         subscriptionsEndpoint: \${safeSerialize(subscriptionsEndpoint)},
+        useWebSocketLegacyProtocol: \${safeSerialize(useWebSocketLegacyProtocol)},
       });
     </script>
   </body>

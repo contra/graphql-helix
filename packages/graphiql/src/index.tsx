@@ -14,6 +14,7 @@ export interface Options {
   headers?: string;
   headerEditorEnabled?: boolean;
   subscriptionsEndpoint?: string;
+  useWebSocketLegacyProtocol?: boolean;
 }
 
 export const init = async ({
@@ -23,6 +24,7 @@ export const init = async ({
   headers = "{}",
   headerEditorEnabled = true,
   subscriptionsEndpoint = endpoint,
+  useWebSocketLegacyProtocol
 }: Options = {}) => {
   const urlLoader = new UrlLoader();
   const {
@@ -35,6 +37,7 @@ export const init = async ({
     directiveIsRepeatable: true,
     schemaDescription: true,
     subscriptionsEndpoint,
+    useWebSocketLegacyProtocol,
     headers: (executionParams) => executionParams?.context?.headers || {},
   });
 
