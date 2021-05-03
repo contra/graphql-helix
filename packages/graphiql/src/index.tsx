@@ -114,7 +114,7 @@ export const init = async ({
                     );
                     const isSubscription =
                       operationAst.operation === "subscription";
-                    const executionParams: Parameters<typeof subscriber>[0] = {
+                    const executionParams = {
                       document: parse(print(operationAst!)),
                       variables: graphQLParams.variables,
                       context: {
@@ -126,9 +126,9 @@ export const init = async ({
                     const res = await queryFn(executionParams);
                     if (isAsyncIterable(res)) {
                       const asyncIterable = res[Symbol.asyncIterator]();
-                      if ("return" in asyncIterable) {
+                      if (asyncIterable.return) {
                         stopSubscription = () => {
-                          asyncIterable.return();
+                          asyncIterable.return!();
                           sink.complete();
                         };
                       }
