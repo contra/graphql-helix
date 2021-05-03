@@ -23,11 +23,7 @@ app.use("/graphql", async (req, res) => {
   };
 
   if (shouldRenderGraphiQL(request)) {
-    res.send(
-      renderGraphiQL({
-        subscriptionsEndpoint: "http://localhost:4000/graphql",
-      })
-    );
+    res.send(renderGraphiQL());
   } else {
     const { operationName, query, variables } = getGraphQLParameters(request);
 
