@@ -4,7 +4,8 @@ import { getOperationAST, parse, print } from "graphql";
 import GraphiQL from "graphiql";
 import React from "react";
 import ReactDOM from "react-dom";
-import { UrlLoader, LoadFromUrlOptions } from "@graphql-tools/url-loader";
+import { UrlLoader } from "@graphql-tools/url-loader";
+import { isAsyncIterable } from "@graphql-tools/utils";
 
 export interface Options {
   defaultQuery?: string;
@@ -13,37 +14,7 @@ export interface Options {
   headers?: string;
   headerEditorEnabled?: boolean;
   subscriptionsEndpoint?: string;
-};
-
-const isAsyncIterable = (input: unknown): input is AsyncIterable<unknown> => {
-  return (
-    typeof input === "object" && input != null && Symbol.asyncIterator in input
-  );
-};
-
-const buildGraphQLUrl = (
-  baseUrl: string,
-  query: string | undefined,
-  variables: string | object | undefined,
-  operationName: string | undefined
-): string => {
-  const searchParams = new URLSearchParams();
-
-  if (query) {
-    searchParams.set("query", query);
-  }
-  if (operationName) {
-    searchParams.set("operationName", operationName);
-  }
-  if (variables) {
-    searchParams.set(
-      "variables",
-      typeof variables === "object" ? JSON.stringify(variables) : variables
-    );
-  }
-
-  return `${baseUrl}?${searchParams.toString()}`;
-};
+}
 
 export const init = async ({
   defaultQuery,
@@ -51,7 +22,7 @@ export const init = async ({
   endpoint = "/graphql",
   headers = "{}",
   headerEditorEnabled = true,
-  subscriptionsEndpoint = endpoint
+  subscriptionsEndpoint = endpoint,
 }: Options = {}) => {
   const urlLoader = new UrlLoader();
   const {
@@ -86,12 +57,12 @@ export const init = async ({
         });
 
         copyToClipboard(
-          buildGraphQLUrl(
-            window.location.href,
-            state?.query,
-            state?.variables,
-            state?.operationName
-          )
+          urlLoader.prepareGETUrl({
+            baseUrl: window.location.href,
+            query: state?.query || "",
+            variables: state?.variables,
+            operationName: state?.operationName,
+          })
         );
       };
 
@@ -99,60 +70,58 @@ export const init = async ({
         <GraphiQL
           defaultQuery={defaultQuery}
           defaultVariableEditorOpen={defaultVariableEditorOpen}
-          fetcher={(graphQLParams, opts) => {
-            return {
-              subscribe(sink) {
-                let stopSubscription = () => {};
-                Promise.resolve().then(async () => {
-                  try {
-                    const operationAst = getOperationAST(
-                      parse(graphQLParams.query),
-                      graphQLParams.operationName
-                    )!;
-                    const isLiveQuery = isLiveQueryOperationDefinitionNode(
-                      operationAst
-                    );
-                    const isSubscription =
-                      operationAst.operation === "subscription";
-                    const executionParams = {
-                      document: parse(print(operationAst!)),
-                      variables: graphQLParams.variables,
-                      context: {
-                        headers: opts?.headers,
-                      },
-                    };
-                    const queryFn: any =
-                      isSubscription || isLiveQuery ? subscriber : executor;
-                    const res = await queryFn(executionParams);
-                    if (isAsyncIterable(res)) {
-                      const asyncIterable = res[Symbol.asyncIterator]();
-                      if (asyncIterable.return) {
-                        stopSubscription = () => {
-                          asyncIterable.return!();
-                          sink.complete();
-                        };
-                      }
-                      for await (const part of res) {
-                        sink.next(part);
-                      }
-                      sink.complete();
-                    } else {
-                      sink.next(res);
-                      sink.complete();
+          fetcher={(graphQLParams, opts) => ({
+            subscribe: (observer) => {
+              let stopSubscription = () => {};
+              Promise.resolve().then(async () => {
+                try {
+                  const operationAst = getOperationAST(
+                    parse(graphQLParams.query),
+                    graphQLParams.operationName
+                  )!;
+                  const isLiveQuery = isLiveQueryOperationDefinitionNode(
+                    operationAst
+                  );
+                  const isSubscription =
+                    operationAst.operation === "subscription";
+                  const executionParams = {
+                    document: parse(print(operationAst!)),
+                    variables: graphQLParams.variables,
+                    context: {
+                      headers: opts?.headers,
+                    },
+                  };
+                  const queryFn: any =
+                    isSubscription || isLiveQuery ? subscriber : executor;
+                  const res = await queryFn(executionParams);
+                  if (isAsyncIterable(res)) {
+                    const asyncIterable = res[Symbol.asyncIterator]();
+                    if (asyncIterable.return) {
+                      stopSubscription = () => {
+                        asyncIterable.return!();
+                        observer.complete();
+                      };
                     }
-                  } catch (error) {
-                    if (typeof error.json === "function") {
-                      const errRes = await error.json();
-                      sink.error(errRes);
-                    } else {
-                      sink.error(error);
+                    for await (const part of res) {
+                      observer.next(part);
                     }
+                    observer.complete();
+                  } else {
+                    observer.next(res);
+                    observer.complete();
                   }
-                });
-                return { unsubscribe: () => stopSubscription() };
-              },
-            };
-          }}
+                } catch (error) {
+                  if (typeof error.json === "function") {
+                    const errRes = await error.json();
+                    observer.error(errRes);
+                  } else {
+                    observer.error(error);
+                  }
+                }
+              });
+              return { unsubscribe: () => stopSubscription() };
+            },
+          })}
           headers={headers}
           headerEditorEnabled={headerEditorEnabled}
           operationName={initialOperationName}
