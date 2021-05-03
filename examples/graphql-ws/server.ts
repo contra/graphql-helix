@@ -1,5 +1,10 @@
 import express from "express";
-import { getGraphQLParameters, processRequest } from "graphql-helix";
+import {
+  getGraphQLParameters,
+  processRequest,
+  renderGraphiQL,
+  shouldRenderGraphiQL,
+} from "graphql-helix";
 import { execute, subscribe, GraphQLError } from "graphql";
 import { createServer } from "graphql-ws";
 import { schema } from "./schema";
@@ -15,7 +20,14 @@ app.use("/graphql", async (req, res) => {
     method: req.method,
     query: req.query,
   };
-
+  if (shouldRenderGraphiQL(request)) {
+    res.send(
+      renderGraphiQL({
+        subscriptionsEndpoint: "ws://localhost:4000/graphql",
+      })
+    );
+    return;
+  }
   const { operationName, query, variables } = getGraphQLParameters(request);
 
   const result = await processRequest({

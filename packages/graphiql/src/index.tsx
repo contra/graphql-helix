@@ -6,7 +6,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { UrlLoader, LoadFromUrlOptions } from "@graphql-tools/url-loader";
 
-export type Options = Omit<LoadFromUrlOptions, "headers"> & {
+export interface Options {
   defaultQuery?: string;
   defaultVariableEditorOpen?: boolean;
   endpoint?: string;
@@ -51,7 +51,7 @@ export const init = async ({
   endpoint = "/graphql",
   headers = "{}",
   headerEditorEnabled = true,
-  ...options
+  subscriptionsEndpoint = endpoint
 }: Options = {}) => {
   const urlLoader = new UrlLoader();
   const {
@@ -59,11 +59,11 @@ export const init = async ({
     executor,
     subscriber,
   } = await urlLoader.getSubschemaConfigAsync(endpoint, {
-    useSSEForSubscription: !options?.subscriptionsEndpoint?.startsWith("ws"),
+    useSSEForSubscription: !subscriptionsEndpoint?.startsWith("ws"),
     specifiedByUrl: true,
     directiveIsRepeatable: true,
     schemaDescription: true,
-    ...options,
+    subscriptionsEndpoint,
     headers: (executionParams) => executionParams?.context?.headers || {},
   });
 
