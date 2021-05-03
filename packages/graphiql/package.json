@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "build": "webpack && cpy src/css/graphiql.min.css dist/",
-    "lint": "prettier --check . && tsc --noEmit"
+    "lint": "prettier --check ."
   },
   "dependencies": {
     "@graphql-tools/url-loader": "6.10.0",

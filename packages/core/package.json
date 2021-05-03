@@ -32,7 +32,7 @@
     "build-deno": "denoify && del-cli ../deno --force && move-file deno_dist ../deno && cp ../../README.md ../deno",
     "build-node": "del-cli dist && tsc",
     "build-render-graphiql": "node scripts/build-render-graphiql",
-    "lint": "prettier --check . && yarn build --noEmit",
+    "lint": "prettier --check .",
     "test": "jest test/integration.test.ts"
   },
   "devDependencies": {
