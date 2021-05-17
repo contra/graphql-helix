@@ -16,7 +16,7 @@ GraphQL Helix is a collection of utility functions for building your own GraphQL
 - **HTTP first.** GraphQL Helix allows you to create a [GraphQL over HTTP](https://github.com/graphql/graphql-over-http) specification-compliant server, while exposing a single HTTP endpoint for everything from documentation to subscriptions.
 - **Server push and client pull.** GraphQL Helix supports real-time requests with both subscriptions and `@defer` and `@stream` directives.
 - **Flexible.** GraphQL Helix abstracts away logic that's common to all GraphQL HTTP servers, while leaving the implementation to you. Implement the features you want and take full control of your transport layer.
-- **Minimal.** No bloat. No paid platform intergration. Zero dependencies outside of `graphql-js`.
+- **Minimal.** No bloat. No paid platform integration. Zero dependencies outside of `graphql-js`.
 
 ## Installation
 
@@ -154,9 +154,9 @@ Extracts the `query`, `variables` and `operationName` values from the request.
 ### `processRequest`
 
 ```ts
-function processRequest<TContext, TRootValue>(
-  options: ProcessRequestOptions<TContext, TRootValue>
-): Promise<ProcessRequestResult<TContext, TRootValue>>;
+function processRequest(
+  options: ProcessRequestOptions
+): Promise<ProcessRequestResult>;
 ```
 
 Takes the `schema`, `request`, `query`, `variables`, `operationName` and a number of other optional parameters and returns one of three kinds of results, depending on the sort of response the server should send back.
@@ -194,42 +194,27 @@ export interface RenderGraphiQLOptions {
    */
   defaultQuery?: string;
   /**
-   * Whether to open the variable editor by default. Defaults to `true`.
+   * The endpoint requests should be sent. Defaults to `/graphql`.
    */
-  defaultVariableEditorOpen?: boolean;
-  /**
-   * The endpoint requests should be sent. Defaults to `"/graphql"`.
-   */
-  endpoint?: string;
-  /**
-   * The initial headers to render inside the header editor. Defaults to `"{}"`.
-   */
-  headers?: string;
-  /**
-   * Whether the header editor is enabled. Defaults to `true`.
-   */
-  headerEditorEnabled?: boolean;
-  /**
-   * A cryptographic nonce for use with Content-Security-Policy.
-   */
-  nonce?: string;
-  /**
-   * The endpoint subscription requests should be sent to. Defaults to the value of the `endpoint` parameter.
-   */
-  subscriptionsEndpoint?: string;
+  graphqlEndpoint?: string;
 }
 
-export interface ProcessRequestOptions<TContext, TRootValue> {
+export interface ProcessRequestOptions {
   /**
    * A function whose return value is passed in as the `context` to `execute`.
    */
   contextFactory?: (
     executionContext: ExecutionContext
-  ) => Promise<TContext> | TContext;
+  ) => Promise<unknown> | unknown;
   /**
    * An optional function which will be used to execute instead of default `execute` from `graphql-js`.
    */
   execute?: typeof execute;
+  /**
+   * An optional function that can be used to transform every payload (i.e. the `data` object and `errors` array) that's
+   * emitted by `processRequest`.
+   */
+  formatPayload?: (params: FormatPayloadParams<TContext, TRootValue>) => any;
   /**
    * The name of the Operation in the Document to execute.
    */
@@ -251,7 +236,7 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
    */
   rootValueFactory?: (
     executionContext: ExecutionContext
-  ) => Promise<TRootValue> | TRootValue;
+  ) => Promise<unknown> | unknown;
   /**
    * The GraphQL schema used to process the request.
    */
@@ -275,6 +260,14 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
   variables?: string | { [name: string]: any };
 }
 
+export interface FormatPayloadParams<TContext, TRootValue> {
+  payload: ExecutionResult | ExecutionPatchResult;
+  context?: TContext;
+  document?: DocumentNode;
+  operation?: OperationDefinitionNode;
+  rootValue?: TRootValue;
+}
+
 export interface ExecutionContext {
   document: DocumentNode;
   operation: OperationDefinitionNode;
@@ -292,41 +285,26 @@ export type Headers =
   | Record<string, string | string[] | undefined>
   | { get(name: string): string | null };
 
-export interface Response<TContext, TRootValue> {
+export interface Response {
   type: "RESPONSE";
   status: number;
   headers: { name: string; value: string }[];
   payload: ExecutionResult;
-  context?: TContext;
-  rootValue?: TRootValue;
-  document?: DocumentNode;
-  operation?: OperationDefinitionNode;
 }
 
-export interface MultipartResponse<TContext, TRootValue> {
+export interface MultipartResponse {
   type: "MULTIPART_RESPONSE";
   subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
   unsubscribe: () => void;
-  context?: TContext;
-  rootValue?: TRootValue;
-  document?: DocumentNode;
-  operation?: OperationDefinitionNode;
 }
 
-export interface Push<TContext, TRootValue> {
+export interface Push {
   type: "PUSH";
   subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
   unsubscribe: () => void;
-  context?: TContext;
-  rootValue?: TRootValue;
-  document?: DocumentNode;
-  operation?: OperationDefinitionNode;
 }
 
-export type ProcessRequestResult<TContext, TRootValue> =
-  | Response<TContext, TRootValue>
-  | MultipartResponse<TContext, TRootValue>
-  | Push<TContext, TRootValue>;
+export type ProcessRequestResult = Response | MultipartResponse | Push;
 ```
 
 ## Recipes
@@ -340,6 +318,8 @@ you want with the execution result before it's sent to the client:
 - Log the response using your [favorite logger](https://github.com/gajus/roarr).
 - Format your errors and mask them in production.
 - Add an `extensions` field to the response with additional metadata to send to the client
+
+In addition to the payload itself, `processRequest` will also return additional information about the request itself, like the parsed document, the operation that was executed and the context and root values that were generated. This makes it easy to provide additional information when logging requests or exceptions.
 
 See [here](examples/error-handling) for a basic example of error handling.
 

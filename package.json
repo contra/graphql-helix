@@ -9,7 +9,8 @@
   "main": "index.js",
   "workspaces": [
     "packages/core",
-    "packages/graphiql"
+    "packages/graphiql",
+    "examples/*"
   ],
   "scripts": {
     "publish": "node scripts/publish",
@@ -21,11 +22,14 @@
     }
   },
   "lint-staged": {
-    "*.{js,ts}": "prettier --write"
+    "*.{js,ts,tsx,json,css}": "prettier --write"
   },
   "devDependencies": {
     "husky": "^4.3.0",
     "lint-staged": "^10.5.1",
     "prettier": "^2.2.0"
+  },
+  "resolutions": {
+    "graphql": "15.4.0-experimental-stream-defer.1"
   }
 }

@@ -56,6 +56,10 @@ export interface RenderGraphiQLOptions {
    * The endpoint subscription requests should be sent to. Defaults to the value of the `endpoint` parameter.
    */
   subscriptionsEndpoint?: string;
+  /**
+   * Use legacy web socket protocol `graphql-ws` instead of the more current standard `graphql-transport-ws`
+   */
+  useWebSocketLegacyProtocol?: boolean;
 }
 
 export interface ProcessRequestOptions<TContext, TRootValue> {
