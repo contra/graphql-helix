@@ -14,9 +14,9 @@
     "lint": "prettier --check ."
   },
   "dependencies": {
-    "@graphql-tools/url-loader": "6.10.0",
-    "@graphql-tools/utils": "7.9.0",
-    "@n1ru4l/graphql-live-query": "0.7.0",
+    "@graphql-tools/url-loader": "6.10.1",
+    "@graphql-tools/utils": "7.10.0",
+    "@n1ru4l/graphql-live-query": "0.7.1",
     "copy-to-clipboard": "^3.3.1",
     "graphiql": "^1.1.0",
     "graphql": "15.4.0",
