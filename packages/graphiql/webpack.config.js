@@ -37,5 +37,8 @@ module.exports = {
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
+    alias: {
+      meros: require.resolve("meros/browser"),
+    },
   },
 };
