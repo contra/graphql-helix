@@ -1,6 +1,13 @@
 import { isLiveQueryOperationDefinitionNode } from "@n1ru4l/graphql-live-query";
 import copyToClipboard from "copy-to-clipboard";
-import { getOperationAST, parse, print } from "graphql";
+import {
+  DocumentNode,
+  getOperationAST,
+  Kind,
+  OperationDefinitionNode,
+  parse,
+  print,
+} from "graphql";
 import GraphiQL from "graphiql";
 import React from "react";
 import ReactDOM from "react-dom";
@@ -17,6 +24,39 @@ export interface Options {
   useWebSocketLegacyProtocol?: boolean;
 }
 
+const getOperationWithFragments = (
+  document: DocumentNode,
+  operationName: string
+): {
+  document: DocumentNode;
+  isSubscriber: boolean;
+} => {
+  let isSubscriber = false;
+  const definitions = document.definitions.filter((definition) => {
+    if (definition.kind === Kind.OPERATION_DEFINITION) {
+      if (operationName) {
+        if (definition.name?.value !== operationName) {
+          return false;
+        }
+      }
+      if (
+        definition.operation === "subscription" ||
+        isLiveQueryOperationDefinitionNode(definition)
+      ) {
+        isSubscriber = true;
+      }
+    }
+    return true;
+  });
+  return {
+    document: {
+      kind: Kind.DOCUMENT,
+      definitions,
+    },
+    isSubscriber,
+  };
+};
+
 export const init = async ({
   defaultQuery,
   defaultVariableEditorOpen,
@@ -28,17 +68,17 @@ export const init = async ({
 }: Options = {}) => {
   const urlLoader = new UrlLoader();
   const {
-    schema,
     executor,
     subscriber,
-  } = await urlLoader.getSubschemaConfigAsync(endpoint, {
+  } = await urlLoader.getExecutorAndSubscriberAsync(endpoint, {
     useSSEForSubscription: !subscriptionsEndpoint?.startsWith("ws"),
     specifiedByUrl: true,
     directiveIsRepeatable: true,
     schemaDescription: true,
     subscriptionsEndpoint,
     useWebSocketLegacyProtocol,
-    headers: (executionParams) => executionParams?.context?.headers || {},
+    headers: (executionParams) =>
+      executionParams?.context?.headers || JSON.parse(headers),
   });
 
   const searchParams = new URLSearchParams(window.location.search);
@@ -78,24 +118,21 @@ export const init = async ({
               let stopSubscription = () => {};
               Promise.resolve().then(async () => {
                 try {
-                  const operationAst = getOperationAST(
+                  const {
+                    document: filteredDocument,
+                    isSubscriber,
+                  } = getOperationWithFragments(
                     parse(graphQLParams.query),
                     graphQLParams.operationName
-                  )!;
-                  const isLiveQuery = isLiveQueryOperationDefinitionNode(
-                    operationAst
                   );
-                  const isSubscription =
-                    operationAst.operation === "subscription";
                   const executionParams = {
-                    document: parse(print(operationAst!)),
+                    document: filteredDocument,
                     variables: graphQLParams.variables,
                     context: {
-                      headers: opts?.headers,
+                      headers: opts?.headers || {},
                     },
                   };
-                  const queryFn: any =
-                    isSubscription || isLiveQuery ? subscriber : executor;
+                  const queryFn: any = isSubscriber ? subscriber : executor;
                   const res = await queryFn(executionParams);
                   if (isAsyncIterable(res)) {
                     const asyncIterable = res[Symbol.asyncIterator]();
@@ -109,16 +146,23 @@ export const init = async ({
                       observer.next(part);
                     }
                     observer.complete();
+                  } else if (typeof observer === "function") {
+                    observer(res);
                   } else {
                     observer.next(res);
                     observer.complete();
                   }
                 } catch (error) {
+                  let errorResult: any;
                   if (typeof error.json === "function") {
-                    const errRes = await error.json();
-                    observer.error(errRes);
+                    errorResult = await error.json();
                   } else {
-                    observer.error(error);
+                    errorResult = error;
+                  }
+                  if (typeof observer === "function") {
+                    throw errorResult;
+                  } else {
+                    observer.error(errorResult);
                   }
                 }
               });
@@ -130,7 +174,6 @@ export const init = async ({
           operationName={initialOperationName}
           query={initialQuery}
           ref={graphiqlRef}
-          schema={schema}
           toolbar={{
             additionalContent: (
               <button className="toolbar-button" onClick={onShare}>
