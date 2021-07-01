@@ -1110,6 +1110,11 @@
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.7.tgz#98a993516c859eb0d5c4c8f098317a9ea68db9ad"
   integrity sha512-cxWFQVseBm6O9Gbw1IWb8r6OS4OhSt3hPZLkFApLjM8TEXROBuQGLAH2i2gZpcXdLBIrpXuTDhH7Vbm1iXmNGA==
 
+"@types/k6@0.32.0":
+  version "0.32.0"
+  resolved "https://registry.yarnpkg.com/@types/k6/-/k6-0.32.0.tgz#9539438dc49068c38a748ef1dfac873d30f9e9fe"
+  integrity sha512-6/PcFVvJe8stn56j/CulPpFTiPC2h7dvw9Mz1gnk2mGTSm4553nKzf52zHw7c/FMVp7f0TRkjyY/59vSImFYgg==
+
 "@types/keygrip@*":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@types/keygrip/-/keygrip-1.0.2.tgz#513abfd256d7ad0bf1ee1873606317b33b1b2a72"
