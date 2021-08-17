@@ -82,7 +82,7 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
 `;
 
 const targetSourceFile = resolve(__dirname, "../src/index.ts");
-writeFileSync(targetSourceFile, contents, {
+writeFileSync(targetSourceFile, contents.replace(/\\r\\n/g, "\\n"), {
   encoding: "utf-8",
 });
 
