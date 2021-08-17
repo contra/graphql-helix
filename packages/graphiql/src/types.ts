@@ -1,3 +1,12 @@
+export interface HybridSubscriptionTransportConfig {
+  /* Enable SSE transport as an option */
+  sse?: string;
+  /* Enable Legacy graphql-ws protocol transport as an option. */
+  legacyWS?: string;
+  /* Enable graphql-transport-ws protocol transport as an option */
+  transportWS?: string;
+}
+
 export interface RenderGraphiQLOptions {
   /**
    * An optional GraphQL string to use when no query is provided and no stored
@@ -38,4 +47,6 @@ export interface RenderGraphiQLOptions {
    * If no protocol is specified, it fallbacks to Server-Sent Events aka **"SSE"**
    */
   subscriptionsProtocol?: "WS" | "LEGACY_WS" | "SSE";
+
+  hybridSubscriptionTransportConfig?: HybridSubscriptionTransportConfig;
 }

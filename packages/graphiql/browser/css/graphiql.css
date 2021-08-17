@@ -1426,3 +1426,24 @@ li.CodeMirror-hint-active {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.graphiql-container .toolbar-drop-down-menu {
+  position: absolute;
+  background-color: white;
+  z-index: 100000000;
+}
+
+.graphiql-container .toolbar-drop-down-menu-item {
+  all: unset;
+  padding: 2px 3px;
+  cursor: pointer;
+  background: rgb(241, 241, 241);
+  width: 100%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2),
+      0 1px 0 rgba(255, 255, 255, 0.7), inset 0 1px #fff;
+  color: #555;
+}
+
+.graphiql-container .toolbar-button {
+  max-width: initial;
+}

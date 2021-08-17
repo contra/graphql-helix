@@ -9,7 +9,7 @@
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "noImplicitAny": false,
-    "rootDir": ".",
+    "rootDir": "../",
     "skipLibCheck": true,
     "strict": true,
     "target": "ES6"

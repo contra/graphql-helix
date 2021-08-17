@@ -4,10 +4,17 @@ import { DocumentNode, getOperationAST, Kind, parse } from "graphql";
 import React from "react";
 import ReactDOM from "react-dom";
 
-import { SubscriptionProtocol, UrlLoader } from "@graphql-tools/url-loader";
-import { isAsyncIterable } from "@graphql-tools/utils";
+import {
+  SubscriptionProtocol,
+  UrlLoader,
+  LoadFromUrlOptions,
+} from "@graphql-tools/url-loader";
+import { isAsyncIterable, AsyncExecutor } from "@graphql-tools/utils";
 import { isLiveQueryOperationDefinitionNode } from "@n1ru4l/graphql-live-query";
+import { ToolbarDropDown } from "./drop-down";
+import type { Fetcher } from "@graphiql/toolkit";
 
+import type { HybridSubscriptionTransportConfig } from "../src/types";
 export interface Options {
   defaultQuery?: string;
   defaultVariableEditorOpen?: boolean;
@@ -16,7 +23,48 @@ export interface Options {
   headerEditorEnabled?: boolean;
   subscriptionsEndpoint?: string;
   subscriptionsProtocol?: `${SubscriptionProtocol}` | SubscriptionProtocol;
+  hybridSubscriptionTransportConfig?: {
+    default: keyof HybridSubscriptionTransportConfig;
+    config: HybridSubscriptionTransportConfig;
+  };
 }
+
+const buildHybridMenuOptions = (
+  hybridConfig: HybridSubscriptionTransportConfig
+) => {
+  const options: Array<{
+    title: string;
+    value: keyof HybridSubscriptionTransportConfig;
+    url: string;
+  }> = [];
+  if (hybridConfig.sse) {
+    options.push({
+      value: "sse",
+      title: "Subscriptions with SSE",
+      url: hybridConfig.sse,
+    });
+  }
+  if (hybridConfig.transportWS) {
+    options.push({
+      value: "transportWS",
+      title: "Subscriptions with GraphQL over WebSocket",
+      url: hybridConfig.transportWS,
+    });
+  }
+  if (hybridConfig.legacyWS) {
+    options.push({
+      value: "legacyWS",
+      title: "Subscriptions with GraphQL over WebSocket",
+      url: hybridConfig.legacyWS,
+    });
+  }
+
+  if (options.length === 0) {
+    return null;
+  }
+
+  return options;
+};
 
 const getOperationWithFragments = (
   document: DocumentNode,
@@ -59,8 +107,22 @@ export const init = async ({
   headerEditorEnabled = true,
   subscriptionsEndpoint: optSubscriptionsEndpoint,
   subscriptionsProtocol: optSubscriptionProtocol,
+  hybridSubscriptionTransportConfig,
 }: Options = {}) => {
   const urlLoader = new UrlLoader();
+
+  const menuOptions =
+    hybridSubscriptionTransportConfig &&
+    buildHybridMenuOptions(hybridSubscriptionTransportConfig.config);
+  let startHybridIndex: null | number = null;
+  if (hybridSubscriptionTransportConfig && menuOptions) {
+    startHybridIndex = menuOptions.findIndex(
+      (option) => option.value === hybridSubscriptionTransportConfig.default
+    );
+    if (startHybridIndex === -1) {
+      startHybridIndex = 0;
+    }
+  }
 
   let subscriptionsEndpoint: string =
     optSubscriptionsEndpoint ||
@@ -102,6 +164,54 @@ export const init = async ({
     React.createElement(() => {
       const graphiqlRef = React.useRef<GraphiQL | null>(null);
 
+      const [hybridTransportIndex, setHybridTransportIndex] =
+        React.useState(startHybridIndex);
+      const [networkInterface, setNetworkInterface] =
+        React.useState<null | AsyncExecutor>(null);
+
+      React.useEffect(() => {
+        let isCanceled = false;
+        const options: LoadFromUrlOptions = {
+          specifiedByUrl: true,
+          directiveIsRepeatable: true,
+          schemaDescription: true,
+          subscriptionsEndpoint,
+          subscriptionsProtocol,
+          headers: JSON.parse(headers),
+        };
+
+        if (menuOptions && hybridTransportIndex) {
+          const target = menuOptions[hybridTransportIndex];
+          if (target.value === "sse") {
+            options.subscriptionsProtocol = SubscriptionProtocol.SSE;
+            options.subscriptionsEndpoint = target.url;
+          } else if (target.value === "legacyWS") {
+            // options.useSSEForSubscription = false;
+            options.subscriptionsProtocol = SubscriptionProtocol.LEGACY_WS;
+            options.subscriptionsEndpoint = target.url;
+            // useWebSocketLegacyProtocol = true;
+          } else if (target.value === "transportWS") {
+            // options.useSSEForSubscription = false;
+            options.subscriptionsProtocol = SubscriptionProtocol.LEGACY_WS;
+            options.subscriptionsEndpoint = target.url;
+          }
+        }
+
+        urlLoader
+          .getExecutorAsync(endpoint, options)
+          .then((networkInterface) => {
+            if (isCanceled) {
+              return;
+            }
+            setNetworkInterface(networkInterface);
+          })
+          .catch(console.error);
+
+        return () => {
+          isCanceled = true;
+        };
+      }, [menuOptions, hybridTransportIndex]);
+
       const onShare = () => {
         const state = graphiqlRef.current?.state;
 
@@ -121,91 +231,99 @@ export const init = async ({
         );
       };
 
-      return (
-        <GraphiQL
-          defaultQuery={defaultQuery}
-          defaultVariableEditorOpen={defaultVariableEditorOpen}
-          fetcher={(graphQLParams, opts) => ({
-            subscribe: (observer: any) => {
-              let stopSubscription = () => {};
-              Promise.resolve().then(async () => {
-                try {
-                  const { document: filteredDocument } =
-                    getOperationWithFragments(
-                      parse(graphQLParams.query),
-                      graphQLParams.operationName
-                    );
-                  const executionParams = {
-                    document: filteredDocument,
-                    variables: graphQLParams.variables,
-                    context: {
-                      headers: opts?.headers || {},
-                    },
-                  };
+      const fetcher = React.useMemo<null | Fetcher>(() => {
+        if (!networkInterface) {
+          return null;
+        }
 
-                  const operationAST = getOperationAST(filteredDocument);
-
-                  if (!operationAST)
-                    throw Error(
-                      "Invalid query document: " + graphQLParams.query
-                    );
-
-                  const res = await executor({
-                    ...executionParams,
-                    operationType: operationAST.operation,
-                    extensions: {
-                      headers: opts?.headers || {},
-                    },
-                  });
-                  if (isAsyncIterable(res)) {
-                    const asyncIterable = res[Symbol.asyncIterator]();
-                    if (asyncIterable.return) {
-                      stopSubscription = () => {
-                        asyncIterable.return!();
-                        observer.complete();
-                      };
-                    }
-                    for await (const part of res) {
-                      observer.next(part);
-                    }
-                    observer.complete();
-                  } else if (typeof observer === "function") {
-                    observer(res);
-                  } else {
-                    observer.next(res);
-                    observer.complete();
+        return (graphQLParams, opts) => ({
+          subscribe: (observer: any) => {
+            let stopSubscription = () => {};
+            Promise.resolve().then(async () => {
+              try {
+                const { document: filteredDocument } =
+                  getOperationWithFragments(
+                    parse(graphQLParams.query),
+                    graphQLParams.operationName
+                  );
+                const executionParams = {
+                  document: filteredDocument,
+                  variables: graphQLParams.variables,
+                  context: {
+                    headers: opts?.headers || {},
+                  },
+                };
+                const queryFn: any = executor;
+                const res = await queryFn(executionParams);
+                if (isAsyncIterable(res)) {
+                  const asyncIterable = res[Symbol.asyncIterator]();
+                  if (asyncIterable.return) {
+                    stopSubscription = () => {
+                      asyncIterable.return!();
+                      observer.complete();
+                    };
                   }
-                } catch (error: any) {
-                  let errorResult: any;
-                  if (typeof error.json === "function") {
-                    errorResult = await error.json();
-                  } else {
-                    errorResult = error;
+                  for await (const part of res) {
+                    observer.next(part);
                   }
-                  if (typeof observer === "function") {
-                    throw errorResult;
-                  } else {
-                    observer.error(errorResult);
-                  }
+                  observer.complete();
+                } else if (typeof observer === "function") {
+                  observer(res);
+                } else {
+                  observer.next(res);
+                  observer.complete();
                 }
-              });
-              return { unsubscribe: () => stopSubscription() };
-            },
-          })}
-          headers={headers}
-          headerEditorEnabled={headerEditorEnabled}
-          operationName={initialOperationName}
-          query={initialQuery}
-          ref={graphiqlRef}
-          toolbar={{
-            additionalContent: (
-              <button className="toolbar-button" onClick={onShare}>
-                Share
-              </button>
-            ),
-          }}
-          variables={initialVariables}
-        />
+              } catch (error: any) {
+                let errorResult: any;
+                if (typeof error.json === "function") {
+                  errorResult = await error.json();
+                } else {
+                  errorResult = error;
+                }
+                if (typeof observer === "function") {
+                  throw errorResult;
+                } else {
+                  observer.error(errorResult);
+                }
+              }
+            });
+            return { unsubscribe: () => stopSubscription() };
+          },
+        });
+      }, [networkInterface]);
+
+      return (
+        fetcher && (
+          <GraphiQL
+            defaultQuery={defaultQuery}
+            defaultVariableEditorOpen={defaultVariableEditorOpen}
+            fetcher={fetcher}
+            headers={headers}
+            headerEditorEnabled={headerEditorEnabled}
+            operationName={initialOperationName}
+            query={initialQuery}
+            ref={graphiqlRef}
+            toolbar={{
+              additionalContent: (
+                <>
+                  <button className="toolbar-button" onClick={onShare}>
+                    Share
+                  </button>
+                  {menuOptions && hybridTransportIndex != null && (
+                    <ToolbarDropDown
+                      options={menuOptions}
+                      activeOptionIndex={hybridTransportIndex}
+                      onSelectOption={(index) => {
+                        setHybridTransportIndex(index);
+                      }}
+                    />
+                  )}
+                </>
+              ),
+            }}
+            variables={initialVariables}
+          />
+        )
       );
     }, {}),
     document.body
