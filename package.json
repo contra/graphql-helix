@@ -7,17 +7,15 @@
   "license": "MIT",
   "author": "Daniel Rearden <danielrearden@gmail.com>",
   "main": "index.js",
-  "workspaces": [
-    "packages/core",
-    "packages/graphiql",
-    "examples/*"
-  ],
   "scripts": {
-    "prepare": "husky install && bob-esbuild tsc && pnpm -r prepack",
+    "build": "bob-esbuild tsc && pnpm -r --no-sort --no-bail prepack",
+    "prepare": "husky install && bob-esbuild tsc && pnpm -r --no-sort --no-bail prepack",
     "publish": "node scripts/publish",
     "update-examples": "node scripts/update-examples",
     "loadtest:start-server": "node ./benchmark/server.js",
-    "test": "pnpm -r --no-sort --no-bail test"
+    "test": "pnpm -r --no-sort --no-bail test",
+    "lint": "pnpm -r --no-sort --no-bail lint",
+    "pretty:all": "prettier --write \"**/*.{ts,tsx,json,js,md,cjs}\""
   },
   "lint-staged": {
     "*.{js,ts,tsx,json,css}": "prettier --write"

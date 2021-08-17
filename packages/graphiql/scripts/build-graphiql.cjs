@@ -1,9 +1,15 @@
-const { execSync } = require('child_process');
-const { readFileSync, writeFileSync } = require('fs');
-const { resolve } = require('path');
+const { execSync } = require("child_process");
+const { readFileSync, writeFileSync } = require("fs");
+const { resolve } = require("path");
 
-const javascript = readFileSync(resolve(__dirname, '../bundle/graphiql.min.js'), 'utf8');
-const css = readFileSync(resolve(__dirname, '../bundle/graphiql.min.css'), 'utf8');
+const javascript = readFileSync(
+  resolve(__dirname, "../bundle/graphiql.min.js"),
+  "utf8"
+);
+const css = readFileSync(
+  resolve(__dirname, "../bundle/graphiql.min.css"),
+  "utf8"
+);
 
 const contents = `import type { RenderGraphiQLOptions } from "./types";
 
@@ -28,7 +34,10 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
   } = options;
   const nonceAttribute = nonce ? \`nonce="\${nonce}"\` : "";
   const css = ${JSON.stringify(css)};
-  const javascript = ${JSON.stringify(javascript).replace('</script>', '<\\/script>')};
+  const javascript = ${JSON.stringify(javascript).replace(
+    "</script>",
+    "<\\/script>"
+  )};
 
   return \`
 <!DOCTYPE html>
@@ -72,11 +81,14 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
 };
 `;
 
-const targetSourceFile = resolve(__dirname, '../src/index.ts');
+const targetSourceFile = resolve(__dirname, "../src/index.ts");
 writeFileSync(targetSourceFile, contents, {
-  encoding: 'utf-8',
+  encoding: "utf-8",
 });
 
-execSync(`node ${require.resolve('prettier/bin-prettier.js')} -w ${targetSourceFile}`, {
-  stdio: 'inherit',
-});
+execSync(
+  `node ${require.resolve("prettier/bin-prettier.js")} -w ${targetSourceFile}`,
+  {
+    stdio: "inherit",
+  }
+);

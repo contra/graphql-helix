@@ -401,7 +401,7 @@ importers:
     devDependencies:
       '@types/react': 17.0.18
       '@types/react-dom': 17.0.9
-      bob-esbuild-cli: 1.0.1_bob-esbuild@1.2.3
+      bob-esbuild-cli: 1.0.1
       changesets-github-release: 0.0.3
       cpy-cli: 3.1.1
       prettier: 2.3.2
@@ -2655,6 +2655,16 @@ packages:
   /bn.js/5.2.0:
     resolution: {integrity: sha512-D7iWRBvnZE8ecXiLj/9wbxH7Tk79fAh8IHaTNq1RWRixsS02W+5qS+iE9yq6RYl0asXx5tw0bLhmT5pIfbSquw==}
     dev: false
+
+  /bob-esbuild-cli/1.0.1:
+    resolution: {integrity: sha512-z1WBNCPNgwL9CaQ7sTA0xGCHX0xjLKhjvMHrBmBhk/Fl3fLX78qq14CarFCRPn8MUjDXc1KDRXYSfhVcdS/rDQ==}
+    engines: {node: '>=12.0.0'}
+    hasBin: true
+    peerDependencies:
+      bob-esbuild: ^1.0.0
+    dependencies:
+      commander: 8.1.0
+    dev: true
 
   /bob-esbuild-cli/1.0.1_bob-esbuild@1.2.3:
     resolution: {integrity: sha512-z1WBNCPNgwL9CaQ7sTA0xGCHX0xjLKhjvMHrBmBhk/Fl3fLX78qq14CarFCRPn8MUjDXc1KDRXYSfhVcdS/rDQ==}
