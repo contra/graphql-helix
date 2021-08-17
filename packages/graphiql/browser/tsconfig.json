@@ -9,8 +9,7 @@
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "noImplicitAny": false,
-    "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "skipLibCheck": true,
     "strict": true,
     "target": "ES6"
