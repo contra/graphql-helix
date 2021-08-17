@@ -69,6 +69,6 @@
     "skipLibCheck": true /* Skip type checking of declaration files. */,
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */
   },
-  "exclude": ["**/deno", "**/dist"],
+  "exclude": ["**/deno", "**/dist", "**/examples"],
   "include": ["**/*.ts", "**/*.tsx"]
 }
