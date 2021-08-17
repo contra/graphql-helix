@@ -4,4 +4,4 @@ node_modules
 !.gitignore
 !.github
 !.prettierignore
-
+!.changeset

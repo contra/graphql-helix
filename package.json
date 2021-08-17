@@ -13,23 +13,23 @@
     "examples/*"
   ],
   "scripts": {
+    "prepare": "husky install && bob-esbuild tsc && pnpm -r prepack",
     "publish": "node scripts/publish",
     "update-examples": "node scripts/update-examples",
-    "loadtest:start-server": "node ./benchmark/server.js"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
+    "loadtest:start-server": "node ./benchmark/server.js",
+    "test": "pnpm -r --no-sort --no-bail test"
   },
   "lint-staged": {
     "*.{js,ts,tsx,json,css}": "prettier --write"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.16.0",
     "@types/k6": "^0.32.0",
-    "husky": "^4.3.0",
-    "lint-staged": "^10.5.1",
-    "prettier": "^2.2.0",
+    "bob-esbuild": "^1.2.3",
+    "bob-esbuild-cli": "^1.0.1",
+    "husky": "^7.0.1",
+    "lint-staged": "^11.1.2",
+    "prettier": "^2.3.2",
     "wait-on": "^6.0.0"
   },
   "resolutions": {
