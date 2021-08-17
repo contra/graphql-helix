@@ -12,10 +12,27 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: yarn install --frozen-lockfile
-      - run: yarn workspace graphql-helix lint
-      - run: yarn workspace @graphql-helix/graphiql lint
-      - run: yarn workspace graphql-helix build
-      - run: yarn workspace graphql-helix test
+      - name: Cache pnpm modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-${{ matrix.node_version }}-${{ hashFiles('./pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-
+      - name: Cache Jest
+        uses: actions/cache@v2
+        with:
+          path: .cache/jest
+          key: ${{ runner.os }}-${{matrix.node_version}}-jest-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{matrix.node_version}}-jest-
+      - name: install pnpm
+        run: npm i pnpm -g
+
+      - run: pnpm install
+      - run: pnpm lint
+      - run: pnpm test
         env:
           CI: true
