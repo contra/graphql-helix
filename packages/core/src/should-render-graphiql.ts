@@ -1,5 +1,5 @@
 import { isHttpMethod } from "./util/is-http-method";
-import { Request } from "./types";
+import type { Request } from "./types";
 
 export const shouldRenderGraphiQL = ({ headers, method }: Request): boolean => {
   const accept =

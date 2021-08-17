@@ -13,7 +13,7 @@ import {
 } from "graphql";
 import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util";
 import { HttpError } from "./errors";
-import {
+import type {
   ExecutionContext,
   ExecutionPatchResult,
   MultipartResponse,
@@ -39,7 +39,7 @@ const parseQuery = (
       });
     }
     return parseResult;
-  } catch (syntaxError) {
+  } catch (syntaxError: any) {
     throw new HttpError(400, "GraphQL syntax error.", {
       graphqlErrors: [syntaxError],
     });
@@ -137,7 +137,9 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         throw new HttpError(
           405,
           "Can only perform a mutation operation from a POST request.",
-          { headers: [{ name: "Allow", value: "POST" }] }
+          {
+            headers: [{ name: "Allow", value: "POST" }],
+          }
         );
       }
 
@@ -277,7 +279,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             };
           }
         }
-      } catch (executionError) {
+      } catch (executionError: any) {
         throw new HttpError(
           500,
           "Unexpected error encountered while executing GraphQL request.",
@@ -286,7 +288,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           }
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       const payload = {
         errors: error.graphqlErrors || [new GraphQLError(error.message)],
       };

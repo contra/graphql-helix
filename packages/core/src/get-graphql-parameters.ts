@@ -1,5 +1,5 @@
 import { isHttpMethod } from "./util";
-import { GraphQLParams, Request } from "./types";
+import type { GraphQLParams, Request } from "./types";
 
 export const getGraphQLParameters = (request: Request): GraphQLParams => {
   const { body, method, query: queryParams } = request;
