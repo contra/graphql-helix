@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "ts-node server"
+    "start": "ts-node-dev server"
   },
   "devDependencies": {
     "ts-node": "^10.2.0",
+    "ts-node-dev": "^1.1.8",
     "typescript": "^4.3.5"
   },
   "dependencies": {

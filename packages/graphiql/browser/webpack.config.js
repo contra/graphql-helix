@@ -1,8 +1,12 @@
 const path = require("path");
 const webpack = require("webpack");
 const TerserPlugin = require("terser-webpack-plugin");
+const { execSync } = require("child_process");
 
-module.exports = {
+/**
+ * @type {import("webpack").Configuration}
+ */
+const config = {
   entry: path.resolve(__dirname, "./index.tsx"),
   mode: "production",
   module: {
@@ -34,6 +38,19 @@ module.exports = {
       "process.env.NODE_DEBUG": "undefined",
       setImmediate: "setTimeout",
     }),
+    {
+      apply(compiler) {
+        compiler.hooks.beforeCompile.tap("Before", () => {
+          console.log("----------------Start bundling----------------");
+        });
+        compiler.hooks.afterEmit.tap("AfterEmit", () => {
+          execSync("pnpm after:webpack", {
+            stdio: "inherit",
+          });
+          console.log("----------------End bundling----------------");
+        });
+      },
+    },
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
@@ -42,3 +59,5 @@ module.exports = {
     },
   },
 };
+
+module.exports = config;

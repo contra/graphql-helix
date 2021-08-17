@@ -22,10 +22,10 @@
     "dist"
   ],
   "scripts": {
+    "after:webpack": "cpy browser/css/graphiql.css bundle/ && node scripts/build-graphiql.cjs && bob-esbuild build",
     "build": "pnpm bundle && bob-esbuild build",
-    "bundle": "pnpm bundle:webpack && pnpm bundle:ts",
-    "bundle:ts": "node scripts/build-graphiql.cjs",
-    "bundle:webpack": "webpack -c browser/webpack.config.js && cpy browser/css/graphiql.css bundle/",
+    "bundle": "webpack -c browser/webpack.config.js",
+    "dev": "concurrently -r \"bob-esbuild watch\" \"webpack --watch -c browser/webpack.config.js\"",
     "lint": "prettier --check .",
     "prepack": "bob-esbuild build",
     "prepublishOnly": "pnpm build",
@@ -49,6 +49,7 @@
     "@types/react-dom": "17.0.9",
     "bob-esbuild-cli": "^1.0.1",
     "changesets-github-release": "^0.0.3",
+    "concurrently": "^6.2.1",
     "cpy-cli": "^3.1.1",
     "prettier": "2.3.2",
     "terser-webpack-plugin": "5.1.4",
