@@ -9,6 +9,8 @@
   "main": "index.js",
   "scripts": {
     "build": "bob-esbuild tsc && pnpm -r --no-sort --no-bail prepack",
+    "ci:release": "pnpm -r publish --access public --no-git-checks",
+    "ci:version": "changeset version && pnpm i --no-frozen-lockfile --lockfile-only --ignore-scripts && pnpm update -r \"@graphql-helix/*\" graphql-helix",
     "lint": "pnpm -r --no-sort --no-bail lint",
     "loadtest:start-server": "node ./benchmark/server.js",
     "prepare": "husky install && bob-esbuild tsc && pnpm -r --no-sort --no-bail prepack",
