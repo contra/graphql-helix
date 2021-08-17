@@ -9,28 +9,32 @@
   "main": "index.js",
   "scripts": {
     "build": "bob-esbuild tsc && pnpm -r --no-sort --no-bail prepack",
-    "prepare": "husky install && bob-esbuild tsc && pnpm -r --no-sort --no-bail prepack",
-    "publish": "node scripts/publish",
-    "update-examples": "node scripts/update-examples",
-    "loadtest:start-server": "node ./benchmark/server.js",
-    "test": "pnpm -r --no-sort --no-bail test",
     "lint": "pnpm -r --no-sort --no-bail lint",
-    "pretty:all": "prettier --write \"**/*.{ts,tsx,json,js,md,cjs}\""
+    "loadtest:start-server": "node ./benchmark/server.js",
+    "prepare": "husky install && bob-esbuild tsc && pnpm -r --no-sort --no-bail prepack",
+    "pretty:all": "prettier --write \"**/*.{ts,tsx,json,js,md,cjs}\"",
+    "publish": "node scripts/publish",
+    "test": "pnpm -r --no-sort --no-bail test",
+    "update-examples": "node scripts/update-examples"
   },
   "lint-staged": {
     "*.{js,ts,tsx,json,css}": "prettier --write"
   },
   "devDependencies": {
     "@changesets/cli": "^2.16.0",
-    "@types/k6": "^0.32.0",
+    "@types/k6": "^0.32.2",
     "bob-esbuild": "^1.2.3",
     "bob-esbuild-cli": "^1.0.1",
+    "fastify": "^3.20.2",
+    "graphql": "15.4.0-experimental-stream-defer.1",
     "husky": "^7.0.1",
     "lint-staged": "^11.1.2",
     "prettier": "^2.3.2",
     "wait-on": "^6.0.0"
   },
-  "resolutions": {
-    "graphql": "15.4.0-experimental-stream-defer.1"
+  "pnpm": {
+    "overrides": {
+      "graphql": "15.4.0-experimental-stream-defer.1"
+    }
   }
 }

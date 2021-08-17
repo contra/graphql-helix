@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@graphql-helix/graphiql": "workspace:^1.1.0",
-    "fastify": "^3.7.0",
+    "fastify": "^3.20.2",
     "graphql": "15.4.0-experimental-stream-defer.1",
-    "graphql-helix": "^1.1.0"
+    "graphql-helix": "workspace:^1.7.0"
   }
 }
