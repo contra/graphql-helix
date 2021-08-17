@@ -3,9 +3,9 @@ import { parse, validate } from "graphql";
 import {
   getGraphQLParameters,
   processRequest,
-  renderGraphiQL,
   shouldRenderGraphiQL,
 } from "graphql-helix";
+import { renderGraphiQL } from "@graphql-helix/graphiql";
 import { compileQuery, isCompiledQuery } from "graphql-jit";
 import lru from "tiny-lru";
 import { schema } from "./schema";

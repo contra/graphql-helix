@@ -3,9 +3,9 @@ import expressSession from "express-session";
 import {
   getGraphQLParameters,
   processRequest,
-  renderGraphiQL,
   shouldRenderGraphiQL,
 } from "graphql-helix";
+import { renderGraphiQL } from "@graphql-helix/graphiql";
 import { schema } from "./schema";
 
 const app = express();

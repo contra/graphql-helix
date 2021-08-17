@@ -2,9 +2,9 @@ import express from "express";
 import {
   getGraphQLParameters,
   processRequest,
-  renderGraphiQL,
   shouldRenderGraphiQL,
 } from "graphql-helix";
+import { renderGraphiQL } from "@graphql-helix/graphiql";
 import { application } from "./application";
 
 const app = express();

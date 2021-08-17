@@ -3,9 +3,9 @@ import express from "express";
 import {
   getGraphQLParameters,
   processRequest,
-  renderGraphiQL,
   shouldRenderGraphiQL,
 } from "graphql-helix";
+import { renderGraphiQL } from "@graphql-helix/graphiql";
 import helmet from "helmet";
 import { schema } from "./schema";
 

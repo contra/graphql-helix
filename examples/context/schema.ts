@@ -19,7 +19,9 @@ export const schema = new GraphQLSchema({
       logout: {
         type: GraphQLString,
         resolve: async (_root, _args, ctx) => {
-          await new Promise((resolve) => ctx.session.destroy(() => resolve()));
+          await new Promise<void>((resolve) =>
+            ctx.session.destroy(() => resolve())
+          );
           return "Logged out!";
         },
       },

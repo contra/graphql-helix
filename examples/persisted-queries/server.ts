@@ -1,10 +1,7 @@
 import express from "express";
 import { parse, DocumentNode, GraphQLError } from "graphql";
-import {
-  processRequest,
-  renderGraphiQL,
-  shouldRenderGraphiQL,
-} from "graphql-helix";
+import { processRequest, shouldRenderGraphiQL } from "graphql-helix";
+import { renderGraphiQL } from "@graphql-helix/graphiql";
 import { schema } from "./schema";
 
 const queryMap: Record<string, DocumentNode> = {

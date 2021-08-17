@@ -7,10 +7,11 @@
   },
   "devDependencies": {
     "@types/koa-bodyparser": "^4.3.0",
-    "ts-node": "^9.0.0",
-    "typescript": "^4.0.5"
+    "ts-node": "^10.2.0",
+    "typescript": "^4.3.5"
   },
   "dependencies": {
+    "@graphql-helix/graphiql": "workspace:^1.1.0",
     "@types/koa": "^2.11.6",
     "graphql": "15.4.0-experimental-stream-defer.1",
     "graphql-helix": "^1.1.0",

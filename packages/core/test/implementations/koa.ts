@@ -4,10 +4,10 @@ import { PassThrough } from "stream";
 import {
   getGraphQLParameters,
   processRequest,
-  renderGraphiQL,
   shouldRenderGraphiQL,
-} from "../../lib";
+} from "../../src";
 import { schema } from "../schema";
+import { renderGraphiQL } from "../../../graphiql/src/index";
 
 const graphqlHandler = async (ctx: Context) => {
   const request = {

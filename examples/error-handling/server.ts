@@ -3,9 +3,9 @@ import { ExecutionResult, GraphQLError } from "graphql";
 import {
   getGraphQLParameters,
   processRequest,
-  renderGraphiQL,
   shouldRenderGraphiQL,
 } from "graphql-helix";
+import { renderGraphiQL } from "@graphql-helix/graphiql";
 import { schema } from "./schema";
 
 const formatResult = (result: ExecutionResult) => {

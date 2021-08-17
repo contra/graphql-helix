@@ -1,17 +1,17 @@
 import {
   getGraphQLParameters,
   processRequest,
-  renderGraphiQL,
   shouldRenderGraphiQL,
 } from "graphql-helix";
 import { NextApiHandler } from "next/types";
+import { renderGraphiQL } from "@graphql-helix/graphiql";
 import { schema } from "../../schema";
 
 export default (async (req, res) => {
   const request = {
     body: req.body,
     headers: req.headers,
-    method: req.method,
+    method: req.method!,
     query: req.query,
   };
 

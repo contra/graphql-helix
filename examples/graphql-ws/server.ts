@@ -2,11 +2,12 @@ import express from "express";
 import {
   getGraphQLParameters,
   processRequest,
-  renderGraphiQL,
   shouldRenderGraphiQL,
 } from "graphql-helix";
+import { renderGraphiQL } from "@graphql-helix/graphiql";
 import { execute, subscribe, GraphQLError } from "graphql";
-import { createServer } from "graphql-ws";
+import { useServer } from "graphql-ws/lib/use/ws";
+import ws from "ws";
 import { schema } from "./schema";
 
 const app = express();
@@ -86,17 +87,18 @@ app.use("/graphql", async (req, res) => {
 
 const port = process.env.PORT || 4000;
 
-const server = app.listen(port, () => {
-  createServer(
+app.listen(port, () => {
+  const wsServer = new ws.Server({
+    port: typeof port === "number" ? port : parseInt(port),
+    path: "/graphql",
+  });
+  useServer(
     {
       schema,
       execute,
       subscribe,
     },
-    {
-      server,
-      path: "/graphql",
-    }
+    wsServer
   );
 
   console.log(`GraphQL server is running on port ${port}.`);

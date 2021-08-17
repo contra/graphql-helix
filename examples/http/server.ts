@@ -2,9 +2,9 @@ import { createServer } from "http";
 import {
   getGraphQLParameters,
   processRequest,
-  renderGraphiQL,
   shouldRenderGraphiQL,
 } from "graphql-helix";
+import { renderGraphiQL } from "@graphql-helix/graphiql";
 import { URL, URLSearchParams } from "url";
 import { schema } from "./schema";
 

@@ -2,10 +2,10 @@ import fastify, { RouteHandlerMethod } from "fastify";
 import {
   getGraphQLParameters,
   processRequest,
-  renderGraphiQL,
   shouldRenderGraphiQL,
-} from "../../lib";
+} from "../../src";
 import { schema } from "../schema";
+import { renderGraphiQL } from "../../../graphiql/src/index";
 
 const graphqlHandler: RouteHandlerMethod = async (req, res) => {
   const request = {

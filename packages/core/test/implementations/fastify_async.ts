@@ -3,10 +3,10 @@ import { parse as graphqlParse } from "graphql";
 import {
   getGraphQLParameters,
   processRequest,
-  renderGraphiQL,
   shouldRenderGraphiQL,
-} from "../../lib";
+} from "../../src";
 import { schema } from "../schema";
+import { renderGraphiQL } from "../../../graphiql/src/index";
 
 const sleep = (time: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, time));
