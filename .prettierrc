@@ -1,0 +1,11 @@
+{
+  "printWidth": 80,
+  "jsxSingleQuote": false,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": false,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "trailingComma": "es5"
+}

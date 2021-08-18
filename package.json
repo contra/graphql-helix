@@ -14,7 +14,7 @@
     "lint": "pnpm -r --no-sort --no-bail lint",
     "loadtest:start-server": "node ./benchmark/server.js",
     "prepare": "husky install && bob-esbuild tsc && pnpm -r --no-sort --no-bail prepack",
-    "pretty:all": "prettier --write \"**/*.{ts,tsx,json,js,md,cjs}\"",
+    "pretty:all": "prettier --write \"**/*.{ts,tsx,json,js,md,cjs,css}\"",
     "publish": "node scripts/publish",
     "test": "pnpm -r --no-sort --no-bail test",
     "update-examples": "node scripts/update-examples"
