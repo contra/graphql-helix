@@ -1,10 +1,10 @@
 export interface HybridSubscriptionTransportConfig {
-  /* Enable SSE transport as an option */
-  sse?: string;
-  /* Enable Legacy graphql-ws protocol transport as an option. */
-  legacyWS?: string;
-  /* Enable graphql-transport-ws protocol transport as an option */
-  transportWS?: string;
+  /* Enable SSE transport as an option, if set as "true", it re-uses `endpoint` */
+  sse?: string | boolean;
+  /* Enable Legacy graphql-ws protocol transport as an option, if set as "true", re-uses `endpoint` with "ws:" or "wss:" protocol */
+  legacyWS?: string | boolean;
+  /* Enable graphql-transport-ws protocol transport as an option, if set as "true" re-uses `endpoint` with "ws:" or "wss:" protocol */
+  transportWS?: string | boolean;
 }
 
 export interface RenderGraphiQLOptions {
@@ -48,5 +48,11 @@ export interface RenderGraphiQLOptions {
    */
   subscriptionsProtocol?: "WS" | "LEGACY_WS" | "SSE";
 
-  hybridSubscriptionTransportConfig?: HybridSubscriptionTransportConfig;
+  /**
+   * Enable selecting subscriptions protocol via dropdown in interface
+   */
+  hybridSubscriptionTransportConfig?: {
+    default: keyof HybridSubscriptionTransportConfig;
+    config: HybridSubscriptionTransportConfig;
+  };
 }

@@ -22,7 +22,16 @@ app.route({
 
     if (shouldRenderGraphiQL(request)) {
       res.type("text/html");
-      res.send(renderGraphiQL({}));
+      res.send(
+        renderGraphiQL({
+          hybridSubscriptionTransportConfig: {
+            default: "sse",
+            config: {
+              sse: "/graphql",
+            },
+          },
+        })
+      );
     } else {
       const request = {
         body: req.body,

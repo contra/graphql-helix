@@ -5,13 +5,19 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 import {
+  LoadFromUrlOptions,
   SubscriptionProtocol,
   UrlLoader,
-  LoadFromUrlOptions,
 } from "@graphql-tools/url-loader";
-import { isAsyncIterable, AsyncExecutor } from "@graphql-tools/utils";
+import {
+  AsyncExecutor,
+  ExecutionRequest,
+  isAsyncIterable,
+} from "@graphql-tools/utils";
 import { isLiveQueryOperationDefinitionNode } from "@n1ru4l/graphql-live-query";
+
 import { ToolbarDropDown } from "./drop-down";
+
 import type { Fetcher } from "@graphiql/toolkit";
 
 import type { HybridSubscriptionTransportConfig } from "../src/types";
@@ -30,7 +36,8 @@ export interface Options {
 }
 
 const buildHybridMenuOptions = (
-  hybridConfig: HybridSubscriptionTransportConfig
+  hybridConfig: HybridSubscriptionTransportConfig,
+  endpoint: string
 ) => {
   const options: Array<{
     title: string;
@@ -41,21 +48,27 @@ const buildHybridMenuOptions = (
     options.push({
       value: "sse",
       title: "Subscriptions with SSE",
-      url: hybridConfig.sse,
+      url: typeof hybridConfig.sse === "string" ? hybridConfig.sse : endpoint,
     });
   }
   if (hybridConfig.transportWS) {
     options.push({
       value: "transportWS",
       title: "Subscriptions with GraphQL over WebSocket",
-      url: hybridConfig.transportWS,
+      url:
+        typeof hybridConfig.transportWS === "string"
+          ? hybridConfig.transportWS
+          : getWebsocketSubscriptionsEndpointBasedOnEndpoint(endpoint),
     });
   }
   if (hybridConfig.legacyWS) {
     options.push({
       value: "legacyWS",
       title: "Subscriptions with GraphQL over WebSocket",
-      url: hybridConfig.legacyWS,
+      url:
+        typeof hybridConfig.legacyWS === "string"
+          ? hybridConfig.legacyWS
+          : getWebsocketSubscriptionsEndpointBasedOnEndpoint(endpoint),
     });
   }
 
@@ -99,6 +112,12 @@ const getOperationWithFragments = (
   };
 };
 
+function getWebsocketSubscriptionsEndpointBasedOnEndpoint(endpoint: string) {
+  const url = new URL(endpoint, window.location.href);
+  url.protocol = url.protocol.replace("http", "ws");
+  return url.href;
+}
+
 export const init = async ({
   defaultQuery,
   defaultVariableEditorOpen,
@@ -113,7 +132,7 @@ export const init = async ({
 
   const menuOptions =
     hybridSubscriptionTransportConfig &&
-    buildHybridMenuOptions(hybridSubscriptionTransportConfig.config);
+    buildHybridMenuOptions(hybridSubscriptionTransportConfig.config, endpoint);
   let startHybridIndex: null | number = null;
   if (hybridSubscriptionTransportConfig && menuOptions) {
     startHybridIndex = menuOptions.findIndex(
@@ -134,9 +153,7 @@ export const init = async ({
         return endpoint;
       }
 
-      const url = new URL(endpoint, window.location.href);
-      url.protocol = url.protocol.replace("http", "ws");
-      return url.href;
+      return getWebsocketSubscriptionsEndpointBasedOnEndpoint(endpoint);
     })();
 
   const subscriptionsProtocol: SubscriptionProtocol =
@@ -167,7 +184,7 @@ export const init = async ({
       const [hybridTransportIndex, setHybridTransportIndex] =
         React.useState(startHybridIndex);
       const [networkInterface, setNetworkInterface] =
-        React.useState<null | AsyncExecutor>(null);
+        React.useState<AsyncExecutor>(() => executor);
 
       React.useEffect(() => {
         let isCanceled = false;
@@ -186,13 +203,10 @@ export const init = async ({
             options.subscriptionsProtocol = SubscriptionProtocol.SSE;
             options.subscriptionsEndpoint = target.url;
           } else if (target.value === "legacyWS") {
-            // options.useSSEForSubscription = false;
             options.subscriptionsProtocol = SubscriptionProtocol.LEGACY_WS;
             options.subscriptionsEndpoint = target.url;
-            // useWebSocketLegacyProtocol = true;
           } else if (target.value === "transportWS") {
-            // options.useSSEForSubscription = false;
-            options.subscriptionsProtocol = SubscriptionProtocol.LEGACY_WS;
+            options.subscriptionsProtocol = SubscriptionProtocol.WS;
             options.subscriptionsEndpoint = target.url;
           }
         }
@@ -203,7 +217,7 @@ export const init = async ({
             if (isCanceled) {
               return;
             }
-            setNetworkInterface(networkInterface);
+            setNetworkInterface(() => networkInterface);
           })
           .catch(console.error);
 
@@ -231,13 +245,22 @@ export const init = async ({
         );
       };
 
-      const fetcher = React.useMemo<null | Fetcher>(() => {
-        if (!networkInterface) {
-          return null;
-        }
-
+      const fetcher = React.useMemo<Fetcher>(() => {
         return (graphQLParams, opts) => ({
-          subscribe: (observer: any) => {
+          subscribe: (observerArg: any) => {
+            const observer:
+              | {
+                  next: (value: unknown) => void;
+                  error: (error: any) => void;
+                  complete: () => void;
+                  (value: unknown): void;
+                }
+              | {
+                  next: (value: unknown) => void;
+                  error: (error: any) => void;
+                  complete: () => void;
+                } = observerArg;
+
             let stopSubscription = () => {};
             Promise.resolve().then(async () => {
               try {
@@ -246,14 +269,24 @@ export const init = async ({
                     parse(graphQLParams.query),
                     graphQLParams.operationName
                   );
-                const executionParams = {
+
+                const operationAST = getOperationAST(filteredDocument);
+
+                if (!operationAST)
+                  throw Error("Invalid query document: " + graphQLParams.query);
+
+                const executionParams: ExecutionRequest = {
                   document: filteredDocument,
                   variables: graphQLParams.variables,
                   context: {
                     headers: opts?.headers || {},
                   },
+                  extensions: {
+                    headers: opts?.headers || {},
+                  },
+                  operationType: operationAST.operation,
                 };
-                const queryFn: any = executor;
+                const queryFn = networkInterface;
                 const res = await queryFn(executionParams);
                 if (isAsyncIterable(res)) {
                   const asyncIterable = res[Symbol.asyncIterator]();
@@ -293,37 +326,35 @@ export const init = async ({
       }, [networkInterface]);
 
       return (
-        fetcher && (
-          <GraphiQL
-            defaultQuery={defaultQuery}
-            defaultVariableEditorOpen={defaultVariableEditorOpen}
-            fetcher={fetcher}
-            headers={headers}
-            headerEditorEnabled={headerEditorEnabled}
-            operationName={initialOperationName}
-            query={initialQuery}
-            ref={graphiqlRef}
-            toolbar={{
-              additionalContent: (
-                <>
-                  <button className="toolbar-button" onClick={onShare}>
-                    Share
-                  </button>
-                  {menuOptions && hybridTransportIndex != null && (
-                    <ToolbarDropDown
-                      options={menuOptions}
-                      activeOptionIndex={hybridTransportIndex}
-                      onSelectOption={(index) => {
-                        setHybridTransportIndex(index);
-                      }}
-                    />
-                  )}
-                </>
-              ),
-            }}
-            variables={initialVariables}
-          />
-        )
+        <GraphiQL
+          defaultQuery={defaultQuery}
+          defaultVariableEditorOpen={defaultVariableEditorOpen}
+          fetcher={fetcher}
+          headers={headers}
+          headerEditorEnabled={headerEditorEnabled}
+          operationName={initialOperationName}
+          query={initialQuery}
+          ref={graphiqlRef}
+          toolbar={{
+            additionalContent: (
+              <>
+                <button className="toolbar-button" onClick={onShare}>
+                  Share
+                </button>
+                {menuOptions && hybridTransportIndex != null && (
+                  <ToolbarDropDown
+                    options={menuOptions}
+                    activeOptionIndex={hybridTransportIndex}
+                    onSelectOption={(index) => {
+                      setHybridTransportIndex(index);
+                    }}
+                  />
+                )}
+              </>
+            ),
+          }}
+          variables={initialVariables}
+        />
       );
     }, {}),
     document.body

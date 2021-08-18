@@ -34,7 +34,6 @@ export const ToolbarDropDown = <TOption extends ToolbarDropDownOption>(props: {
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const selectedOption = props.options[props.activeOptionIndex] ?? null;
-  console.log(props.options);
   return (
     <div className="toolbar-drop-down">
       <ToolbarButton
