@@ -4,23 +4,27 @@ import type { GraphQLParams, Request } from "./types";
 export const getGraphQLParameters = (request: Request): GraphQLParams => {
   const { body, method, query: queryParams } = request;
 
-  let operationName;
-  let query;
-  let variables;
+  let operationName: GraphQLParams["operationName"];
+  let query: GraphQLParams["query"];
+  let variables: GraphQLParams["variables"];
+  let extensions: GraphQLParams["extensions"];
 
   if (isHttpMethod("GET", method)) {
     operationName = queryParams.operationName;
     query = queryParams.query;
     variables = queryParams.variables;
-  } else if (isHttpMethod("POST", method)) {
-    operationName = body?.operationName;
-    query = body?.query;
-    variables = body?.variables;
+    extensions = queryParams.extensions;
+  } else if (isHttpMethod("POST", method) && body) {
+    operationName = body.operationName;
+    query = body.query;
+    variables = body.variables;
+    extensions = body.extensions;
   }
 
   return {
     operationName,
     query,
     variables,
+    extensions,
   };
 };
