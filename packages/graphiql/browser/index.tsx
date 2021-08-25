@@ -197,7 +197,7 @@ export const init = async ({
           headers: JSON.parse(headers),
         };
 
-        if (menuOptions && hybridTransportIndex) {
+        if (menuOptions && hybridTransportIndex != null) {
           const target = menuOptions[hybridTransportIndex];
           if (target.value === "sse") {
             options.subscriptionsProtocol = SubscriptionProtocol.SSE;
