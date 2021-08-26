@@ -93,7 +93,7 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
 
 export interface FormatPayloadParams<TContext, TRootValue> {
   payload: ExecutionResult | ExecutionPatchResult;
-  context?: TContext;
+  contextValue?: TContext;
   document?: DocumentNode;
   operation?: OperationDefinitionNode;
   rootValue?: TRootValue;
@@ -118,7 +118,7 @@ export type Headers =
   | { get(name: string): string | null };
 
 export interface Result<TContext, TRootValue> {
-  context?: TContext;
+  contextValue?: TContext;
   document?: DocumentNode;
   operation?: OperationDefinitionNode;
   rootValue?: TRootValue;

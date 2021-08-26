@@ -92,7 +92,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
     variables,
   } = options;
 
-  let context: TContext | undefined;
+  let contextValue: TContext | undefined;
   let rootValue: TRootValue | undefined;
   let document: DocumentNode | undefined;
   let operation: OperationDefinitionNode | undefined;
@@ -161,7 +161,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           operation,
           variables: variableValues,
         };
-        context = contextFactory
+        contextValue = contextFactory
           ? await contextFactory(executionContext)
           : ({} as TContext);
         rootValue = rootValueFactory
@@ -169,14 +169,14 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           : ({} as TRootValue);
 
         if (operation.operation === "subscription") {
-          const result = await subscribe(
+          const result = await subscribe({
             schema,
             document,
             rootValue,
-            context,
+            contextValue,
             variableValues,
-            operationName
-          );
+            operationName,
+          });
 
           // If errors are encountered while subscribing to the operation, an execution result
           // instead of an AsyncIterable.
@@ -188,7 +188,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                   onResult(
                     formatPayload({
                       payload,
-                      context,
+                      contextValue,
                       rootValue,
                       document,
                       operation,
@@ -208,7 +208,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                   onResult(
                     formatPayload({
                       payload: result,
-                      context,
+                      contextValue,
                       rootValue,
                       document,
                       operation,
@@ -222,7 +222,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                 type: "RESPONSE",
                 payload: formatPayload({
                   payload: result,
-                  context,
+                  contextValue,
                   rootValue,
                   document,
                   operation,
@@ -233,14 +233,14 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             }
           }
         } else {
-          const result = await execute(
+          const result = await execute({
             schema,
             document,
             rootValue,
-            context,
+            contextValue,
             variableValues,
-            operationName
-          );
+            operationName,
+          });
 
           // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
           // execution result.
@@ -252,7 +252,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                   onResult(
                     formatPayload({
                       payload,
-                      context,
+                      contextValue,
                       rootValue,
                       document,
                       operation,
@@ -271,7 +271,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
               headers: [],
               payload: formatPayload({
                 payload: result,
-                context,
+                contextValue,
                 rootValue,
                 document,
                 operation,
@@ -303,7 +303,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             onResult(
               formatPayload({
                 payload,
-                context,
+                contextValue,
                 rootValue,
                 document,
                 operation,
@@ -319,7 +319,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           headers: error.headers || [],
           payload: formatPayload({
             payload,
-            context,
+            contextValue,
             rootValue,
             document,
             operation,
@@ -331,7 +331,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
 
   return {
     ...result,
-    context,
+    contextValue,
     rootValue,
     document,
     operation,
