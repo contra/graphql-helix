@@ -1,12 +1,12 @@
 import type { ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
-import { HttpError } from "./errors";
+import { HttpError } from "../errors";
 import type {
   Response,
   MultipartResponse,
   Push,
   ProcessRequestResult,
-} from "./types";
+} from "../types";
 
 type RawResponse = ServerResponse | Http2ServerResponse;
 
