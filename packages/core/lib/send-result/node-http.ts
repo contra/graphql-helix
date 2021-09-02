@@ -8,7 +8,7 @@ import type {
   ProcessRequestResult,
 } from "../types";
 
-type RawResponse = ServerResponse | Http2ServerResponse;
+export type RawResponse = ServerResponse | Http2ServerResponse;
 
 export async function sendResponseResult(
   responseResult: Response<any, any>,
@@ -82,12 +82,14 @@ export async function sendResult(
   result: ProcessRequestResult<any, any>,
   rawResponse: RawResponse
 ) {
-  if (result.type === "RESPONSE") {
-    return sendResponseResult(result, rawResponse);
-  } else if (result.type === "MULTIPART_RESPONSE") {
-    return sendMultipartResponseResult(result, rawResponse);
-  } else if (result.type === "PUSH") {
-    return sendPushResult(result, rawResponse);
+  switch (result.type) {
+    case "RESPONSE":
+      return sendResponseResult(result, rawResponse);
+    case "MULTIPART_RESPONSE":
+      return sendMultipartResponseResult(result, rawResponse);
+    case "PUSH":
+      return sendPushResult(result, rawResponse);
+    default:
+      throw new HttpError(500, "Cannot process result.");
   }
-  throw new HttpError(500, "Cannot process result.");
 }
