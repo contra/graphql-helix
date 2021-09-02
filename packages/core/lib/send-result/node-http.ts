@@ -37,7 +37,7 @@ export async function sendMultipartResponseResult(
   rawResponse.on("close", () => {
     multipartResult.unsubscribe();
   });
-  // @ts-ignore - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
+  // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
   rawResponse.write("---");
 
   await multipartResult.subscribe((result) => {
@@ -53,11 +53,11 @@ export async function sendMultipartResponseResult(
     if (result.hasNext) {
       data.push("---");
     }
-    // @ts-ignore - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
+    // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
     rawResponse.write(data.join("\r\n"));
   });
 
-  // @ts-ignore - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
+  // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
   rawResponse.write("\r\n-----\r\n");
   rawResponse.end();
 }
@@ -78,7 +78,7 @@ export async function sendPushResult(
   });
 
   await pushResult.subscribe((result) => {
-    // @ts-ignore - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
+    // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
     rawResponse.write(`data: ${JSON.stringify(result)}\n\n`);
   });
 }
