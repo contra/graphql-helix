@@ -76,8 +76,8 @@
     "./*": {
       "require": "./dist/*.js"
     },
-    "./send-result/node": {
-      "require": "./dist/send-result/node.js"
+    "./send-result/node-http": {
+      "require": "./dist/send-result/node-http.js"
     }
   }
 }
