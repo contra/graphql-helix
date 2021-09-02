@@ -14,7 +14,12 @@ export async function sendResponseResult(
   responseResult: Response<any, any>,
   rawResponse: RawResponse
 ) {
-  rawResponse.statusCode = responseResult.status;
+  for (const { name, value } of responseResult.headers) {
+    rawResponse.setHeader(name, value);
+  }
+  rawResponse.writeHead(responseResult.status, {
+    "content-type": "application/json",
+  });
   rawResponse.end(JSON.stringify(responseResult.payload));
 }
 
