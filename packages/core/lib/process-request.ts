@@ -278,13 +278,17 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           }
         }
       } catch (executionError) {
-        throw new HttpError(
-          500,
-          "Unexpected error encountered while executing GraphQL request.",
-          {
-            graphqlErrors: [new GraphQLError(executionError.message)],
-          }
-        );
+        if (executionError instanceof HttpError) {
+          throw executionError;
+        } else {
+          throw new HttpError(
+            500,
+            "Unexpected error encountered while executing GraphQL request.",
+            {
+              graphqlErrors: [new GraphQLError(executionError.message)],
+            }
+          );
+        }
       }
     } catch (error) {
       const payload = {
