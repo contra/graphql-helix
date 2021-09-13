@@ -1,7 +1,9 @@
 dist
 node_modules
 .*
+!.changeset
 !.gitignore
 !.github
 !.prettierignore
+!.prettierrc
 
