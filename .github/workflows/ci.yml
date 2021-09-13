@@ -1,11 +1,15 @@
-name: GraphQL Helix CI
-on: [push, pull_request]
+name: GraphQL Helix
+on:
+  pull_request:
+    branches:
+      - master
+      
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x, 14.x]
+        node-version: [12.x, 14.x, 16.x]
     steps:
       - uses: actions/checkout@v2
       - name: Node.version ${{ matrix.node-version }}
