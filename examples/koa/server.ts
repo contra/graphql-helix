@@ -1,13 +1,14 @@
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
-import { PassThrough } from "stream";
-import {
-  getGraphQLParameters,
-  processRequest,
-  renderGraphiQL,
-  shouldRenderGraphiQL,
-} from "graphql-helix";
+import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "graphql-helix";
 import { schema } from "./schema";
+
+declare module "koa" {
+  interface Request {
+    body?: any;
+    rawBody: string;
+  }
+}
 
 const app = new Koa();
 
@@ -34,79 +35,7 @@ app.use(async (ctx) => {
       schema,
     });
 
-    if (result.type === "RESPONSE") {
-      result.headers.forEach(({ name, value }) =>
-        ctx.response.set(name, value)
-      );
-      ctx.status = result.status;
-      ctx.body = result.payload;
-    } else if (result.type === "PUSH") {
-      ctx.req.socket.setTimeout(0);
-      ctx.req.socket.setNoDelay(true);
-      ctx.req.socket.setKeepAlive(true);
-
-      ctx.set({
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      });
-
-      const stream = new PassThrough();
-
-      stream.on("close", () => {
-        result.unsubscribe();
-      });
-
-      ctx.status = 200;
-      ctx.body = stream;
-
-      result.subscribe((result) => {
-        stream.write(`data: ${JSON.stringify(result)}\n\n`);
-      });
-    } else {
-      ctx.req.socket.setTimeout(0);
-      ctx.req.socket.setNoDelay(true);
-      ctx.req.socket.setKeepAlive(true);
-
-      ctx.set({
-        Connection: "keep-alive",
-        "Content-Type": 'multipart/mixed; boundary="-"',
-        "Transfer-Encoding": "chunked",
-      });
-
-      const stream = new PassThrough();
-
-      stream.on("close", () => {
-        result.unsubscribe();
-      });
-
-      ctx.status = 200;
-      ctx.body = stream;
-
-      stream.write("---");
-
-      result
-        .subscribe((result) => {
-          const chunk = Buffer.from(JSON.stringify(result), "utf8");
-          const data = [
-            "",
-            "Content-Type: application/json; charset=utf-8",
-            "Content-Length: " + String(chunk.length),
-            "",
-            chunk,
-          ];
-
-          if (result.hasNext) {
-            data.push("---");
-          }
-
-          stream.write(data.join("\r\n"));
-        })
-        .then(() => {
-          stream.write("\r\n-----\r\n");
-          stream.end();
-        });
-    }
+    sendResult(result, ctx.res);
   }
 });
 

@@ -4,6 +4,8 @@ import {
   getGraphQLParameters,
   processRequest,
   renderGraphiQL,
+  sendPushResult,
+  sendResponseResult,
   shouldRenderGraphiQL,
 } from "graphql-helix";
 import { compileQuery, isCompiledQuery } from "graphql-jit";
@@ -51,37 +53,20 @@ app.use("/graphql", async (req, res) => {
       },
       validate: (schema, documentAST, rules, typeInfo, options) => {
         if (!validationErrors) {
-          validationErrors = validate(
-            schema,
-            documentAST,
-            rules,
-            typeInfo,
-            options
-          );
+          validationErrors = validate(schema, documentAST, rules, typeInfo, options);
           cache.set(cacheKey, { document, validationErrors });
         }
 
         return validationErrors;
       },
-      execute: (
-        schema,
-        documentAst,
-        rootValue,
-        contextValue,
-        variableValues,
-        operationName
-      ) => {
+      execute: (schema, documentAst, rootValue, contextValue, variableValues, operationName) => {
         if (!compiledQuery) {
           compiledQuery = compileQuery(schema, documentAst, operationName);
           cache.set(cacheKey, { compiledQuery, document, validationErrors });
         }
 
         if (isCompiledQuery(compiledQuery)) {
-          return compiledQuery.query(
-            rootValue,
-            contextValue,
-            variableValues || {}
-          );
+          return compiledQuery.query(rootValue, contextValue, variableValues || {});
         } else {
           return compiledQuery;
         }
@@ -89,23 +74,9 @@ app.use("/graphql", async (req, res) => {
     });
 
     if (result.type === "RESPONSE") {
-      result.headers.forEach(({ name, value }) => res.setHeader(name, value));
-      res.status(result.status);
-      res.json(result.payload);
+      sendResponseResult(result, res);
     } else if (result.type === "PUSH") {
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        Connection: "keep-alive",
-        "Cache-Control": "no-cache",
-      });
-
-      req.on("close", () => {
-        result.unsubscribe();
-      });
-
-      await result.subscribe((result) => {
-        res.write(`data: ${JSON.stringify(result)}\n\n`);
-      });
+      sendPushResult(result, res);
     } else {
       // GraphQL JIT does not currently support @defer and @stream
     }

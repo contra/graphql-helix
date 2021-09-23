@@ -10,21 +10,12 @@ import {
   OperationDefinitionNode,
   ValidationRule,
   ExecutionResult,
-} from "https://cdn.skypack.dev/graphql@0.0.0?dts";
+} from "https://cdn.skypack.dev/graphql@15.4.0-experimental-stream-defer.1?dts";
 import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index.ts";
 import { HttpError } from "./errors.ts";
-import {
-  ExecutionContext,
-  ExecutionPatchResult,
-  MultipartResponse,
-  ProcessRequestOptions,
-  ProcessRequestResult,
-} from "./types.ts";
+import { ExecutionContext, ExecutionPatchResult, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types.ts";
 
-const parseQuery = (
-  query: string | DocumentNode,
-  parse: typeof defaultParse
-): DocumentNode | Promise<DocumentNode> => {
+const parseQuery = (query: string | DocumentNode, parse: typeof defaultParse): DocumentNode | Promise<DocumentNode> => {
   if (typeof query !== "string" && query.kind === "Document") {
     return query;
   }
@@ -41,7 +32,7 @@ const parseQuery = (
     return parseResult;
   } catch (syntaxError) {
     throw new HttpError(400, "GraphQL syntax error.", {
-      graphqlErrors: [syntaxError],
+      graphqlErrors: [syntaxError as GraphQLError],
     });
   }
 };
@@ -60,10 +51,7 @@ export const validateDocument = (
   }
 };
 
-const getExecutableOperation = (
-  document: DocumentNode,
-  operationName?: string
-): OperationDefinitionNode => {
+const getExecutableOperation = (document: DocumentNode, operationName?: string): OperationDefinitionNode => {
   const operation = getOperationAST(document, operationName);
 
   if (!operation) {
@@ -97,27 +85,15 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
   let document: DocumentNode | undefined;
   let operation: OperationDefinitionNode | undefined;
 
-  const result = await (async (): Promise<
-    ProcessRequestResult<TContext, TRootValue>
-  > => {
-    const accept =
-      typeof request.headers.get === "function"
-        ? request.headers.get("accept")
-        : (request.headers as any).accept;
+  const result = await (async (): Promise<ProcessRequestResult<TContext, TRootValue>> => {
+    const accept = typeof request.headers.get === "function" ? request.headers.get("accept") : (request.headers as any).accept;
     const isEventStream = accept === "text/event-stream";
 
     try {
-      if (
-        !isHttpMethod("GET", request.method) &&
-        !isHttpMethod("POST", request.method)
-      ) {
-        throw new HttpError(
-          405,
-          "GraphQL only supports GET and POST requests.",
-          {
-            headers: [{ name: "Allow", value: "GET, POST" }],
-          }
-        );
+      if (!isHttpMethod("GET", request.method) && !isHttpMethod("POST", request.method)) {
+        throw new HttpError(405, "GraphQL only supports GET and POST requests.", {
+          headers: [{ name: "Allow", value: "GET, POST" }],
+        });
       }
 
       if (query == null) {
@@ -130,23 +106,17 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
 
       operation = getExecutableOperation(document, operationName);
 
-      if (
-        operation.operation === "mutation" &&
-        isHttpMethod("GET", request.method)
-      ) {
-        throw new HttpError(
-          405,
-          "Can only perform a mutation operation from a POST request.",
-          { headers: [{ name: "Allow", value: "POST" }] }
-        );
+      if (operation.operation === "mutation" && isHttpMethod("GET", request.method)) {
+        throw new HttpError(405, "Can only perform a mutation operation from a POST request.", {
+          headers: [{ name: "Allow", value: "POST" }],
+        });
       }
 
       let variableValues: { [name: string]: any } | undefined;
 
       try {
         if (variables) {
-          variableValues =
-            typeof variables === "string" ? JSON.parse(variables) : variables;
+          variableValues = typeof variables === "string" ? JSON.parse(variables) : variables;
         }
       } catch (_error) {
         throw new HttpError(400, "Variables are invalid JSON.");
@@ -159,22 +129,11 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           operation,
           variables: variableValues,
         };
-        context = contextFactory
-          ? await contextFactory(executionContext)
-          : ({} as TContext);
-        rootValue = rootValueFactory
-          ? await rootValueFactory(executionContext)
-          : ({} as TRootValue);
+        context = contextFactory ? await contextFactory(executionContext) : ({} as TContext);
+        rootValue = rootValueFactory ? await rootValueFactory(executionContext) : ({} as TRootValue);
 
         if (operation.operation === "subscription") {
-          const result = await subscribe(
-            schema,
-            document,
-            rootValue,
-            context,
-            variableValues,
-            operationName
-          );
+          const result = await subscribe(schema, document, rootValue, context, variableValues, operationName);
 
           // If errors are encountered while subscribing to the operation, an execution result
           // instead of an AsyncIterable.
@@ -231,14 +190,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             }
           }
         } else {
-          const result = await execute(
-            schema,
-            document,
-            rootValue,
-            context,
-            variableValues,
-            operationName
-          );
+          const result = await execute(schema, document, rootValue, context, variableValues, operationName);
 
           // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
           // execution result.
@@ -279,29 +231,22 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         }
       } catch (executionError) {
         if (executionError instanceof GraphQLError) {
-          throw new HttpError(
-            200,
-            "GraphQLError encountered white executed GraphQL request.",
-            {
-              graphqlErrors: [executionError],
-            }
-          );
+          throw new HttpError(200, "GraphQLError encountered white executed GraphQL request.", {
+            graphqlErrors: [executionError],
+          });
         } else if (executionError instanceof HttpError) {
           throw executionError;
         } else {
-          throw new HttpError(
-            500,
-            "Unexpected error encountered while executing GraphQL request.",
-            {
-              graphqlErrors: [new GraphQLError(executionError.message)],
-            }
-          );
+          throw new HttpError(500, "Unexpected error encountered while executing GraphQL request.", {
+            graphqlErrors: [new GraphQLError((executionError as Error).message)],
+          });
         }
       }
     } catch (error) {
-      const payload = {
-        errors: error.graphqlErrors || [new GraphQLError(error.message)],
+      const payload: ExecutionResult<any> = {
+        errors: ((error as HttpError).graphqlErrors as GraphQLError[]) || [new GraphQLError((error as Error).message)],
       };
+
       if (isEventStream) {
         return {
           type: "PUSH",
@@ -321,8 +266,8 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
       } else {
         return {
           type: "RESPONSE",
-          status: error.status || 500,
-          headers: error.headers || [],
+          status: (error as HttpError).status || 500,
+          headers: (error as HttpError).headers || [],
           payload: formatPayload({
             payload,
             context,

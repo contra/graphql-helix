@@ -6,12 +6,12 @@
     "start": "ts-node server"
   },
   "devDependencies": {
-    "ts-node": "^9.0.0",
-    "typescript": "^4.0.5"
+    "ts-node": "10.2.1",
+    "typescript": "4.4.3"
   },
   "dependencies": {
-    "fastify": "^3.7.0",
+    "fastify": "3.21.6",
     "graphql": "15.4.0-experimental-stream-defer.1",
-    "graphql-helix": "^1.1.0"
+    "graphql-helix": "^1.7.0"
   }
 }

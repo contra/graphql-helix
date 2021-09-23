@@ -1,7 +1,8 @@
 {
   "name": "@graphql-helix/graphiql",
   "version": "1.1.0",
-  "description": "A highly evolved GraphQL HTTP Server 🧬",
+  "private": true,
+  "description": "A wrapper for GraphiQL with enhanced tooling and support for multiple transports",
   "repository": "https://github.com/contrawork/graphql-helix.git",
   "license": "MIT",
   "author": "Daniel Rearden <danielrearden@gmail.com>",
@@ -10,8 +11,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "node build.js",
-    "lint": "prettier --check ."
+    "build": "node build.js"
   },
   "dependencies": {
     "@graphql-tools/url-loader": "6.10.1",

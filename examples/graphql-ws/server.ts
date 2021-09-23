@@ -3,11 +3,14 @@ import {
   getGraphQLParameters,
   processRequest,
   renderGraphiQL,
+  sendMultipartResponseResult,
+  sendResponseResult,
   shouldRenderGraphiQL,
 } from "graphql-helix";
 import { execute, subscribe, GraphQLError } from "graphql";
-import { createServer } from "graphql-ws";
 import { schema } from "./schema";
+import * as ws from "ws";
+import { useServer } from "graphql-ws/lib/use/ws";
 
 const app = express();
 
@@ -20,6 +23,7 @@ app.use("/graphql", async (req, res) => {
     method: req.method,
     query: req.query,
   };
+
   if (shouldRenderGraphiQL(request)) {
     res.send(
       renderGraphiQL({
@@ -28,6 +32,7 @@ app.use("/graphql", async (req, res) => {
     );
     return;
   }
+
   const { operationName, query, variables } = getGraphQLParameters(request);
 
   const result = await processRequest({
@@ -39,47 +44,13 @@ app.use("/graphql", async (req, res) => {
   });
 
   if (result.type === "RESPONSE") {
-    result.headers.forEach(({ name, value }) => res.setHeader(name, value));
-    res.status(result.status);
-    res.json(result.payload);
+    sendResponseResult(result, res);
   } else if (result.type === "MULTIPART_RESPONSE") {
-    res.writeHead(200, {
-      Connection: "keep-alive",
-      "Content-Type": 'multipart/mixed; boundary="-"',
-      "Transfer-Encoding": "chunked",
-    });
-
-    req.on("close", () => {
-      result.unsubscribe();
-    });
-
-    res.write("---");
-
-    await result.subscribe((result) => {
-      const chunk = Buffer.from(JSON.stringify(result), "utf8");
-      const data = [
-        "",
-        "Content-Type: application/json; charset=utf-8",
-        "Content-Length: " + String(chunk.length),
-        "",
-        chunk,
-      ];
-
-      if (result.hasNext) {
-        data.push("---");
-      }
-
-      res.write(data.join("\r\n"));
-    });
-
-    res.write("\r\n-----\r\n");
-    res.end();
+    sendMultipartResponseResult(result, res);
   } else {
     res.status(422);
     res.json({
-      errors: [
-        new GraphQLError("Subscriptions should be sent over WebSocket."),
-      ],
+      errors: [new GraphQLError("Subscriptions should be sent over WebSocket.")],
     });
   }
 });
@@ -87,17 +58,12 @@ app.use("/graphql", async (req, res) => {
 const port = process.env.PORT || 4000;
 
 const server = app.listen(port, () => {
-  createServer(
-    {
-      schema,
-      execute,
-      subscribe,
-    },
-    {
-      server,
-      path: "/graphql",
-    }
-  );
+  const wsServer = new ws.Server({
+    server,
+    path: "/graphql",
+  });
+
+  useServer({ schema, execute, subscribe }, wsServer);
 
   console.log(`GraphQL server is running on port ${port}.`);
 });
