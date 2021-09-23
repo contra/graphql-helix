@@ -1,0 +1,65 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "eslint:recommended",
+    "standard",
+    "prettier",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "plugins": ["@typescript-eslint", "promise"],
+  "rules": {
+    "no-empty": "off",
+    "no-console": "error",
+    "no-prototype-builtins": "off",
+    "no-useless-constructor": "off",
+    "@typescript-eslint/no-unused-vars": ["warn", {"args":  "none"}],
+    "@typescript-eslint/no-use-before-define": "off",
+    "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/no-empty-interface": "off",
+    "@typescript-eslint/no-empty-function": "off",
+    "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/ban-ts-ignore": "off",
+    "@typescript-eslint/ban-types": "off",
+    "no-use-before-define": "off"
+  },
+  "env": {
+    "es6": true,
+    "node": true
+  },
+  "overrides": [
+    {
+      "files": [
+        "./packages/deno/**/*.ts",
+        "./benchmark/**/*.js"
+      ],
+      "rules": {
+      }
+    },
+    {
+      "files": [
+        "./examples/**/*.ts"
+      ],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": [
+        "**/tests/**/*.ts",
+        "**/test/**/*.ts",
+        "*.spec.ts"
+      ],
+      "env": {
+        "jest": true
+      },
+      "rules": {
+        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/explicit-module-boundary-types": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["dist", "node_modules", "dev-test", "website"]
+}

@@ -47,10 +47,7 @@ const getOperationWithFragments = (
           return false;
         }
       }
-      if (
-        definition.operation === "subscription" ||
-        isLiveQueryOperationDefinitionNode(definition)
-      ) {
+      if (definition.operation === "subscription" || isLiveQueryOperationDefinitionNode(definition)) {
         isSubscriber = true;
       }
     }
@@ -65,9 +62,7 @@ const getOperationWithFragments = (
   };
 };
 
-const buildHybridMenuOptions = (
-  hybridConfig: HybridSubscriptionTransportConfig
-) => {
+const buildHybridMenuOptions = (hybridConfig: HybridSubscriptionTransportConfig) => {
   const options: Array<{
     title: string;
     value: keyof HybridSubscriptionTransportConfig;
@@ -119,14 +114,10 @@ export const init = async ({
   const initialQuery = searchParams.get("query") || undefined;
   const initialVariables = searchParams.get("variables") || "{}";
 
-  const menuOptions =
-    hybridSubscriptionTransportConfig &&
-    buildHybridMenuOptions(hybridSubscriptionTransportConfig.config);
+  const menuOptions = hybridSubscriptionTransportConfig && buildHybridMenuOptions(hybridSubscriptionTransportConfig.config);
   let startHybridIndex: null | number = null;
   if (hybridSubscriptionTransportConfig && menuOptions) {
-    startHybridIndex = menuOptions.findIndex(
-      (option) => option.value === hybridSubscriptionTransportConfig.default
-    );
+    startHybridIndex = menuOptions.findIndex((option) => option.value === hybridSubscriptionTransportConfig.default);
     if (startHybridIndex === -1) {
       startHybridIndex = 0;
     }
@@ -136,9 +127,7 @@ export const init = async ({
     React.createElement(() => {
       const graphiqlRef = React.useRef<GraphiQL | null>(null);
 
-      const [hybridTransportIndex, setHybridTransportIndex] = React.useState(
-        startHybridIndex
-      );
+      const [hybridTransportIndex, setHybridTransportIndex] = React.useState(startHybridIndex);
       const [networkInterface, setNetworkInterface] = React.useState<null | {
         executor: AsyncExecutor;
         subscriber: Subscriber;
@@ -153,8 +142,7 @@ export const init = async ({
           schemaDescription: true,
           subscriptionsEndpoint,
           useWebSocketLegacyProtocol,
-          headers: (executionParams) =>
-            executionParams?.context?.headers || JSON.parse(headers),
+          headers: (executionParams) => executionParams?.context?.headers || JSON.parse(headers),
         };
 
         if (menuOptions && hybridTransportIndex) {
@@ -182,6 +170,7 @@ export const init = async ({
             }
             setNetworkInterface(networkInterface);
           })
+          // eslint-disable-next-line no-console
           .catch(console.error);
 
         return () => {
@@ -191,12 +180,6 @@ export const init = async ({
 
       const onShare = () => {
         const state = graphiqlRef.current?.state;
-
-        console.log({
-          a: state?.query,
-          b: state?.variables,
-          c: state?.operationName,
-        });
 
         copyToClipboard(
           urlLoader.prepareGETUrl({
@@ -218,10 +201,7 @@ export const init = async ({
             let stopSubscription = () => {};
             Promise.resolve().then(async () => {
               try {
-                const {
-                  document: filteredDocument,
-                  isSubscriber,
-                } = getOperationWithFragments(
+                const { document: filteredDocument, isSubscriber } = getOperationWithFragments(
                   parse(graphQLParams.query),
                   graphQLParams.operationName
                 );

@@ -16,11 +16,7 @@ const ToolbarDropDownMenuItem = <TOption extends ToolbarDropDownOption>(props: {
   onClick: () => void;
 }) => {
   return (
-    <button
-      className="toolbar-drop-down-menu-item"
-      title={props.item.title}
-      onClick={props.onClick}
-    >
+    <button className="toolbar-drop-down-menu-item" title={props.item.title} onClick={props.onClick}>
       {props.item.title}
     </button>
   );
@@ -34,7 +30,7 @@ export const ToolbarDropDown = <TOption extends ToolbarDropDownOption>(props: {
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const selectedOption = props.options[props.activeOptionIndex] ?? null;
-  console.log(props.options);
+
   return (
     <div className="toolbar-drop-down">
       <ToolbarButton

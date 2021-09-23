@@ -1,10 +1,5 @@
 import express, { RequestHandler } from "express";
-import {
-  getGraphQLParameters,
-  processRequest,
-  renderGraphiQL,
-  shouldRenderGraphiQL,
-} from "../../lib";
+import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 
 const graphqlMiddleware: RequestHandler = async (req, res) => {
@@ -56,13 +51,7 @@ const graphqlMiddleware: RequestHandler = async (req, res) => {
 
     await result.subscribe((result) => {
       const chunk = Buffer.from(JSON.stringify(result), "utf8");
-      const data = [
-        "",
-        "Content-Type: application/json; charset=utf-8",
-        "Content-Length: " + String(chunk.length),
-        "",
-        chunk,
-      ];
+      const data = ["", "Content-Type: application/json; charset=utf-8", "Content-Length: " + String(chunk.length), "", chunk];
 
       if (result.hasNext) {
         data.push("---");
