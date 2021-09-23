@@ -15,6 +15,6 @@
     "@n1ru4l/graphql-live-query": "0.8.1",
     "express": "4.17.1",
     "graphql": "15.4.0-experimental-stream-defer.1",
-    "graphql-helix": "^1.7.0"
+    "graphql-helix": "^1.8.0"
   }
 }
