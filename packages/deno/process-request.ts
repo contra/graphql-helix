@@ -11,11 +11,7 @@ import {
   ValidationRule,
   ExecutionResult,
 } from "https://cdn.skypack.dev/graphql@0.0.0?dts";
-import {
-  stopAsyncIteration,
-  isAsyncIterable,
-  isHttpMethod,
-} from "./util/index.ts";
+import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index.ts";
 import { HttpError } from "./errors.ts";
 import {
   ExecutionContext,
@@ -282,13 +278,25 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           }
         }
       } catch (executionError) {
-        throw new HttpError(
-          500,
-          "Unexpected error encountered while executing GraphQL request.",
-          {
-            graphqlErrors: [new GraphQLError(executionError.message)],
-          }
-        );
+        if (executionError instanceof GraphQLError) {
+          throw new HttpError(
+            200,
+            "GraphQLError encountered white executed GraphQL request.",
+            {
+              graphqlErrors: [executionError],
+            }
+          );
+        } else if (executionError instanceof HttpError) {
+          throw executionError;
+        } else {
+          throw new HttpError(
+            500,
+            "Unexpected error encountered while executing GraphQL request.",
+            {
+              graphqlErrors: [new GraphQLError(executionError.message)],
+            }
+          );
+        }
       }
     } catch (error) {
       const payload = {

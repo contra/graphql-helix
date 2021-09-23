@@ -3,3 +3,4 @@ export * from "./process-request.ts";
 export * from "./render-graphiql.ts";
 export * from "./should-render-graphiql.ts";
 export * from "./types.ts";
+export * from "./errors.ts";

@@ -45,6 +45,6 @@ function escapeString(str) {
     .replace(`"{CSS}"`, () => escapeString(cssBuild.outputFiles[0].text))
     .replace(`"{JS}"`, () => escapeString(jsBuild.outputFiles[0].text));
 
-  console.info(`Writing GraphiQL render file to ${templateFile}`);
+  console.info(`Writing GraphiQL rendered file to ${templateFile}`);
   writeFileSync(outputFile, output);
 })();
