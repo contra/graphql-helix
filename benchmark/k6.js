@@ -2,7 +2,7 @@
 import { check } from "k6";
 import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 import { graphql, checkNoErrors } from "./utils.js";
-import { githubComment } from "./github.js";
+import { githubComment } from "https://raw.githubusercontent.com/dotansimha/k6-github-pr-comment/master/lib.js";
 
 export const options = {
   vus: 1,
@@ -34,15 +34,11 @@ export function handleSummary(data) {
       }
 
       if (checks.failures) {
-        result.push(
-          "**Failed assertions detected**: some GraphQL operations included in the loadtest are failing."
-        );
+        result.push("**Failed assertions detected**: some GraphQL operations included in the loadtest are failing.");
       }
 
       if (!passes) {
-        result.push(
-          `> If the performance regression is expected, please increase the failing threshold.`
-        );
+        result.push(`> If the performance regression is expected, please increase the failing threshold.`);
       }
 
       return result.join("\n");
