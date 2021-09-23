@@ -1,19 +1,11 @@
 import type { ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
 import { HttpError } from "../errors";
-import type {
-  Response,
-  MultipartResponse,
-  Push,
-  ProcessRequestResult,
-} from "../types";
+import type { Response, MultipartResponse, Push, ProcessRequestResult } from "../types";
 
 export type RawResponse = ServerResponse | Http2ServerResponse;
 
-export async function sendResponseResult(
-  responseResult: Response<any, any>,
-  rawResponse: RawResponse
-) {
+export async function sendResponseResult(responseResult: Response<any, any>, rawResponse: RawResponse): Promise<void> {
   for (const { name, value } of responseResult.headers) {
     rawResponse.setHeader(name, value);
   }
@@ -26,7 +18,7 @@ export async function sendResponseResult(
 export async function sendMultipartResponseResult(
   multipartResult: MultipartResponse<any, any>,
   rawResponse: RawResponse
-) {
+): Promise<void> {
   rawResponse.writeHead(200, {
     // prettier-ignore
     "Connection": "keep-alive",
@@ -42,13 +34,7 @@ export async function sendMultipartResponseResult(
 
   await multipartResult.subscribe((result) => {
     const chunk = Buffer.from(JSON.stringify(result), "utf8");
-    const data = [
-      "",
-      "Content-Type: application/json; charset=utf-8",
-      "Content-Length: " + String(chunk.length),
-      "",
-      chunk,
-    ];
+    const data = ["", "Content-Type: application/json; charset=utf-8", "Content-Length: " + String(chunk.length), "", chunk];
 
     if (result.hasNext) {
       data.push("---");
@@ -62,10 +48,7 @@ export async function sendMultipartResponseResult(
   rawResponse.end();
 }
 
-export async function sendPushResult(
-  pushResult: Push<any, any>,
-  rawResponse: RawResponse
-) {
+export async function sendPushResult(pushResult: Push<any, any>, rawResponse: RawResponse): Promise<void> {
   rawResponse.writeHead(200, {
     "Content-Type": "text/event-stream",
     // prettier-ignore
@@ -83,10 +66,7 @@ export async function sendPushResult(
   });
 }
 
-export async function sendResult(
-  result: ProcessRequestResult<any, any>,
-  rawResponse: RawResponse
-) {
+export async function sendResult(result: ProcessRequestResult<any, any>, rawResponse: RawResponse): Promise<void> {
   switch (result.type) {
     case "RESPONSE":
       return sendResponseResult(result, rawResponse);

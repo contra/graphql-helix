@@ -17,8 +17,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: yarn install --frozen-lockfile
-      - run: yarn workspace graphql-helix lint
-      - run: yarn workspace @graphql-helix/graphiql lint
+      - run: yarn lint
       - run: yarn workspace graphql-helix build
       - run: yarn workspace graphql-helix test
         env:

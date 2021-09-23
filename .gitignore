@@ -6,4 +6,5 @@ node_modules
 !.github
 !.prettierignore
 !.prettierrc
-
+!.eslintrc.json
+!.eslintignore
