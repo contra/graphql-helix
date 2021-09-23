@@ -19,8 +19,8 @@ export function handleSummary(data) {
     token: __ENV.GITHUB_TOKEN,
     commit: __ENV.GITHUB_SHA,
     pr: __ENV.GITHUB_PR,
-    org: "dotansimha",
-    repo: "envelop",
+    org: "contrawork",
+    repo: "graphql-helix",
     renderTitle({ passes }) {
       return passes ? "✅ Benchmark Results" : "❌ Benchmark Failed";
     },
