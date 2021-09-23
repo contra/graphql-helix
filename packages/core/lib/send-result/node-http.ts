@@ -1,3 +1,4 @@
+// @denoify-ignore
 import { ExecutionResult } from "graphql";
 import type { ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";

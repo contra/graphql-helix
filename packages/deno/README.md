@@ -24,6 +24,10 @@ GraphQL Helix is a collection of utility functions for building your own GraphQL
 npm install graphql-helix
 ```
 
+```
+yarn add graphql-helix
+```
+
 ## Basic Usage
 
 The following example shows how to integrate GraphQL Helix with Node.js using Express. This example shows how to implement all the basic features, including a GraphiQL interface, subscriptions and support for `@stream` and `@defer`. See the rest of the [examples](./examples) for implementations using other frameworks and runtimes. For implementing additional features, see the [Recipes](#Recipes) section below.
@@ -35,6 +39,7 @@ import {
   processRequest,
   renderGraphiQL,
   shouldRenderGraphiQL,
+  sendResult,
 } from "../lib";
 import { schema } from "./schema";
 
@@ -55,7 +60,7 @@ app.use("/graphql", async (req, res) => {
   if (shouldRenderGraphiQL(request)) {
     res.send(renderGraphiQL());
   } else {
-    // Extract the GraphQL parameters from the request
+    // Extract the Graphql parameters from the request
     const { operationName, query, variables } = getGraphQLParameters(request);
 
     // Validate and execute the query
@@ -71,66 +76,9 @@ app.use("/graphql", async (req, res) => {
     // 1) RESPONSE: a regular JSON payload
     // 2) MULTIPART RESPONSE: a multipart response (when @stream or @defer directives are used)
     // 3) PUSH: a stream of events to push back down the client for a subscription
-    if (result.type === "RESPONSE") {
-      // We set the provided status and headers and just the send the payload back to the client
-      result.headers.forEach(({ name, value }) => res.setHeader(name, value));
-      res.status(result.status);
-      res.json(result.payload);
-    } else if (result.type === "MULTIPART_RESPONSE") {
-      // Indicate we're sending a multipart response
-      res.writeHead(200, {
-        Connection: "keep-alive",
-        "Content-Type": 'multipart/mixed; boundary="-"',
-        "Transfer-Encoding": "chunked",
-      });
-
-      // If the request is closed by the client, we unsubscribe and stop executing the request
-      req.on("close", () => {
-        result.unsubscribe();
-      });
-
-      res.write("---");
-
-      // Subscribe and send back each result as a separate chunk. We await the subscribe
-      // call. Once we're done executing the request and there are no more results to send
-      // to the client, the Promise returned by subscribe will resolve and we can end the response.
-      await result.subscribe((result) => {
-        const chunk = Buffer.from(JSON.stringify(result), "utf8");
-        const data = [
-          "",
-          "Content-Type: application/json; charset=utf-8",
-          "Content-Length: " + String(chunk.length),
-          "",
-          chunk,
-        ];
-
-        if (result.hasNext) {
-          data.push("---");
-        }
-
-        res.write(data.join("\r\n"));
-      });
-
-      res.write("\r\n-----\r\n");
-      res.end();
-    } else {
-      // Indicate we're sending an event stream to the client
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        Connection: "keep-alive",
-        "Cache-Control": "no-cache",
-      });
-
-      // If the request is closed by the client, we unsubscribe and stop executing the request
-      req.on("close", () => {
-        result.unsubscribe();
-      });
-
-      // We subscribe to the event stream and push any new events to the client
-      await result.subscribe((result) => {
-        res.write(`data: ${JSON.stringify(result)}\n\n`);
-      });
-    }
+    // The "sendResult" is a NodeJS-only shortcut for handling all possible types of Graphql responses,
+    // See "Advanced Usage" below for more details and customizations available on that layer.
+    sendResult(result, res);
   }
 });
 
@@ -140,6 +88,35 @@ app.listen(port, () => {
   console.log(`GraphQL server is running on port ${port}.`);
 });
 ```
+
+## Transports Variations
+
+The `processRequest` will return one of the following types:
+- `RESPONSE`: a regular JSON payload
+- `MULTIPART_RESPONSE`: a multipart response (when @stream or @defer directives are used)
+- `PUSH`: a stream of events to push back down the client for a GraphQL subscription
+
+If you GraphQL schema doesn't have the `type Subscription` defined, or the `@stream` / `@defer` / `@live` directives available, you'll get `RESPONSE` in your result payload, so you can just use `sendResult` helper to send the response data in one line of code.
+
+If you wish to have more control over you transports, you can use one of the following exported helpers:
+
+* `sendResponseResult` - matches the `RESPONSE` type.
+* `sendMultipartResponseResult` - matches the `MULTIPART_RESPONSE` type.
+* `sendPushResult` - matches the `PUSH` type.
+
+And you'll be able to construct a custom flow. Here's a quick example for customizing the response per each type of result:
+
+```ts
+if (result.type === "RESPONSE") {
+  sendResponseResult(result, res);
+} else if (result.type === "MULTIPART_RESPONSE") {
+  sendMultipartResponseResult(result, res);
+} else if (result.type === "PUSH") {
+  sendPushResult(result, res);
+}
+```
+
+> This way you can also disable specific responses if you wish, by return an error instead of calling the helpers. 
 
 ## API
 
@@ -176,6 +153,66 @@ function shouldRenderGraphiQL(request: Request): boolean;
 ```
 
 Uses the method and headers in the request to determine whether a GraphiQL instance should be returned instead of processing an API request.
+
+> This method checks the request headers and also the method. In different transports, the `GET` method might be reused not only for GraphiQL (for example, Server-Sent Events), so it's better to handle a unified handler for all GraphQL requests, and inside handler decide wether to use GraphiQL or not, using `shouldRenderGraphiQL`.
+
+### `sendResult`
+
+```ts
+function sendResult(
+  result: ProcessRequestResult<any, any>,
+  rawResponse: RawResponse,
+  transformResult: TransformResultFn = DEFAULT_TRANSFORM_RESULT_FN
+): Promise<void>;
+```
+
+This method accepts a `result` (from `processRequest`) and a raw NodeJS HTTP `Response` object, and handles the response based on the `result.type`.
+
+Behind the scenes, this method calls `sendResponseResult` / `sendMultipartResponseResult` / `sendPushResult` based on `result.type`.
+
+You can also provide an optional `transformResult` function to manipulate the `ExecutionResult` before sending it, and this function will be called based on the `result.type` lifecycle.
+
+### `sendResponseResult`
+
+```ts
+function sendResponseResult(
+  responseResult: Response<any, any>,
+  rawResponse: RawResponse,
+  transformResult: TransformResultFn = DEFAULT_TRANSFORM_RESULT_FN
+): Promise<void>
+```
+
+Handles response sending for payload of type `RESPONSE`. It will send the stringified value of the result, along with the required HTTP headers and status code.
+
+You can also provide an optional `transformResult` function to manipulate the `ExecutionResult` before sending it.
+
+### `sendMultipartResponseResult`
+
+```ts
+function sendMultipartResponseResult(
+  responseResult: Response<any, any>,
+  rawResponse: RawResponse,
+  transformResult: TransformResultFn = DEFAULT_TRANSFORM_RESULT_FN
+): Promise<void>
+```
+
+Handles response sending for payload of type `MULTIPART_RESPONSE`. It will send the stringified value of the result, along with the required HTTP headers and status for sending multipart-responses. Use this in case your schema implements `@stream` and `@defer`.
+
+You can also provide an optional `transformResult` function to manipulate each `ExecutionResult` object before sending it.
+
+### `sendPushResult`
+
+```ts
+function sendPushResult(
+  responseResult: Response<any, any>,
+  rawResponse: RawResponse,
+  transformResult: TransformResultFn = DEFAULT_TRANSFORM_RESULT_FN
+): Promise<void>
+```
+
+Handles response sending for payload of type `PUSH`. It will send the stringified value of the result, along with the required HTTP headers and status for sending SSE responses (as `text/event-stream`).
+
+You can also provide an optional `transformResult` function to manipulate each `ExecutionResult` object before sending it.
 
 ## Types
 
@@ -368,9 +405,10 @@ With `contextFactory`, we have a mechanism for doing authentication and authoriz
 </br>
 GraphQL Helix is transport-agnostic and could be used with any network protocol. However, it was designed with HTTP in mind, which makes Server Sent Events (SSE) a good fit for implementing subscriptions. You can read more about the advantages and caveats of using SSE [here](https://wundergraph.com/blog/deprecate_graphql_subscriptions_over_websockets).
 
-When the operation being executed is a subscription, `processRequest` will return a `PUSH` result, which you can then use to return a `text/event-stream` response. Here's what a basic implementation looks like:
+When the operation being executed is a subscription, `processRequest` will return a `PUSH` result, which you can then use to return a `text/event-stream` response. You can use the `sendResult` or `sendPushResult` to handle that autoamtically, here's what a basic implementation looks like:
 
 ```ts
+// This is what sendResult/sendPushResult is doing behind the scenes
 if (result.type === "PUSH") {
   // Indicate that we're sending a stream of events and should keep the connection open.
   res.writeHead(200, {
@@ -395,6 +433,8 @@ On the client-side, we use the EventSource API to listen to these events. Our Ev
 
 Implementing SSE on the client-side is equally simple, but you can use [sse-z](https://github.com/contrawork/sse-z) to make it even easier. If you're adding keep-alive to your implementation, `sse-z` provides a nice abstraction for that as well.
 
+> If you are using the GraphiQL varition provided by GraphQL-Helix, you can test SSE directly from there!
+
 </details>
 
 <details>
@@ -412,8 +452,9 @@ import {
   shouldRenderGraphiQL,
 } from "graphql-helix";
 import { execute, subscribe } from "graphql";
-import { createServer } from "graphql-ws";
 import { schema } from "./schema";
+import * as ws from "ws";
+import { useServer } from "graphql-ws/lib/use/ws";
 
 const app = express();
 
@@ -426,17 +467,12 @@ app.use("/graphql", async (req, res) => {
 const port = process.env.PORT || 4000;
 
 const server = app.listen(port, () => {
-  createServer(
-    {
-      schema,
-      execute,
-      subscribe,
-    },
-    {
-      server,
-      path: "/graphql",
-    }
-  );
+  const wsServer = new ws.Server({
+    server,
+    path: "/graphql",
+  });
+
+  useServer({ schema, execute, subscribe }, wsServer);
 
   console.log(`GraphQL server is running on port ${port}.`);
 });
@@ -458,9 +494,11 @@ See [here](examples/file-upload) for an example.
 <details>
 <summary>Using the `@defer` and `@stream` directives</summary>
 </br>
-GraphQL Helix supports `@defer` and `@stream` directives out-of-the-box, provided you use the appropriate version of `graphql-js`. When either directive is used, `processRequest` will return a `MULTIPART_RESPONSE` result, which you can then use to return a `multipart/mixed` response.
+
+GraphQL Helix supports `@defer` and `@stream` directives out-of-the-box, provided you use the appropriate version of `graphql-js`. When either directive is used, `processRequest` will return a `MULTIPART_RESPONSE` result, which you can then use to return a `multipart/mixed` response. You can use `sendResult` or `sendMultipartResponseResult` helpers to send a valid response strucut easily. Here's an example of how this is implemented behind the scenes:
 
 ```ts
+// This is what sendResult / sendMultipartResponseResult is doing behind the scenes
 if (result.type === "MULTIPART_RESPONSE") {
   // Indicate that this is a multipart response and the connection should be kept open.
   res.writeHead(200, {
