@@ -232,8 +232,9 @@ export const init = async ({
                   observer.next(res);
                   observer.complete();
                 }
-              } catch (error) {
+              } catch (error: any) {
                 let errorResult: any;
+
                 if (typeof error.json === "function") {
                   errorResult = await error.json();
                 } else {
@@ -265,7 +266,7 @@ export const init = async ({
             additionalContent: (
               <>
                 <button className="toolbar-button" onClick={onShare}>
-                  Share
+                  Copy Link
                 </button>
                 {menuOptions && hybridTransportIndex != null && (
                   <ToolbarDropDown

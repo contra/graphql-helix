@@ -31,7 +31,7 @@
     "build": "yarn build-render-graphiql && yarn build-deno && yarn run build-node",
     "build-deno": "denoify && del-cli ../deno --force && move-file deno_dist ../deno && cpy ../../README.md ../deno",
     "build-node": "del-cli dist && tsc",
-    "build-render-graphiql": "node scripts/build-render-graphiql",
+    "build-render-graphiql": "cd ../graphiql && yarn run build",
     "test": "jest test/integration.test.ts"
   },
   "devDependencies": {

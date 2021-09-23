@@ -8,3 +8,4 @@ node_modules
 !.prettierrc
 !.eslintrc.json
 !.eslintignore
+yarn-error.log
