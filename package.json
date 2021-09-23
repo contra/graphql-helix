@@ -15,7 +15,7 @@
   "scripts": {
     "prerelease": "yarn build",
     "release": "changeset publish",
-    "build": "yarn workspace @graphql-helix/graphiql build && yarn workspace graphql-helix build",
+    "build": "yarn workspace graphql-helix build",
     "lint": "eslint --ext .ts,.tsx .",
     "update-examples": "node scripts/update-examples",
     "loadtest:start-server": "node ./benchmark/server.js"
