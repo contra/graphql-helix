@@ -10,7 +10,8 @@
   "workspaces": [
     "packages/core",
     "packages/graphiql",
-    "examples/*"
+    "examples/*",
+    "website"
   ],
   "scripts": {
     "prerelease": "yarn build",

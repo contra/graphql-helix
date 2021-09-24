@@ -1,0 +1,46 @@
+---
+title: Using the `@defer` and `@stream` directives
+---
+
+GraphQL Helix supports `@defer` and `@stream` directives out-of-the-box, provided you use the appropriate version of `graphql-js`. When either directive is used, `processRequest` will return a `MULTIPART_RESPONSE` result, which you can then use to return a `multipart/mixed` response. You can use `sendResult` or `sendMultipartResponseResult` helpers to send a valid response strucut easily. Here's an example of how this is implemented behind the scenes:
+
+```ts
+// This is what sendResult / sendMultipartResponseResult is doing behind the scenes
+if (result.type === "MULTIPART_RESPONSE") {
+  // Indicate that this is a multipart response and the connection should be kept open.
+  res.writeHead(200, {
+    Connection: "keep-alive",
+    "Content-Type": 'multipart/mixed; boundary="-"',
+    "Transfer-Encoding": "chunked",
+  });
+
+  // If the client closes the connection, we unsubscribe to prevent memory leaks.
+  req.on("close", () => {
+    result.unsubscribe();
+  });
+
+  res.write("---");
+
+  // Subscribe to new results. The callback will be called with the
+  // ExecutionResult object that should be sent back to the client for each chunk.
+  await result.subscribe((result) => {
+    const chunk = Buffer.from(JSON.stringify(formatResult(result)), "utf8");
+    const data = ["Content-Type: application/json; charset=utf-8", "Content-Length: " + String(chunk.length), "", chunk];
+
+    if (result.hasNext) {
+      data.push("---");
+    }
+
+    res.write(data.join("\r\n"));
+  });
+
+  // The Promise returned by `subscribe` will only resolve once all chunks have been emitted,
+  // at which point we can end the request.
+  res.write("\r\n-----\r\n");
+  res.end();
+}
+```
+
+See the [here](https://github.com/contrawork/graphql-helix/tree/master/examples/express) for a complete example.
+
+The examples used in this repo are compatible with client-side libraries like [meros](https://github.com/maraisr/meros) and [fetch-multipart-graphql](https://github.com/relay-tools/fetch-multipart-graphql).

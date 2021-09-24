@@ -6,3 +6,4 @@ node_modules
 package-lock.json
 css
 *.min.js
+.next

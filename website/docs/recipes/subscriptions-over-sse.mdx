@@ -1,0 +1,35 @@
+---
+title: Subscriptions over SSE
+---
+
+GraphQL Helix is transport-agnostic and could be used with any network protocol. However, it was designed with HTTP in mind, which makes Server Sent Events (SSE) a good fit for implementing subscriptions. You can read more about the advantages and caveats of using SSE [here](https://wundergraph.com/blog/deprecate_graphql_subscriptions_over_websockets).
+
+When the operation being executed is a subscription, `processRequest` will return a `PUSH` result, which you can then use to return a `text/event-stream` response. You can use the `sendResult` or `sendPushResult` to handle that autoamtically, here's what a basic implementation looks like:
+
+```ts
+// This is what sendResult/sendPushResult is doing behind the scenes
+if (result.type === "PUSH") {
+  // Indicate that we're sending a stream of events and should keep the connection open.
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    Connection: "keep-alive",
+    "Cache-Control": "no-cache",
+  });
+
+  // If the client closes the connection, we unsubscribe to prevent memory leaks.
+  req.on("close", () => {
+    result.unsubscribe();
+  });
+
+  // We subscribe to any new events and push them down to the client that initiated the subscription.
+  await result.subscribe((result) => {
+    res.write(`data: ${JSON.stringify(result)}\n\n`);
+  });
+}
+```
+
+On the client-side, we use the EventSource API to listen to these events. Our EventSource instance _should_ reconnect in the event the connection is closed, but this behavior varies widely from browser to browser. Therefore, it's a good idea to implement a keep-alive mechanism in production to ensure your connection stays persistent. Check out [this StackOverflow post](https://stackoverflow.com/a/20060461/6024220) for additional details. On the back end, you can just use `setInterval` to periodically send the keep alive message to the client (just make sure to clear the timer when you `unsubscribe`).
+
+Implementing SSE on the client-side is equally simple, but you can use [sse-z](https://github.com/contrawork/sse-z) to make it even easier. If you're adding keep-alive to your implementation, `sse-z` provides a nice abstraction for that as well.
+
+> If you are using the GraphiQL variation provided by GraphQL-Helix, you can test SSE directly from there!

@@ -1,38 +1,16 @@
-<h1 align="center">
-	<br>
-	<img width="400" src="./logo.svg" alt="GraphQL Helix">
-	<br>
-	<br>
-	<br>
-</h1>
-
-> A highly evolved GraphQL HTTP Server 🧬
-
-GraphQL Helix is a collection of utility functions for building your own GraphQL HTTP server. You can check out [Building a GraphQL server with GraphQL Helix](https://dev.to/danielrearden/building-a-graphql-server-with-graphql-helix-2k44) on DEV for a detailed tutorial on getting started.
-
-## Features
-
-- **Framework and runtime agnostic.** Use whatever HTTP library you want. GraphQL Helix works in Node, Deno and in the browser.
-- **HTTP first.** GraphQL Helix allows you to create a [GraphQL over HTTP](https://github.com/graphql/graphql-over-http) specification-compliant server, while exposing a single HTTP endpoint for everything from documentation to subscriptions.
-- **Server push and client pull.** GraphQL Helix supports real-time requests with both subscriptions and `@defer` and `@stream` directives.
-- **Flexible.** GraphQL Helix abstracts away logic that's common to all GraphQL HTTP servers, while leaving the implementation to you. Implement the features you want and take full control of your transport layer.
-- **Minimal.** No bloat. No paid platform integration. Zero dependencies outside of `graphql-js`.
+---
+title: Getting Started
+---
 
 ## Installation
 
-```
-npm install graphql-helix
-```
+<PackageInstall packages={["graphql-helix"]} />
 
-```
-yarn add graphql-helix
-```
+#### Basic Usage
 
-## Basic Usage
+The following example shows how to integrate GraphQL Helix with Node.js using Express. This example shows how to implement all the basic features, including a GraphiQL interface, subscriptions and support for @stream and @defer. See the rest of the examples for implementations using other frameworks and runtimes. For implementing additional features, see the Recipes section below.
 
-The following example shows how to integrate GraphQL Helix with Node.js using Express. This example shows how to implement all the basic features, including a GraphiQL interface, subscriptions and support for `@stream` and `@defer`. See the rest of the [examples](./examples) for implementations using other frameworks and runtimes. For implementing additional features, see the [Recipes](#Recipes) section below.
-
-```js
+```ts
 import express, { RequestHandler } from "express";
 import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL, sendResult } from "../lib";
 import { schema } from "./schema";
@@ -83,7 +61,7 @@ app.listen(port, () => {
 });
 ```
 
-## Transports Variations
+#### Transports Variations
 
 The `processRequest` will return one of the following types:
 
@@ -110,7 +88,3 @@ if (result.type === "RESPONSE") {
   sendPushResult(result, res);
 }
 ```
-
-> This way you can also disable specific responses if you wish, by return an error instead of calling the helpers.
-
-Checkout docs to learn more.
