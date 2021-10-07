@@ -1,6 +1,13 @@
 # graphql-helix
 
+## 1.8.1
+
+### Patch Changes
+
+- a1ce7db: add esm support
+
 ## 1.8.0
+
 ### Minor Changes
 
 - 185b64c: Added response helpers for Node.js for reducing boilerplate in projects

@@ -13,7 +13,7 @@
   "dependencies": {
     "express": "4.17.1",
     "graphql": "15.4.0-experimental-stream-defer.1",
-    "graphql-helix": "^1.8.0",
+    "graphql-helix": "^1.8.1",
     "graphql-jit": "0.5.2",
     "tiny-lru": "7.0.6"
   }
