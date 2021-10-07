@@ -65,11 +65,11 @@
   "exports": {
     ".": {
       "require": "./dist/index.js",
-      "import": "./dist-esm/index.js"
+      "import": "./dist-esm/index.mjs"
     },
     "./*": {
       "require": "./dist/*.js",
-      "import": "./dist-esm/*.js"
+      "import": "./dist-esm/*.mjs"
     },
     "./send-result/node-http": {
       "require": "./dist/send-result/node-http.js",
