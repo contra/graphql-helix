@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "graphql": "15.4.0-experimental-stream-defer.1",
-    "graphql-helix": "^1.8.0"
+    "graphql-helix": "^1.8.1"
   }
 }
