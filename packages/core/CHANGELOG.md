@@ -1,5 +1,11 @@
 # graphql-helix
 
+## 1.8.2
+
+### Patch Changes
+
+- 03c8416: include esm code in the published package
+
 ## 1.8.1
 
 ### Patch Changes
