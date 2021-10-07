@@ -25,7 +25,8 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "dist-esm"
   ],
   "scripts": {
     "build": "yarn build-render-graphiql && yarn build-deno && yarn run build-node",
