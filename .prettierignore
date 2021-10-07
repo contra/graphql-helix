@@ -1,6 +1,7 @@
 coverage
 deno_dist
 dist
+dist-esm
 node_modules
 package-lock.json
 css
