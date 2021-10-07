@@ -1,5 +1,5 @@
 ---
-"graphql-helix": minor
+"graphql-helix": patch
 ---
 
 add esm support
