@@ -7,7 +7,7 @@ import chalk from "chalk";
 process.env.NEW_RELIC_APP_NAME = "TEST";
 
 async function main() {
-  const mjsFiles = await globby(["./dist-esm/**/*.mjs"], {
+  const mjsFiles = await globby(["../dist-esm/**/*.mjs"], {
     cwd: dirname(fileURLToPath(import.meta.url)),
   });
 
