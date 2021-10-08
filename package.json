@@ -19,7 +19,8 @@
     "build": "yarn workspace graphql-helix build",
     "lint": "eslint --ext .ts,.tsx .",
     "update-examples": "node scripts/update-examples",
-    "loadtest:start-server": "node ./benchmark/server.js"
+    "loadtest:start-server": "node ./benchmark/server.js",
+    "web": "yarn workspace @graphql-helix/website dev"
   },
   "husky": {
     "hooks": {
