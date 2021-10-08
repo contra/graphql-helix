@@ -11,7 +11,7 @@ import {
   ValidationRule,
   ExecutionResult,
 } from "graphql";
-import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util";
+import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index";
 import { HttpError } from "./errors";
 import { ExecutionContext, ExecutionPatchResult, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types";
 

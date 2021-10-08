@@ -11,7 +11,7 @@ glob("dist-esm/**/*.js", (_, filePaths) => {
     parts.pop();
     const mjsFileName = parts.join(".") + ".mjs";
     fs.createReadStream(path.join(__dirname, "..", filePath))
-      .pipe(replaceStream(/from '(\.?\.\/[^']*)'/g, "from '$1.mjs'"))
+      .pipe(replaceStream(/from ['"](\.?\.\/[^'"]*)['|"]/g, "from '$1.mjs'"))
       .pipe(fs.createWriteStream(path.join(__dirname, "..", mjsFileName)))
       .on("close", () => {
         fs.unlinkSync(filePath);
