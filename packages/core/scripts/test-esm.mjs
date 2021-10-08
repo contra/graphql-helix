@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import globby from "globby";
+import { globby } from "globby";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import chalk from "chalk";
@@ -7,7 +7,7 @@ import chalk from "chalk";
 process.env.NEW_RELIC_APP_NAME = "TEST";
 
 async function main() {
-  const mjsFiles = await globby(["../packages/*/dist-esm/*.mjs"], {
+  const mjsFiles = await globby(["./dist-esm/**/*.mjs"], {
     cwd: dirname(fileURLToPath(import.meta.url)),
   });
 
