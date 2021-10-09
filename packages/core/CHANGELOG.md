@@ -1,5 +1,11 @@
 # graphql-helix
 
+## 1.8.3
+
+### Patch Changes
+
+- 39c5d9d: fix esm support which resulted in trying to import the wrong files.
+
 ## 1.8.2
 
 ### Patch Changes
