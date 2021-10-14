@@ -5,7 +5,7 @@ import {
   GraphQLSchema,
   OperationDefinitionNode,
   ValidationRule,
-} from "https://cdn.skypack.dev/graphql@15.4.0-experimental-stream-defer.1?dts";
+} from "https://cdn.skypack.dev/graphql@16.0.0-rc.2.experimental-stream-defer.3?dts";
 
 export interface ExecutionPatchResult<
   TData = { [key: string]: any },

@@ -1,4 +1,3 @@
-import { isLiveQueryOperationDefinitionNode } from "@n1ru4l/graphql-live-query";
 import copyToClipboard from "copy-to-clipboard";
 import { DocumentNode, Kind, parse } from "graphql";
 import GraphiQL, { Fetcher } from "graphiql";
@@ -6,7 +5,6 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { LoadFromUrlOptions, SubscriptionProtocol, UrlLoader } from "@graphql-tools/url-loader";
 import { ToolbarDropDown } from "./drop-down";
-import { AsyncExecutor, isAsyncIterable } from "@graphql-tools/utils";
 
 export type HybridSubscriptionTransportConfig = {
   /* Enable SSE transport as an option */
@@ -30,14 +28,7 @@ export interface Options {
   };
 }
 
-const getOperationWithFragments = (
-  document: DocumentNode,
-  operationName: string
-): {
-  document: DocumentNode;
-  isSubscriber: boolean;
-} => {
-  let isSubscriber = false;
+const getOperationWithFragments = (document: DocumentNode, operationName: string): DocumentNode => {
   const definitions = document.definitions.filter((definition) => {
     if (definition.kind === Kind.OPERATION_DEFINITION) {
       if (operationName) {
@@ -45,18 +36,12 @@ const getOperationWithFragments = (
           return false;
         }
       }
-      if (definition.operation === "subscription" || isLiveQueryOperationDefinitionNode(definition)) {
-        isSubscriber = true;
-      }
     }
     return true;
   });
   return {
-    document: {
-      kind: Kind.DOCUMENT,
-      definitions,
-    },
-    isSubscriber,
+    kind: Kind.DOCUMENT,
+    definitions,
   };
 };
 
@@ -126,9 +111,8 @@ export const init = async ({
       const graphiqlRef = React.useRef<GraphiQL | null>(null);
 
       const [hybridTransportIndex, setHybridTransportIndex] = React.useState(startHybridIndex);
-      const [executor, setExecutor] = React.useState<AsyncExecutor | null>(null);
 
-      React.useEffect(() => {
+      const fetcher: Fetcher = React.useMemo(() => {
         const options: LoadFromUrlOptions = {
           subscriptionsProtocol: subscriptionsEndpoint?.startsWith("ws")
             ? useWebSocketLegacyProtocol
@@ -155,9 +139,21 @@ export const init = async ({
           }
         }
 
-        urlLoader.getExecutorAsync(endpoint, options).then((executor) => {
-          setExecutor(() => executor);
-        });
+        const executor$ = urlLoader.getExecutorAsync(endpoint, options);
+        return async (graphQLParams, opts) => {
+          const document = getOperationWithFragments(parse(graphQLParams.query), graphQLParams.operationName);
+
+          const executor = await executor$;
+
+          return executor({
+            document,
+            operationName: graphQLParams.operationName,
+            variables: graphQLParams.variables,
+            extensions: {
+              headers: opts?.headers,
+            },
+          }) as ReturnType<Fetcher>;
+        };
       }, [hybridTransportIndex]);
 
       const onShare = () => {
@@ -172,69 +168,6 @@ export const init = async ({
           })
         );
       };
-
-      const fetcher = React.useMemo<null | Fetcher>(() => {
-        if (executor === null) {
-          return null;
-        }
-
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const fetcher: Fetcher = async (graphQLParams, opts) => {
-          let stopSubscription = () => {};
-          // We are still returning an Observable instead of AsyncIterable here
-          // as the GraphiQL Play/STop button kind of does not work with the latter...
-          return {
-            subscribe: (observer) => {
-              (async () => {
-                try {
-                  const { document } = getOperationWithFragments(parse(graphQLParams.query), graphQLParams.operationName);
-
-                  const response = await executor({
-                    document,
-                    variables: graphQLParams.variables,
-                    operationName: graphQLParams.operationName,
-                    extensions: {
-                      headers: opts?.headers,
-                    },
-                  });
-
-                  if (isAsyncIterable(response)) {
-                    const asyncIterable = response[Symbol.asyncIterator]();
-                    stopSubscription = () => {
-                      asyncIterable.return?.();
-                      observer.complete();
-                    };
-                    for await (const part of response) {
-                      observer.next(part);
-                    }
-                    observer.complete();
-                  } else {
-                    observer.next(response);
-                    observer.complete();
-                  }
-                } catch (error: any) {
-                  let errorResult: any;
-                  if (typeof error.json === "function") {
-                    errorResult = await error.json();
-                  } else {
-                    errorResult = error;
-                  }
-                  if (typeof observer === "function") {
-                    throw errorResult;
-                  } else {
-                    observer.error(errorResult);
-                  }
-                }
-              })();
-
-              return { unsubscribe: () => stopSubscription() };
-            },
-          };
-        };
-
-        return fetcher;
-      }, [executor]);
 
       return fetcher ? (
         <GraphiQL

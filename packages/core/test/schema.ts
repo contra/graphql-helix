@@ -79,7 +79,7 @@ export const schema = new GraphQLSchema({
         type: GraphQLInt,
         args: {
           to: {
-            type: GraphQLNonNull(GraphQLInt),
+            type: new GraphQLNonNull(GraphQLInt),
           },
         },
         subscribe: async function* (_root, args) {

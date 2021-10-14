@@ -6,7 +6,7 @@
     "start": "next dev"
   },
   "dependencies": {
-    "graphql": "15.4.0-experimental-stream-defer.1",
+    "graphql": "16.0.0-rc.2.experimental-stream-defer.3",
     "graphql-helix": "^1.7.0",
     "next": "11.1.2",
     "react": "17.0.2",

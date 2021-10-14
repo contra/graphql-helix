@@ -21,7 +21,8 @@
     "lint": "eslint --ext .ts,.tsx .",
     "update-examples": "node scripts/update-examples",
     "loadtest:start-server": "node ./benchmark/server.js",
-    "web": "yarn workspace @graphql-helix/website dev"
+    "web": "yarn workspace @graphql-helix/website dev",
+    "postinstall": "patch-package"
   },
   "husky": {
     "hooks": {
@@ -53,9 +54,10 @@
     "husky": "7.0.2",
     "lint-staged": "11.1.2",
     "prettier": "2.4.1",
+    "patch-package": "6.4.7",
     "wait-on": "6.0.0"
   },
   "resolutions": {
-    "graphql": "15.4.0-experimental-stream-defer.1"
+    "graphql": "16.0.0-rc.2.experimental-stream-defer.3"
   }
 }

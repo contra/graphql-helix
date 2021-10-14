@@ -14,20 +14,20 @@
     "build": "node build.js"
   },
   "dependencies": {
-    "@graphql-tools/url-loader": "7.3.0",
-    "@graphql-tools/utils": "8.4.0",
-    "@n1ru4l/graphql-live-query": "0.8.1",
+    "@graphql-tools/utils": "8.5.2",
+    "@n1ru4l/graphql-live-query": "0.8.2",
+    "@graphql-tools/url-loader": "7.5.0",
     "copy-to-clipboard": "3.3.1",
-    "graphiql": "1.4.2",
-    "graphql": "15.6.0",
+    "graphiql": "1.4.6",
+    "graphql": "16.0.0-rc.2.experimental-stream-defer.3",
     "graphql-language-service-interface": "2.8.4",
     "react": "17.0.2",
     "react-dom": "17.0.2"
   },
   "devDependencies": {
-    "esbuild": "0.13.1",
-    "@types/react": "17.0.24",
-    "@types/react-dom": "17.0.9",
-    "typescript": "4.4.3"
+    "esbuild": "0.13.12",
+    "@types/react": "17.0.34",
+    "@types/react-dom": "17.0.11",
+    "typescript": "4.4.4"
   }
 }

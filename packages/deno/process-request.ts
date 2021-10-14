@@ -10,7 +10,7 @@ import {
   OperationDefinitionNode,
   ValidationRule,
   ExecutionResult,
-} from "https://cdn.skypack.dev/graphql@15.4.0-experimental-stream-defer.1?dts";
+} from "https://cdn.skypack.dev/graphql@16.0.0-rc.2.experimental-stream-defer.3?dts";
 import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index.ts";
 import { HttpError } from "./errors.ts";
 import { ExecutionContext, ExecutionPatchResult, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types.ts";
@@ -133,7 +133,14 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         rootValue = rootValueFactory ? await rootValueFactory(executionContext) : ({} as TRootValue);
 
         if (operation.operation === "subscription") {
-          const result = await subscribe(schema, document, rootValue, context, variableValues, operationName);
+          const result = await subscribe({
+            schema,
+            document,
+            rootValue,
+            context,
+            variableValues,
+            operationName,
+          });
 
           // If errors are encountered while subscribing to the operation, an execution result
           // instead of an AsyncIterable.
@@ -190,7 +197,14 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             }
           }
         } else {
-          const result = await execute(schema, document, rootValue, context, variableValues, operationName);
+          const result = await execute({
+            schema,
+            document,
+            rootValue,
+            context,
+            variableValues,
+            operationName,
+          });
 
           // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
           // execution result.
