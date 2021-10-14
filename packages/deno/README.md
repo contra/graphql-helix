@@ -158,6 +158,8 @@ Uses the method and headers in the request to determine whether a GraphiQL insta
 
 ### `sendResult`
 
+> Note: This helpers is currently available only for NodeJS runtime (Not `Deno`).
+
 ```ts
 function sendResult(
   result: ProcessRequestResult<any, any>,
@@ -174,6 +176,8 @@ You can also provide an optional `transformResult` function to manipulate the `E
 
 ### `sendResponseResult`
 
+> Note: This helpers is currently available only for NodeJS runtime (Not `Deno`).
+
 ```ts
 function sendResponseResult(
   responseResult: Response<any, any>,
@@ -188,6 +192,8 @@ You can also provide an optional `transformResult` function to manipulate the `E
 
 ### `sendMultipartResponseResult`
 
+> Note: This helpers is currently available only for NodeJS runtime (Not `Deno`).
+
 ```ts
 function sendMultipartResponseResult(
   responseResult: Response<any, any>,
@@ -201,6 +207,8 @@ Handles response sending for payload of type `MULTIPART_RESPONSE`. It will send 
 You can also provide an optional `transformResult` function to manipulate each `ExecutionResult` object before sending it.
 
 ### `sendPushResult`
+
+> Note: This helpers is currently available only for NodeJS runtime (Not `Deno`).
 
 ```ts
 function sendPushResult(

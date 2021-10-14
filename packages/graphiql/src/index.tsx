@@ -1,14 +1,13 @@
 import { isLiveQueryOperationDefinitionNode } from "@n1ru4l/graphql-live-query";
 import copyToClipboard from "copy-to-clipboard";
 import { DocumentNode, Kind, parse } from "graphql";
-import GraphiQL from "graphiql";
-import React from "react";
-import ReactDOM from "react-dom";
+import GraphiQL, { Fetcher } from "graphiql";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { LoadFromUrlOptions, UrlLoader } from "@graphql-tools/url-loader";
 import { isAsyncIterable } from "@graphql-tools/utils";
 import { AsyncExecutor, Subscriber } from "@graphql-tools/delegate";
 import { ToolbarDropDown } from "./drop-down";
-import { Fetcher } from "graphiql/dist/components/GraphiQL";
 
 export type HybridSubscriptionTransportConfig = {
   /* Enable SSE transport as an option */
