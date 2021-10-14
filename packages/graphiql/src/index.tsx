@@ -105,7 +105,7 @@ export const init = async ({
   subscriptionsEndpoint = endpoint,
   useWebSocketLegacyProtocol,
   hybridSubscriptionTransportConfig,
-}: Options = {}) => {
+}: Options = {}): Promise<void> => {
   const urlLoader = new UrlLoader();
 
   const searchParams = new URLSearchParams(window.location.search);
