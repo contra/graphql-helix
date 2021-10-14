@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ToolbarButton } from "graphiql/dist/components/ToolbarButton";
+import { ToolbarButton } from "graphiql";
 
 type ToolbarDropDownOption = {
   title: string;
@@ -27,7 +27,7 @@ export const ToolbarDropDown = <TOption extends ToolbarDropDownOption>(props: {
   activeOptionIndex: number;
   placeholder?: string;
   onSelectOption: (optionIndex: number) => void;
-}) => {
+}): React.ReactElement => {
   const [isOpen, setIsOpen] = React.useState(false);
   const selectedOption = props.options[props.activeOptionIndex] ?? null;
 
