@@ -140,7 +140,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           if (isAsyncIterable<ExecutionResult>(result)) {
             return {
               type: "PUSH",
-              subscribe: async (onResult) => {
+              subscribe: async (onResult, onDone) => {
                 for await (const payload of result) {
                   onResult(
                     formatPayload({
@@ -152,6 +152,8 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                     })
                   );
                 }
+                
+                onDone?.()
               },
               unsubscribe: () => {
                 stopAsyncIteration(result);
