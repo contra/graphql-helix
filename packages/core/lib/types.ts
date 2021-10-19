@@ -186,7 +186,7 @@ export interface MultipartResponse<TContext, TRootValue>
 export interface Push<TContext, TRootValue>
   extends Result<TContext, TRootValue> {
   type: "PUSH";
-  subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
+  subscribe: (onResult: (result: ExecutionResult) => void, onDone: () => void) => Promise<void>;
   unsubscribe: () => void;
 }
 
