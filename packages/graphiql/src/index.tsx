@@ -128,7 +128,7 @@ export const init = async ({
 
       const options = React.useMemo(() => {
         const options: LoadFromUrlOptions = {
-          subscriptionsProtocol: !subscriptionsEndpoint?.startsWith("ws") ? SubscriptionProtocol.SSE : SubscriptionProtocol.WS,
+          subscriptionsProtocol: subscriptionsEndpoint?.startsWith("ws") ? SubscriptionProtocol.WS : SubscriptionProtocol.SSE,
           specifiedByUrl: true,
           directiveIsRepeatable: true,
           schemaDescription: true,
