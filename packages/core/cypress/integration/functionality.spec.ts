@@ -53,7 +53,10 @@ describe("Basic functionality", () => {
         JSON.stringify(
           {
             data: {
-              ping: true,
+              song: {
+                firstVerse: "Now I know my ABC's.",
+                secondVerse: "Next time won't you sing with me?",
+              },
             },
           },
           null,
@@ -70,7 +73,7 @@ describe("Basic functionality", () => {
     `;
     cy.visit(`/graphql?query=${subscription}`);
     cy.get(".execute-button").click();
-    cy.wait(4000);
+    cy.wait(5000);
     return cy.window().then((w) => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
