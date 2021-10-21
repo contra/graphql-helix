@@ -128,7 +128,11 @@ export const init = async ({
 
       const options = React.useMemo(() => {
         const options: LoadFromUrlOptions = {
-          subscriptionsProtocol: subscriptionsEndpoint?.startsWith("ws") ? SubscriptionProtocol.WS : SubscriptionProtocol.SSE,
+          subscriptionsProtocol: subscriptionsEndpoint?.startsWith("ws")
+            ? useWebSocketLegacyProtocol
+              ? SubscriptionProtocol.LEGACY_WS
+              : SubscriptionProtocol.WS
+            : SubscriptionProtocol.SSE,
           specifiedByUrl: true,
           directiveIsRepeatable: true,
           schemaDescription: true,
@@ -140,15 +144,12 @@ export const init = async ({
           if (target.value === "sse") {
             options.subscriptionsProtocol = SubscriptionProtocol.SSE;
             options.subscriptionsEndpoint = target.url;
-            useWebSocketLegacyProtocol = undefined;
           } else if (target.value === "legacyWS") {
             options.subscriptionsProtocol = SubscriptionProtocol.LEGACY_WS;
             options.subscriptionsEndpoint = target.url;
-            useWebSocketLegacyProtocol = true;
           } else if (target.value === "transportWS") {
             options.subscriptionsProtocol = SubscriptionProtocol.WS;
             options.subscriptionsEndpoint = target.url;
-            useWebSocketLegacyProtocol = false;
           }
         }
 
