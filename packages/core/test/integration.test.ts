@@ -2,6 +2,7 @@ import { Chance } from "chance";
 import EventSource from "eventsource";
 import getPort from "get-port";
 import got from "got";
+import puppeteer from "puppeteer";
 import { getIntrospectionQuery } from "graphql";
 import implementations from "./implementations";
 
@@ -136,14 +137,8 @@ implementations.forEach((implementation) => {
           chunks.push(chunk.toString());
         }
         expect(chunks).toHaveLength(2);
-        expect(
-          chunks[0].includes(`{"data":{"hello":"hello"},"hasNext":true}`)
-        ).toEqual(true);
-        expect(
-          chunks[1].includes(
-            `{"data":{"goodbye":"goodbye"},"path":[],"hasNext":false}`
-          )
-        ).toEqual(true);
+        expect(chunks[0].includes(`{"data":{"hello":"hello"},"hasNext":true}`)).toEqual(true);
+        expect(chunks[1].includes(`{"data":{"goodbye":"goodbye"},"path":[],"hasNext":false}`)).toEqual(true);
       });
 
       test("POST query with @stream", async () => {
@@ -161,18 +156,9 @@ implementations.forEach((implementation) => {
           chunks.push(chunk.toString());
         }
         expect(chunks).toHaveLength(3);
-        expect(
-          chunks[0].includes(`{"data":{"stream":["A"]},"hasNext":true}`)
-        ).toEqual(true);
-        expect(
-          chunks[1].includes(`{"data":"B","path":["stream",1],"hasNext":true}`)
-        ).toEqual(true);
-        expect(
-          chunks[2].includes(`{"data":"C","path":["stream",2],"hasNext":true}`)
-        ).toEqual(true);
-        expect(
-          chunks[2].includes(`{"hasNext":false}`)
-        ).toEqual(true);
+        expect(chunks[0].includes(`{"data":{"stream":["A"]},"hasNext":true}`)).toEqual(true);
+        expect(chunks[1].includes(`{"data":"B","path":["stream",1],"hasNext":true}`)).toEqual(true);
+        expect(chunks[2].includes(`{"data":"C","path":["stream",2],"hasNext":true}`)).toEqual(true);
       });
 
       test("POST mutation with variables", async () => {
@@ -224,9 +210,7 @@ implementations.forEach((implementation) => {
           query: "query {alwaysTrue",
         });
         expect(statusCode).toEqual(400);
-        expect(errors[0].message).toEqual(
-          "Syntax Error: Expected Name, found <EOF>."
-        );
+        expect(errors[0].message).toEqual("Syntax Error: Expected Name, found <EOF>.");
       });
 
       test("POST validation errors", async () => {
@@ -318,9 +302,7 @@ implementations.forEach((implementation) => {
       });
 
       test("GET subscription", async () => {
-        const eventSource = new EventSource(
-          `http://localhost:${port}/graphql?query=subscription{eventEmitted}`
-        );
+        const eventSource = new EventSource(`http://localhost:${port}/graphql?query=subscription{eventEmitted}`);
         const payload = await new Promise<any>((resolve) => {
           eventSource.addEventListener("message", (event: any) => {
             resolve(event.data);
@@ -332,9 +314,7 @@ implementations.forEach((implementation) => {
       });
 
       test("GET malformed subscription", async () => {
-        const eventSource = new EventSource(
-          `http://localhost:${port}/graphql?query=subscription{eventEmitted}}`
-        );
+        const eventSource = new EventSource(`http://localhost:${port}/graphql?query=subscription{eventEmitted}}`);
         const payload = await new Promise<any>((resolve) => {
           eventSource.addEventListener("message", (event: any) => {
             resolve(event.data);
@@ -366,14 +346,8 @@ implementations.forEach((implementation) => {
           chunks.push(chunk.toString());
         }
         expect(chunks).toHaveLength(2);
-        expect(
-          chunks[0].includes(`{"data":{"hello":"hello"},"hasNext":true}`)
-        ).toEqual(true);
-        expect(
-          chunks[1].includes(
-            `{"data":{"goodbye":"goodbye"},"path":[],"hasNext":false}`
-          )
-        ).toEqual(true);
+        expect(chunks[0].includes(`{"data":{"hello":"hello"},"hasNext":true}`)).toEqual(true);
+        expect(chunks[1].includes(`{"data":{"goodbye":"goodbye"},"path":[],"hasNext":false}`)).toEqual(true);
       });
 
       test("GET query with @stream", async () => {
@@ -391,15 +365,9 @@ implementations.forEach((implementation) => {
           chunks.push(chunk.toString());
         }
         expect(chunks).toHaveLength(3);
-        expect(
-          chunks[0].includes(`{"data":{"stream":["A"]},"hasNext":true}`)
-        ).toEqual(true);
-        expect(
-          chunks[1].includes(`{"data":"B","path":["stream",1],"hasNext":true}`)
-        ).toEqual(true);
-        expect(
-          chunks[2].includes(`{"data":"C","path":["stream",2],"hasNext":true}`)
-        ).toEqual(true);
+        expect(chunks[0].includes(`{"data":{"stream":["A"]},"hasNext":true}`)).toEqual(true);
+        expect(chunks[1].includes(`{"data":"B","path":["stream",1],"hasNext":true}`)).toEqual(true);
+        expect(chunks[2].includes(`{"data":"C","path":["stream",2],"hasNext":true}`)).toEqual(true);
       });
 
       test("GET mutation", async () => {
@@ -416,9 +384,7 @@ implementations.forEach((implementation) => {
           `,
         });
         expect(statusCode).toEqual(405);
-        expect(errors[0].message).toEqual(
-          "Can only perform a mutation operation from a POST request."
-        );
+        expect(errors[0].message).toEqual("Can only perform a mutation operation from a POST request.");
       });
 
       test("GET malformed variables", async () => {
@@ -453,30 +419,24 @@ implementations.forEach((implementation) => {
           throwHttpErrors: false,
         });
         expect(statusCode).toEqual(405);
-        expect(errors[0].message).toEqual(
-          "GraphQL only supports GET and POST requests."
-        );
+        expect(errors[0].message).toEqual("GraphQL only supports GET and POST requests.");
       });
     });
 
     describe("path: /graphiql", () => {
       test("GET GraphiQL interface", async () => {
-        const { body } = await got.get<any>(
-          `http://localhost:${port}/graphiql`,
-          {
-            headers: {
-              accept:
-                "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
-            },
-            searchParams: {
-              query: `
+        const { body } = await got.get<any>(`http://localhost:${port}/graphiql`, {
+          headers: {
+            accept: "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
+          },
+          searchParams: {
+            query: `
                 query {
                   echo(text: "hello world")
                 }
               `,
-            },
-          }
-        );
+          },
+        });
         expect(body.includes("<!DOCTYPE html>")).toEqual(true);
       });
     });
@@ -515,23 +475,148 @@ implementations.forEach((implementation) => {
       });
 
       test("GET GraphiQL interface", async () => {
-        const { body } = await got.get<any>(
-          `http://localhost:${port}/graphiql`,
-          {
-            headers: {
-              accept:
-                "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
-            },
-            searchParams: {
-              query: `
+        const { body } = await got.get<any>(`http://localhost:${port}/graphiql`, {
+          headers: {
+            accept: "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
+          },
+          searchParams: {
+            query: `
                 query {
                   echo(text: "hello world")
                 }
               `,
-            },
-          }
-        );
+          },
+        });
         expect(body.includes("<!DOCTYPE html>")).toEqual(true);
+      });
+    });
+
+    describe("GraphiQL functionality", () => {
+      let browser: puppeteer.Browser;
+      let page: puppeteer.Page | undefined;
+
+      beforeAll(async () => {
+        browser = await puppeteer.launch({
+          // If you wanna run tests with open browser
+          // set your PUPPETEER_HEADLESS env to "false"
+          headless: process.env.PUPPETEER_HEADLESS !== "false",
+        });
+      });
+      beforeEach(async () => {
+        if (page !== undefined) {
+          await page.close();
+          page = undefined;
+        }
+      });
+      afterAll(async () => {
+        await browser.close();
+      });
+
+      test("can execute simple query operation", async () => {
+        page = await browser.newPage();
+        const operation = `{ alwaysFalse }`;
+        await page.goto(`http://localhost:${port}/graphiql?query=${operation}`);
+        await page.click(".execute-button");
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const resultContents = await page.evaluate(() => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          return window.g.resultComponent.viewer.getValue();
+        });
+        expect(resultContents).toEqual(
+          JSON.stringify(
+            {
+              data: {
+                alwaysFalse: false,
+              },
+            },
+            null,
+            2
+          )
+        );
+      });
+
+      test("can execute a simple mutation operation", async () => {
+        page = await browser.newPage();
+        const operation = `mutation { setFavoriteNumber(number: 3) }`;
+        await page.goto(`http://localhost:${port}/graphiql?query=${operation}`);
+        await page.click(".execute-button");
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const resultContents = await page.evaluate(() => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          return window.g.resultComponent.viewer.getValue();
+        });
+        expect(resultContents).toEqual(
+          JSON.stringify(
+            {
+              data: {
+                setFavoriteNumber: 3,
+              },
+            },
+            null,
+            2
+          )
+        );
+      });
+
+      test("can execute a stream multi-part operation", async () => {
+        page = await browser.newPage();
+        const operation = `query { stream @stream(initialCount: 1) }`;
+        await page.goto(`http://localhost:${port}/graphiql?query=${operation}`);
+        await page.click(".execute-button");
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        let resultContents = await page.evaluate(() => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          return window.g.resultComponent.viewer.getValue();
+        });
+        expect(resultContents).toEqual(
+          JSON.stringify(
+            {
+              data: {
+                stream: ["A"],
+              },
+            },
+            null,
+            2
+          )
+        );
+        await new Promise((resolve) => setTimeout(resolve, 2200));
+        resultContents = await page.evaluate(() => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          return window.g.resultComponent.viewer.getValue();
+        });
+        expect(resultContents).toEqual(
+          JSON.stringify(
+            {
+              data: {
+                stream: ["A", "B", "C"],
+              },
+            },
+            null,
+            2
+          )
+        );
+      });
+
+      test("can execute a SSE (subscription) operation", async () => {
+        page = await browser.newPage();
+        const operation = `subscription { eventEmitted }`;
+        await page.goto(`http://localhost:${port}/graphiql?query=${operation}`);
+        await page.click(".execute-button");
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        const resultContents = await page.evaluate(() => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          return window.g.resultComponent.viewer.getValue();
+        });
+        expect(JSON.parse(resultContents)).toEqual({
+          data: {
+            eventEmitted: expect.any(Number),
+          },
+        });
       });
     });
   });

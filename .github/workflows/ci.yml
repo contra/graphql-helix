@@ -23,4 +23,3 @@ jobs:
         env:
           CI: true
       - run: yarn workspace graphql-helix esm:test
-      - run: yarn workspace graphql-helix e2e

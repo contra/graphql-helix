@@ -57,14 +57,25 @@ const server = createServer((req, res) => {
         schema,
       });
 
-      sendResult(result, res);
+      await sendResult(result, res);
     }
   });
 });
 
-const port = process.env.PORT || 4000;
-
-server.listen(port, () => {
-  // eslint-disable-next-line no-console
-  console.log(`GraphQL server is running on port ${port}.`);
-});
+export const startDevServer = (port = 4000): Promise<() => Promise<void>> => {
+  return new Promise((resolve) => {
+    server.listen(port, () => {
+      // eslint-disable-next-line no-console
+      // console.log(`GraphQL server is running on port ${port}.`);
+      resolve(
+        () =>
+          new Promise<void>((resolve, reject) => {
+            server.close((err) => {
+              if (err) return reject(err);
+              resolve();
+            });
+          })
+      );
+    });
+  });
+};
