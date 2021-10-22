@@ -495,6 +495,9 @@ implementations.forEach((implementation) => {
       let browser: puppeteer.Browser;
       let page: puppeteer.Page | undefined;
 
+      const playButtonSelector = `[d="M 11 9 L 24 16 L 11 23 z"]`;
+      const stopButtonSelector = `[d="M 10 10 L 23 10 L 23 23 L 10 23 z"]`;
+
       beforeAll(async () => {
         browser = await puppeteer.launch({
           // If you wanna run tests with open browser
@@ -566,12 +569,12 @@ implementations.forEach((implementation) => {
         await page.goto(`http://localhost:${port}/graphiql?query=${operation}`);
         await page.click(".execute-button");
         await new Promise((resolve) => setTimeout(resolve, 100));
-        let resultContents = await page.evaluate(() => {
+        const [resultContents1, isShowingStopElement] = await page.evaluate((stopButtonSelector) => {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          return window.g.resultComponent.viewer.getValue();
-        });
-        expect(resultContents).toEqual(
+          return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(stopButtonSelector)];
+        }, stopButtonSelector);
+        expect(resultContents1).toEqual(
           JSON.stringify(
             {
               data: {
@@ -582,13 +585,15 @@ implementations.forEach((implementation) => {
             2
           )
         );
+        expect(isShowingStopElement).toEqual(true);
+
         await new Promise((resolve) => setTimeout(resolve, 2200));
-        resultContents = await page.evaluate(() => {
+        const [resultContents2, isShowingPlayButton] = await page.evaluate((playButtonSelector) => {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          return window.g.resultComponent.viewer.getValue();
-        });
-        expect(resultContents).toEqual(
+          return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(playButtonSelector)];
+        }, playButtonSelector);
+        expect(resultContents2).toEqual(
           JSON.stringify(
             {
               data: {
@@ -599,24 +604,38 @@ implementations.forEach((implementation) => {
             2
           )
         );
+        expect(isShowingPlayButton).toEqual(true);
       });
 
       test("can execute a SSE (subscription) operation", async () => {
         page = await browser.newPage();
-        const operation = `subscription { eventEmitted }`;
+        const operation = `subscription { count(to: 2) }`;
         await page.goto(`http://localhost:${port}/graphiql?query=${operation}`);
         await page.click(".execute-button");
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        const resultContents = await page.evaluate(() => {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const [resultContents, isShowingStopButton] = await page.evaluate((stopButtonSelector) => {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          return window.g.resultComponent.viewer.getValue();
-        });
+          return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(stopButtonSelector)];
+        }, stopButtonSelector);
         expect(JSON.parse(resultContents)).toEqual({
           data: {
-            eventEmitted: expect.any(Number),
+            count: 1,
           },
         });
+        expect(isShowingStopButton).toEqual(true);
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        const [resultContents1, isShowingPlayButton] = await page.evaluate((playButtonSelector) => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(playButtonSelector)];
+        }, playButtonSelector);
+        expect(JSON.parse(resultContents1)).toEqual({
+          data: {
+            count: 2,
+          },
+        });
+        expect(isShowingPlayButton).toEqual(true);
       });
     });
   });
