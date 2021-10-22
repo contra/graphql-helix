@@ -34,8 +34,7 @@
     "build-node": "del-cli dist && del-cli dist-esm && tsc && tsc -b tsconfig.esm.json && node scripts/esm-post-process.js",
     "build-render-graphiql": "cd ../graphiql && yarn run build",
     "test": "jest test/integration.test.ts",
-    "esm:test": "node scripts/test-esm.mjs",
-    "dev": "yarn ts-node-dev dev-server/index.ts"
+    "esm:test": "node scripts/test-esm.mjs"
   },
   "devDependencies": {
     "@types/chance": "1.1.3",
