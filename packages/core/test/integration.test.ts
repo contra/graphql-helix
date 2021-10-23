@@ -170,6 +170,9 @@ implementations.forEach((implementation) => {
         expect(
           chunks[2].includes(`{"data":"C","path":["stream",2],"hasNext":true}`)
         ).toEqual(true);
+        expect(
+          chunks[2].includes(`{"hasNext":false}`)
+        ).toEqual(true);
       });
 
       test("POST mutation with variables", async () => {
