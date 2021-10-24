@@ -1,6 +1,6 @@
 {
   "name": "graphql-helix",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "description": "A highly evolved GraphQL HTTP Server 🧬",
   "keywords": [
     "graphql",
