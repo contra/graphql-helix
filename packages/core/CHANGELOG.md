@@ -1,5 +1,12 @@
 # graphql-helix
 
+## 1.8.4
+
+### Patch Changes
+
+- f4399bb: terminate SSE HTTP connection after stream ended emitting values
+- f4399bb: fix broken multi part response and SSE response fetching in GraphiQL
+
 ## 1.8.3
 
 ### Patch Changes
