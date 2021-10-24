@@ -55,6 +55,7 @@
     "jest": "27.2.1",
     "lint-staged": "11.1.2",
     "move-file-cli": "3.0.0",
+    "puppeteer": "10.4.0",
     "replacestream": "4.0.3",
     "ts-jest": "27.0.5",
     "ts-node": "10.2.1",

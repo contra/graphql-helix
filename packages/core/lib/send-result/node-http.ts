@@ -78,6 +78,7 @@ export async function sendPushResult(
     // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
     rawResponse.write(`data: ${JSON.stringify(transformResult(result))}\n\n`);
   });
+  rawResponse.end();
 }
 
 export async function sendResult(

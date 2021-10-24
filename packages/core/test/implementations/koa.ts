@@ -1,12 +1,7 @@
 import Koa, { Context } from "koa";
 import bodyParser from "koa-bodyparser";
 import { PassThrough } from "stream";
-import {
-  getGraphQLParameters,
-  processRequest,
-  renderGraphiQL,
-  shouldRenderGraphiQL,
-} from "../../lib";
+import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 
 const graphqlHandler = async (ctx: Context) => {
@@ -50,9 +45,13 @@ const graphqlHandler = async (ctx: Context) => {
     ctx.status = 200;
     ctx.body = stream;
 
-    result.subscribe((result) => {
-      stream.write(`data: ${JSON.stringify(result)}\n\n`);
-    });
+    result
+      .subscribe((result) => {
+        stream.write(`data: ${JSON.stringify(result)}\n\n`);
+      })
+      .then(() => {
+        stream.end();
+      });
   } else {
     ctx.request.socket.setTimeout(0);
     ctx.req.socket.setNoDelay(true);
@@ -78,13 +77,7 @@ const graphqlHandler = async (ctx: Context) => {
     result
       .subscribe((result) => {
         const chunk = Buffer.from(JSON.stringify(result), "utf8");
-        const data = [
-          "",
-          "Content-Type: application/json; charset=utf-8",
-          "Content-Length: " + String(chunk.length),
-          "",
-          chunk,
-        ];
+        const data = ["", "Content-Type: application/json; charset=utf-8", "Content-Length: " + String(chunk.length), "", chunk];
 
         if (result.hasNext) {
           data.push("---");

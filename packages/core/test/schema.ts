@@ -3,6 +3,7 @@ import {
   GraphQLFloat,
   GraphQLInt,
   GraphQLList,
+  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLString,
@@ -51,8 +52,7 @@ export const schema = new GraphQLSchema({
       },
       goodbye: {
         type: GraphQLString,
-        resolve: () =>
-          new Promise((resolve) => setTimeout(() => resolve("goodbye"), 1000)),
+        resolve: () => new Promise((resolve) => setTimeout(() => resolve("goodbye"), 1000)),
       },
       stream: {
         type: new GraphQLList(GraphQLString),
@@ -73,6 +73,20 @@ export const schema = new GraphQLSchema({
         type: GraphQLFloat,
         subscribe: async function* () {
           yield { eventEmitted: Date.now() };
+        },
+      },
+      count: {
+        type: GraphQLInt,
+        args: {
+          to: {
+            type: GraphQLNonNull(GraphQLInt),
+          },
+        },
+        subscribe: async function* (_root, args) {
+          for (let count = 1; count <= args.to; count++) {
+            yield { count };
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
         },
       },
     }),
