@@ -114,7 +114,7 @@ const AppContentWrapper = appWithTranslation(function TranslatedApp(appProps) {
 
 const defaultSeo: AppSeoProps = {
   title: "GraphQL Helix",
-  description: "A highly evolved GraphQL HTTP Server 🧬",
+  description: "Build your own extensible and framework-agnostic GraphQL Server",
   logo: {
     url: "https://raw.githubusercontent.com/contrawork/graphql-helix/13877388d1ea9a3d887370fb231c3552f23cf546/logo.svg",
     width: 150,
