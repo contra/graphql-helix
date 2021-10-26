@@ -1,0 +1,37 @@
+---
+title: Subscriptions over WebSocket
+---
+
+If SSE is not your cup of tea and you want to use WebSocket as the transport for your subscriptions instead, you can still do that. For example, we can use both GraphQL Helix and [graphql-ws](https://github.com/enisdenjo/graphql-ws)
+
+```ts
+import express from "express";
+import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "graphql-helix";
+import { execute, subscribe } from "graphql";
+import { schema } from "./schema";
+import * as ws from "ws";
+import { useServer } from "graphql-ws/lib/use/ws";
+
+const app = express();
+
+app.use(express.json());
+
+app.use("/graphql", async (req, res) => {
+  // handle the request using processRequest as shown before
+});
+
+const port = process.env.PORT || 4000;
+
+const server = app.listen(port, () => {
+  const wsServer = new ws.Server({
+    server,
+    path: "/graphql",
+  });
+
+  useServer({ schema, execute, subscribe }, wsServer);
+
+  console.log(`GraphQL server is running on port ${port}.`);
+});
+```
+
+A complete example can be found [here](https://github.com/contrawork/graphql-helix/tree/master/examples/graphql-ws). If you'd prefer you use socket.io, take a look at [socket-io-graphql-server](https://github.com/n1ru4l/graphql-live-query/tree/main/packages/socket-io-graphql-server) instead.

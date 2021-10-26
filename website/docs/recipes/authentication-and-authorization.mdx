@@ -1,0 +1,40 @@
+---
+title: Authentication and authorization
+---
+
+When calling `processRequest`, you can provide a `contextFactory` that will be called to generate the execution context that is passed to your resolvers. You can pass whatever values to the context that are available in the scope where `contextFactory` is called. For example, if we're using Express, we could pass in the entire `req` object:
+
+```ts
+app.use("/graphql", async (req, res) => {
+  ...
+
+  const result = await processRequest({
+    operationName,
+    query,
+    variables,
+    request,
+    schema,
+    contextFactory: () => ({
+      req,
+    }),
+  });
+}
+```
+
+The `contextFactory` can be asyncronous and return a Promise. The function is called with a single parameter, an object with the following properties:
+
+```ts
+export interface ExecutionContext {
+  document: DocumentNode;
+  operation: OperationDefinitionNode;
+  variables?: { readonly [name: string]: unknown };
+}
+```
+
+GraphQL Helix provides this information to `contextFactory` in case you want to modify the context based on the operation that will be executed.
+
+With `contextFactory`, we have a mechanism for doing authentication and authorization inside our application.
+We can determine who is accessing our API and capture that information inside the context.
+Our resolvers can then use the context to determine _whether_ a particular field can be resolved and how to resolve it.
+Check out [this example](https://github.com/contrawork/graphql-helix/tree/master/examples/context) for basic `contextFactory` usage.
+If you're looking for a robust _authorization_ solution, I highly recommend [GraphQL Shield](https://github.com/maticzav/graphql-shield).

@@ -1,0 +1,29 @@
+---
+title: Using the `@live` directive
+---
+
+Live queries using the `@live` directive provide an alternative to subscriptions for handling real-time updates. You can add support for live queries to your server by following the instructions [here](https://github.com/n1ru4l/graphql-live-queries).
+
+With GraphQL Helix, it's as simple as adding the directive to your schema and utilizing the alternative `execute` function provided by [@n1ru4l/in-memory-live-query-store](https://github.com/n1ru4l/graphql-live-queries/tree/main/packages/in-memory-live-query-store).
+
+```ts
+import { InMemoryLiveQueryStore } from "@n1ru4l/in-memory-live-query-store";
+
+const liveQueryStore = new InMemoryLiveQueryStore();
+
+...
+
+const result = await processRequest({
+  operationName,
+  query,
+  variables,
+  request,
+  schema,
+  contextFactory: () => ({
+    liveQueryStore,
+  }),
+  execute: liveQueryStore.execute,
+});
+```
+
+You can checkout the complete example [here](https://github.com/contrawork/graphql-helix/tree/master/examples/live-queries).

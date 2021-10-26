@@ -1,0 +1,14 @@
+---
+title: Formatting and logging responses
+---
+
+GraphQL Helix leaves it up to you to send the appropriate response back to the client. While this requires a little more boilerplate, it means you're free to do whatever
+you want with the execution result before it's sent to the client:
+
+- Log the response using your [favorite logger](https://github.com/gajus/roarr).
+- Format your errors and mask them in production.
+- Add an `extensions` field to the response with additional metadata to send to the client
+
+In addition to the payload itself, `processRequest` will also return additional information about the request itself, like the parsed document, the operation that was executed and the context and root values that were generated. This makes it easy to provide additional information when logging requests or exceptions.
+
+See [here](https://github.com/contrawork/graphql-helix/tree/master/examples/error-handling) for a basic example of error handling.

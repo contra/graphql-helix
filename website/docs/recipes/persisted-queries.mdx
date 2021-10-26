@@ -1,0 +1,43 @@
+---
+title: Persisted queries
+---
+
+Persisted queries are useful because they reduce the payload sent from client to server and can also be used to only allow specific queries. Persisted queries are also a performance optimization since they allow us to skip parsing the query when executing a request.
+
+The `query` value that's passed to `processQuery` can be an already-parsed DocumentNode object instead of a string. This lets us fetch the query from memory based on some other value, like a `queryId` parameter. A rudimentary implementation could be as simple as this:
+
+```ts
+let queryId: string;
+let operationName: string | undefined;
+let variables: any;
+
+if (req.method === "POST") {
+  queryId = req.body.queryId;
+  operationName = req.body.operationName;
+  variables = req.body.variables;
+} else {
+  queryId = req.query.queryId as string;
+  operationName = req.query.operationName as string;
+  variables = req.query.variables;
+}
+
+const query = queryMap[queryId];
+
+if (!query) {
+  res.status(400);
+  res.json({
+    errors: [new GraphQLError(`Could not find a persisted query with an id of ${queryId}`)],
+  });
+  return;
+}
+
+const result = await processRequest({
+  operationName,
+  query,
+  variables,
+  request,
+  schema,
+});
+```
+
+See [here](https://github.com/contrawork/graphql-helix/tree/master/examples/persisted-queries) for a more complete example. A more robust solution can be implemented using a library like [relay-compiler-plus](https://github.com/yusinto/relay-compiler-plus).

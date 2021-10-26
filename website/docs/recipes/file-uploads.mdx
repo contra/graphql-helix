@@ -1,0 +1,7 @@
+---
+title: File uploads
+---
+
+File uploads, like serving static content, are generally best handled outside of your GraphQL schema. However, if you want to add support for uploads to your server, you can use the [graphql-upload](https://github.com/jaydenseric/graphql-upload) package. You need to add the Upload scalar to your schema and then add the appropriate middleware to your server.
+
+See [here](https://github.com/contrawork/graphql-helix/tree/master/examples/file-upload) for an example.

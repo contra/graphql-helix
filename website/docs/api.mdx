@@ -1,0 +1,103 @@
+---
+title: API
+---
+
+## `getGraphQLParameters`
+
+```ts
+function getGraphQLParameters(request: Request): GraphQLParams;
+```
+
+Extracts the `query`, `variables` and `operationName` values from the request.
+
+## `processRequest`
+
+```ts
+function processRequest(options: ProcessRequestOptions): Promise<ProcessRequestResult>;
+```
+
+Takes the `schema`, `request`, `query`, `variables`, `operationName` and a number of other optional parameters and returns one of three kinds of results, depending on the sort of response the server should send back.
+
+## `renderGraphiQL`
+
+```ts
+function renderGraphiQL(options: RenderGraphiQLOptions = {}): string;
+```
+
+Returns the HTML to render a GraphiQL instance.
+
+## `shouldRenderGraphiQL`
+
+```ts
+function shouldRenderGraphiQL(request: Request): boolean;
+```
+
+Uses the method and headers in the request to determine whether a GraphiQL instance should be returned instead of processing an API request.
+
+> This method checks the request headers and also the method. In different transports, the `GET` method might be reused not only for GraphiQL (for example, Server-Sent Events), so it's better to handle a unified handler for all GraphQL requests, and inside handler decide wether to use GraphiQL or not, using `shouldRenderGraphiQL`.
+
+## `sendResult`
+
+> Note: This helpers is currently available only for NodeJS runtime (Not `Deno`).
+
+```ts
+function sendResult(
+  result: ProcessRequestResult<any, any>,
+  rawResponse: RawResponse,
+  transformResult: TransformResultFn = DEFAULT_TRANSFORM_RESULT_FN
+): Promise<void>;
+```
+
+This method accepts a `result` (from `processRequest`) and a raw NodeJS HTTP `Response` object, and handles the response based on the `result.type`.
+
+Behind the scenes, this method calls `sendResponseResult` / `sendMultipartResponseResult` / `sendPushResult` based on `result.type`.
+
+You can also provide an optional `transformResult` function to manipulate the `ExecutionResult` before sending it, and this function will be called based on the `result.type` lifecycle.
+
+## `sendResponseResult`
+
+> Note: This helpers is currently available only for NodeJS runtime (Not `Deno`).
+
+```ts
+function sendResponseResult(
+  responseResult: Response<any, any>,
+  rawResponse: RawResponse,
+  transformResult: TransformResultFn = DEFAULT_TRANSFORM_RESULT_FN
+): Promise<void>;
+```
+
+Handles response sending for payload of type `RESPONSE`. It will send the stringified value of the result, along with the required HTTP headers and status code.
+
+You can also provide an optional `transformResult` function to manipulate the `ExecutionResult` before sending it.
+
+## `sendMultipartResponseResult`
+
+> Note: This helpers is currently available only for NodeJS runtime (Not `Deno`).
+
+```ts
+function sendMultipartResponseResult(
+  responseResult: Response<any, any>,
+  rawResponse: RawResponse,
+  transformResult: TransformResultFn = DEFAULT_TRANSFORM_RESULT_FN
+): Promise<void>;
+```
+
+Handles response sending for payload of type `MULTIPART_RESPONSE`. It will send the stringified value of the result, along with the required HTTP headers and status for sending multipart-responses. Use this in case your schema implements `@stream` and `@defer`.
+
+You can also provide an optional `transformResult` function to manipulate each `ExecutionResult` object before sending it.
+
+## `sendPushResult`
+
+> Note: This helpers is currently available only for NodeJS runtime (Not `Deno`).
+
+```ts
+function sendPushResult(
+  responseResult: Response<any, any>,
+  rawResponse: RawResponse,
+  transformResult: TransformResultFn = DEFAULT_TRANSFORM_RESULT_FN
+): Promise<void>;
+```
+
+Handles response sending for payload of type `PUSH`. It will send the stringified value of the result, along with the required HTTP headers and status for sending SSE responses (as `text/event-stream`).
+
+You can also provide an optional `transformResult` function to manipulate each `ExecutionResult` object before sending it.
