@@ -22,5 +22,5 @@
     "node_modules",
     "packages/graphql-helix/test"
   ],
-  "include": ["lib"]
+  "include": ["lib", "declarations.d.ts"]
 }

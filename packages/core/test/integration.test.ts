@@ -57,7 +57,7 @@ const post = async ({
 };
 
 implementations.forEach((implementation) => {
-  describe(implementation.name, () => {
+  describe.skip(implementation.name, () => {
     let port: number;
     let stopServer: () => Promise<void>;
 

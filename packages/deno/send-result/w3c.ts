@@ -1,6 +1,7 @@
-import { HttpError } from "..";
-import { MultipartResponse, ProcessRequestResult, Push, Response as HelixResponse } from "../types";
-import { DEFAULT_TRANSFORM_RESULT_FN } from "./utils";
+import { Buffer } from "https://deno.land/std@0.85.0/node/buffer.ts";
+import { HttpError } from "../index.ts";
+import { MultipartResponse, ProcessRequestResult, Push, Response as HelixResponse } from "../types.ts";
+import { DEFAULT_TRANSFORM_RESULT_FN } from "./utils.ts";
 
 export function getRegularResponse<TResponse extends Response>(
     responseResult: HelixResponse<any, any>,
@@ -72,6 +73,7 @@ export function getPushResponse<TResponse extends Response, TReadableStream exte
 
     const readableStream = new ReadableStream({
         async start(controller) {
+            controller.enqueue(`---`);
             await pushResult.subscribe(result => {
                 controller.enqueue(`data: ${JSON.stringify(transformResult(result))}\n\n`);
             })
