@@ -1,5 +1,16 @@
 # graphql-helix
 
+## 1.9.0
+
+### Minor Changes
+
+- c8750f3: Added support for GraphQL v16
+- 1ada48e: feat: W3C Response handlers
+
+### Patch Changes
+
+- c8750f3: fix broken multi part response and SSE response fetching in GraphiQL
+
 ## 1.8.4
 
 ### Patch Changes
