@@ -40,7 +40,7 @@ export function getMultipartResponse<TResponse extends Response, TReadableStream
             controller.enqueue(`---`);
             await multipartResult.subscribe(patchResult => {
                 const transformedResult = transformResult(patchResult);
-                const chunk = Buffer.from(JSON.stringify(transformResult(transformedResult)), "utf8");
+                const chunk = JSON.stringify(transformResult(transformedResult));
                 const data = ["", "Content-Type: application/json; charset=utf-8", "Content-Length: " + String(chunk.length), "", chunk];
                 if (patchResult.hasNext) {
                     data.push("---");
