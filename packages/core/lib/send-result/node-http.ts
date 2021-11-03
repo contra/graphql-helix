@@ -1,14 +1,11 @@
 // @denoify-ignore
-import { ExecutionResult } from "graphql";
 import type { ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
 import { HttpError } from "../errors";
 import type { Response, MultipartResponse, Push, ProcessRequestResult } from "../types";
+import { TransformResultFn, DEFAULT_TRANSFORM_RESULT_FN } from "./utils";
 
 export type RawResponse = ServerResponse | Http2ServerResponse;
-export type TransformResultFn = (result: ExecutionResult) => ExecutionResult;
-
-const DEFAULT_TRANSFORM_RESULT_FN: TransformResultFn = (result) => result;
 
 export async function sendResponseResult(
   responseResult: Response<any, any>,
@@ -76,7 +73,7 @@ export async function sendPushResult(
 
   await pushResult.subscribe((result) => {
     // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
-    rawResponse.write(`data: ${JSON.stringify(transformResult(result))}\n\n`);
+ rawResponse.write(`data: ${JSON.stringify(transformResult(result))}\n\n`);   
   });
   rawResponse.end();
 }
