@@ -7,10 +7,10 @@
   },
   "devDependencies": {
     "ts-node": "10.2.1",
-    "typescript": "4.4.3"
+    "typescript": "4.4.4"
   },
   "dependencies": {
-    "graphql": "15.4.0-experimental-stream-defer.1",
-    "graphql-helix": "^1.8.4"
+    "graphql-helix": "^1.8.4",
+    "graphql": "16.0.0-experimental-stream-defer.5"
   }
 }

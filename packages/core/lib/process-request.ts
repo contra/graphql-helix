@@ -133,7 +133,14 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         rootValue = rootValueFactory ? await rootValueFactory(executionContext) : ({} as TRootValue);
 
         if (operation.operation === "subscription") {
-          const result = await subscribe(schema, document, rootValue, context, variableValues, operationName);
+          const result = await subscribe({
+            schema,
+            document,
+            rootValue,
+            context,
+            variableValues,
+            operationName,
+          });
 
           // If errors are encountered while subscribing to the operation, an execution result
           // instead of an AsyncIterable.
@@ -190,7 +197,14 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             }
           }
         } else {
-          const result = await execute(schema, document, rootValue, context, variableValues, operationName);
+          const result = await execute({
+            schema,
+            document,
+            rootValue,
+            context,
+            variableValues,
+            operationName,
+          });
 
           // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
           // execution result.
