@@ -10,7 +10,7 @@ import {
   OperationDefinitionNode,
   ValidationRule,
   ExecutionResult,
-} from "https://cdn.skypack.dev/graphql@16.0.0-rc.2.experimental-stream-defer.3?dts";
+} from "https://cdn.skypack.dev/graphql@16.0.0-experimental-stream-defer.5?dts";
 import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index.ts";
 import { HttpError } from "./errors.ts";
 import { ExecutionContext, ExecutionPatchResult, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types.ts";

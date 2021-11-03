@@ -14,7 +14,7 @@
   "dependencies": {
     "express": "4.17.1",
     "express-session": "1.17.2",
-    "graphql": "15.6.0",
+    "graphql": "16.0.0-experimental-stream-defer.5",
     "graphql-helix": "^1.8.4"
   }
 }

@@ -13,6 +13,6 @@
   "dependencies": {
     "express": "4.17.1",
     "graphql-helix": "^1.8.4",
-    "graphql": "16.0.0-rc.2.experimental-stream-defer.3"
+    "graphql": "16.0.0-experimental-stream-defer.5"
   }
 }
