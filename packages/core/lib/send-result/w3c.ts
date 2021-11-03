@@ -1,5 +1,5 @@
-import { HttpError } from "..";
-import { MultipartResponse, ProcessRequestResult, Push, Response as HelixResponse } from "../types";
+import { HttpError } from "../errors";
+import type { MultipartResponse, ProcessRequestResult, Push, Response as HelixResponse } from "../types";
 import { DEFAULT_TRANSFORM_RESULT_FN } from "./utils";
 
 export function getRegularResponse<TResponse extends Response>(
