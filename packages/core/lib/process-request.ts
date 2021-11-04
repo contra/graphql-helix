@@ -11,9 +11,9 @@ import {
   ValidationRule,
   ExecutionResult,
 } from "graphql";
-import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index";
+import { isAsyncIterable, isHttpMethod } from "./util/index";
 import { HttpError } from "./errors";
-import { ExecutionContext, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types";
+import { ExecutionContext, ExecutionPatchResult, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types";
 
 const parseQuery = (query: string | DocumentNode, parse: typeof defaultParse): DocumentNode | Promise<DocumentNode> => {
   if (typeof query !== "string" && query.kind === "Document") {
@@ -145,13 +145,15 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           // If errors are encountered while subscribing to the operation, an execution result
           // instead of an AsyncIterable.
           if (isAsyncIterable(result)) {
+            const asyncIterator = result[Symbol.asyncIterator]();
             return {
               type: "PUSH",
               subscribe: async (onResult) => {
-                for await (const payload of result) {
+                let iteratorResult: IteratorResult<ExecutionResult | ExecutionPatchResult>;
+                while (!((iteratorResult = await asyncIterator.next()).done)) {
                   onResult(
                     formatPayload({
-                      payload,
+                      payload: iteratorResult.value,
                       context,
                       rootValue,
                       document,
@@ -160,9 +162,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                   );
                 }
               },
-              unsubscribe: () => {
-                stopAsyncIteration(result);
-              },
+              unsubscribe: () => asyncIterator.return?.(),
             };
           } else {
             if (isEventStream) {
@@ -209,13 +209,15 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
           // execution result.
           if (isAsyncIterable(result)) {
+            const asyncIterator = result[Symbol.asyncIterator]();
             return {
               type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
               subscribe: async (onResult) => {
-                for await (const payload of result) {
+                let iteratorResult: IteratorResult<ExecutionResult | ExecutionPatchResult>;
+                while (!((iteratorResult = await asyncIterator.next()).done)) {
                   onResult(
                     formatPayload({
-                      payload,
+                      payload: iteratorResult.value,
                       context,
                       rootValue,
                       document,
@@ -224,9 +226,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                   );
                 }
               },
-              unsubscribe: () => {
-                stopAsyncIteration(result);
-              },
+              unsubscribe: () => asyncIterator.return?.(),
             } as MultipartResponse<TContext, TRootValue>;
           } else {
             return {

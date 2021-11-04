@@ -11,7 +11,7 @@ import {
   ValidationRule,
   ExecutionResult,
 } from "https://cdn.skypack.dev/graphql@16.0.0-experimental-stream-defer.5?dts";
-import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index.ts";
+import { isAsyncIterable, isHttpMethod } from "./util/index.ts";
 import { HttpError } from "./errors.ts";
 import { ExecutionContext, ExecutionPatchResult, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types.ts";
 
@@ -137,21 +137,23 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             schema,
             document,
             rootValue,
-            context,
+            contextValue: context,
             variableValues,
             operationName,
           });
 
           // If errors are encountered while subscribing to the operation, an execution result
           // instead of an AsyncIterable.
-          if (isAsyncIterable<ExecutionResult>(result)) {
+          if (isAsyncIterable(result)) {
+            const asyncIterator = result[Symbol.asyncIterator]();
             return {
               type: "PUSH",
               subscribe: async (onResult) => {
-                for await (const payload of result) {
+                let iteratorResult: IteratorResult<ExecutionResult | ExecutionPatchResult>;
+                while (!((iteratorResult = await asyncIterator.next()).done)) {
                   onResult(
                     formatPayload({
-                      payload,
+                      payload: iteratorResult.value,
                       context,
                       rootValue,
                       document,
@@ -160,9 +162,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                   );
                 }
               },
-              unsubscribe: () => {
-                stopAsyncIteration(result);
-              },
+              unsubscribe: () => asyncIterator.return?.(),
             };
           } else {
             if (isEventStream) {
@@ -208,14 +208,16 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
 
           // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
           // execution result.
-          if (isAsyncIterable<ExecutionPatchResult>(result)) {
+          if (isAsyncIterable(result)) {
+            const asyncIterator = result[Symbol.asyncIterator]();
             return {
               type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
               subscribe: async (onResult) => {
-                for await (const payload of result) {
+                let iteratorResult: IteratorResult<ExecutionResult | ExecutionPatchResult>;
+                while (!((iteratorResult = await asyncIterator.next()).done)) {
                   onResult(
                     formatPayload({
-                      payload,
+                      payload: iteratorResult.value,
                       context,
                       rootValue,
                       document,
@@ -224,9 +226,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                   );
                 }
               },
-              unsubscribe: () => {
-                stopAsyncIteration(result);
-              },
+              unsubscribe: () => asyncIterator.return?.(),
             } as MultipartResponse<TContext, TRootValue>;
           } else {
             return {
