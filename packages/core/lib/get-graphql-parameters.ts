@@ -1,21 +1,29 @@
-import { isHttpMethod } from "./util/index";
-import { GraphQLParams, Request } from "./types";
+import { GraphQLParams } from "./types";
 
-export const getGraphQLParameters = (request: Request): GraphQLParams => {
-  const { body, method, query: queryParams } = request;
+export async function getGraphQLParameters(request: Request): Promise<GraphQLParams> {
+  const url = new URL(request.url);
 
-  let operationName;
-  let query;
-  let variables;
+  let operationName: string | undefined;
+  let query: string | undefined;
+  let variables: any | undefined;
 
-  if (isHttpMethod("GET", method)) {
-    operationName = queryParams.operationName;
-    query = queryParams.query;
-    variables = queryParams.variables;
-  } else if (isHttpMethod("POST", method)) {
-    operationName = body?.operationName;
-    query = body?.query;
-    variables = body?.variables;
+  switch(request.method) {
+    case 'GET': {
+      operationName = url.searchParams.get('operationName') || undefined;
+      query = url.searchParams.get('query') || undefined;
+      const variablesStr = url.searchParams.get('variables');
+      if (variablesStr) {
+        variables = JSON.parse(variablesStr);
+      }
+      break;
+    }
+    case 'POST': {
+      const requestBody = await request.json();
+      operationName = requestBody?.operationName;
+      query = requestBody?.query;
+      variables = requestBody?.variables;
+      break;
+    }
   }
 
   return {
@@ -23,4 +31,5 @@ export const getGraphQLParameters = (request: Request): GraphQLParams => {
     query,
     variables,
   };
-};
+}
+
