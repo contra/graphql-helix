@@ -5,9 +5,7 @@ import {
   subscribe as defaultSubscribe,
   validate as defaultValidate,
   DocumentNode,
-  GraphQLSchema,
   OperationDefinitionNode,
-  ValidationRule,
   ExecutionResult,
 } from "graphql";
 import { isAsyncIterable } from "./util/index";
@@ -19,18 +17,6 @@ const parseQuery = async (query: string | DocumentNode, parse: typeof defaultPar
     return query;
   }
   return parse(query as string);
-};
-
-export const validateDocument = (
-  schema: GraphQLSchema,
-  document: DocumentNode,
-  validate: typeof defaultValidate,
-  validationRules?: readonly ValidationRule[]
-): void => {
-  const validationErrors = validate(schema, document, validationRules);
-  if (validationErrors.length) {
-    throw validationErrors;
-  }
 };
 
 const getExecutableOperation = (document: DocumentNode, operationName?: string): OperationDefinitionNode => {
@@ -48,9 +34,9 @@ export const processRequest = async <
   TRootValue = {},
   TResponse extends Response = Response,
   TReadableStream extends ReadableStream = ReadableStream,
->(
-  options: ProcessRequestOptions<TContext, TRootValue, TResponse, TReadableStream>
-): Promise<Response> => {
+  >(
+    options: ProcessRequestOptions<TContext, TRootValue, TResponse, TReadableStream>
+  ): Promise<TResponse> => {
   const {
     contextFactory,
     execute = defaultExecute,
@@ -94,7 +80,7 @@ export const processRequest = async <
         headers: {
           Allow: "GET, POST",
         },
-        Response, transformResult,
+        Response, transformResult, ReadableStream, isEventStream,
       });
     }
 
@@ -102,24 +88,41 @@ export const processRequest = async <
       return getErrorResponse({
         status: 400,
         message: "Must provide query string.",
-        Response, transformResult,
+        Response, transformResult, ReadableStream, isEventStream,
       });
     }
 
-    document = await parseQuery(query, parse);
+    try {
+      document = await parseQuery(query, parse);
+    } catch (e: any) {
+      return getErrorResponse({
+        status: 400,
+        message: "Syntax error",
+        errors: [e],
+        Response, transformResult, ReadableStream, isEventStream,
+      });
+    }
 
-    validateDocument(schema, document, validate, validationRules);
+    const validationErrors = validate(schema, document, validationRules);
+    if (validationErrors.length > 0) {
+      return getErrorResponse({
+        status: 400,
+        message: "Invalid query.",
+        errors: validationErrors,
+        Response, transformResult, ReadableStream, isEventStream,
+      });
+    }
 
     operation = getExecutableOperation(document, operationName);
 
     if (operation.operation === "mutation" && request.method === "GET") {
       return getErrorResponse({
         status: 405,
-        message: "Must provide query string.",
+        message: "Can only perform a mutation operation from a POST request.",
         headers: {
           Allow: "POST",
         },
-        Response, transformResult,
+        Response, transformResult, ReadableStream, isEventStream,
       });
     }
 
@@ -133,7 +136,7 @@ export const processRequest = async <
       return getErrorResponse({
         message: "Variables are invalid JSON.",
         status: 400,
-        Response, transformResult
+        Response, transformResult, ReadableStream, isEventStream,
       });
     }
 
@@ -189,10 +192,6 @@ export const processRequest = async <
     }
   } catch (error: any) {
     const errors = Array.isArray(error) ? error : error.errors || [error];
-    const payload: ExecutionResult<any> = {
-      errors,
-    };
-
-    return getRegularResponse({ executionResult: payload, Response, transformResult });
+    return getErrorResponse({ message: 'Error', status: 500, errors, Response, ReadableStream, isEventStream, transformResult });
   }
 };

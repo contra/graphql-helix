@@ -70,8 +70,9 @@ export function getMultipartResponse<TResponse extends Response, TReadableStream
         controller.error(e);
       }
     },
-    cancel() {
+    cancel(controller) {
       stopAsyncIteration(asyncExecutionResult);
+      controller.close();
     },
   });
   return new Response(readableStream, responseInit);
@@ -110,8 +111,9 @@ export function getPushResponse<TResponse extends Response, TReadableStream exte
         controller.error(e);
       }
     },
-    cancel() {
+    cancel(controller) {
       stopAsyncIteration(asyncExecutionResult);
+      controller.close();
     },
   });
   return new Response(readableStream, responseInit);
@@ -131,8 +133,9 @@ export function getErrorResponse<TResponse extends Response>({
   status = 500,
   headers = {},
   errors = [{ message }],
+  Response,
   transformResult = DEFAULT_TRANSFORM_RESULT_FN,
-}: ErrorResponseParams<TResponse>): Response {
+}: ErrorResponseParams<TResponse>): TResponse {
   const payload: any = {
     errors,
   };

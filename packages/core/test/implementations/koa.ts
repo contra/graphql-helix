@@ -3,11 +3,12 @@ import bodyParser from "koa-bodyparser";
 import { Readable } from "stream";
 import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
+import { Request, Response } from 'undici';
 import { ReadableStream } from "stream/web";
 
 const graphqlHandler = async (ctx: Context) => {
-  const request: any = new Request(ctx.request.url, {
-    body: JSON.stringify(ctx.request.body),
+  const request: any = new Request('http://localhost/' + ctx.request.url, {
+    ...(ctx.request.method === 'POST' ? { body: JSON.stringify(ctx.request.body) } : undefined),
     headers: ctx.request.headers as any,
     method: ctx.request.method,
   })
@@ -33,7 +34,7 @@ const graphqlHandler = async (ctx: Context) => {
   })
 
   ctx.status = 200;
-  ctx.body = (Readable as any).fromWeb(response);
+  ctx.body = Readable.from(response.body as any);
 };
 
 const graphiqlHandler = async (ctx: Context) => {

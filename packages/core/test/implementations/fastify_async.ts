@@ -2,13 +2,14 @@ import fastify, { RouteHandlerMethod } from "fastify";
 import { parse as graphqlParse } from "graphql";
 import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL, sendResponse } from "../../lib";
 import { schema } from "../schema";
+import { Request, Response } from 'undici';
 import { ReadableStream } from "stream/web";
 
 const sleep = (time: number) => new Promise<void>((resolve) => setTimeout(resolve, time));
 
 const graphqlHandler: RouteHandlerMethod = async (req, res) => {
-  const request: any = new Request(req.url, {
-    body: JSON.stringify(req.body),
+  const request: any = new Request('http://localhost/' + req.url, {
+    ...(req.method === 'POST' ? { body: JSON.stringify(req.body) } : undefined),
     headers: req.headers as any,
     method: req.method,
   })
@@ -55,8 +56,8 @@ app.route({
   method: ["GET", "POST", "PUT"],
   url: "/",
   async handler(req, res) {
-    const request: any = new Request(req.url, {
-      body: JSON.stringify(req.body),
+    const request: any = new Request('http://localhost/' + req.url, {
+      ...(req.method === 'POST' ? { body: JSON.stringify(req.body) } : undefined),
       headers: req.headers as any,
       method: req.method,
     })
