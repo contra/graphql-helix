@@ -1,5 +1,11 @@
 # graphql-helix
 
+## 1.9.1
+
+### Patch Changes
+
+- a52d40b: fix(processRequest): pass context as contextValue correctly
+
 ## 1.9.0
 
 ### Minor Changes
