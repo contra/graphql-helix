@@ -82,7 +82,6 @@ implementations.forEach((implementation) => {
         expect(errors).toBeUndefined();
         expect(data).toBeDefined();
       });
-
       test("POST basic query", async () => {
         const {
           body: { data, errors },
@@ -422,7 +421,6 @@ implementations.forEach((implementation) => {
         expect(errors[0].message).toEqual("GraphQL only supports GET and POST requests.");
       });
     });
-
     describe("path: /graphiql", () => {
       test("GET GraphiQL interface", async () => {
         const { body } = await got.get<any>(`http://localhost:${port}/graphiql`, {
@@ -618,11 +616,11 @@ implementations.forEach((implementation) => {
           // @ts-ignore
           return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(stopButtonSelector)];
         }, stopButtonSelector);
-        expect(JSON.parse(resultContents)).toEqual({
+        expect(resultContents).toEqual(JSON.stringify({
           data: {
             count: 1,
           },
-        });
+        }, null, 2));
         expect(isShowingStopButton).toEqual(true);
         await new Promise((resolve) => setTimeout(resolve, 3000));
         const [resultContents1, isShowingPlayButton] = await page.evaluate((playButtonSelector) => {
@@ -630,11 +628,11 @@ implementations.forEach((implementation) => {
           // @ts-ignore
           return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(playButtonSelector)];
         }, playButtonSelector);
-        expect(JSON.parse(resultContents1)).toEqual({
+        expect(resultContents1).toEqual(JSON.stringify({
           data: {
             count: 2,
           },
-        });
+        }, null, 2));
         expect(isShowingPlayButton).toEqual(true);
       });
     });

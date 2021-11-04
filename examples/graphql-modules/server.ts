@@ -1,5 +1,5 @@
 import express from "express";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "graphql-helix";
+import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "graphql-helix";
 import { application } from "./application";
 
 const app = express();
@@ -7,17 +7,12 @@ const app = express();
 app.use(express.json());
 
 app.use("/graphql", async (req, res) => {
-  const request = {
-    body: req.body,
-    headers: req.headers,
-    method: req.method,
-    query: req.query,
-  };
+  const request = await getNodeRequest(req);
 
   if (shouldRenderGraphiQL(request)) {
     res.send(renderGraphiQL());
   } else {
-    const { operationName, query, variables } = getGraphQLParameters(request);
+    const { operationName, query, variables } = await getGraphQLParameters(request);
 
     const result = await processRequest({
       operationName,
@@ -29,7 +24,7 @@ app.use("/graphql", async (req, res) => {
       subscribe: application.createSubscription(),
     });
 
-    sendResult(result, res);
+    await sendNodeResponse(result, res);
   }
 });
 

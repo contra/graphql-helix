@@ -1,16 +1,11 @@
 import fastify, { RouteHandlerMethod } from "fastify";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "../../lib";
-import { schema } from "../schema";
+import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
+import { schema } from "../schema"; 
 
 const graphqlHandler: RouteHandlerMethod = async (req, res) => {
-  const request = {
-    body: req.body,
-    headers: req.headers,
-    method: req.method,
-    query: req.query,
-  };
-  const { operationName, query, variables } = getGraphQLParameters(request);
-  const result = await processRequest({
+  const request = await getNodeRequest(req);
+  const { operationName, query, variables } = await getGraphQLParameters(request);
+  const response = await processRequest({
     operationName,
     query,
     variables,
@@ -18,7 +13,7 @@ const graphqlHandler: RouteHandlerMethod = async (req, res) => {
     schema,
   });
 
-  await sendResult(result, res.raw);
+  await sendNodeResponse(response, res.raw);
   // Tell fastify a response was sent
   res.sent = true;
 };
@@ -46,12 +41,7 @@ app.route({
   method: ["GET", "POST", "PUT"],
   url: "/",
   async handler(req, res) {
-    const request = {
-      body: req.body,
-      headers: req.headers,
-      method: req.method,
-      query: req.query,
-    };
+    const request = await getNodeRequest(req);
 
     if (shouldRenderGraphiQL(request)) {
       await graphiqlHandler.call(this, req, res);

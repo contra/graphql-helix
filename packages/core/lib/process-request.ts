@@ -5,65 +5,36 @@ import {
   subscribe as defaultSubscribe,
   validate as defaultValidate,
   DocumentNode,
-  GraphQLError,
-  GraphQLSchema,
   OperationDefinitionNode,
-  ValidationRule,
   ExecutionResult,
 } from "graphql";
-import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index";
-import { HttpError } from "./errors";
-import { ExecutionContext, ExecutionPatchResult, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types";
+import { isAsyncIterable } from "./util/is-async-iterable";
+import { ExecutionContext, ExecutionPatchResult, ProcessRequestOptions } from "./types";
+import { getMultipartResponse, getPushResponse, getRegularResponse, getErrorResponse } from "./util/get-response";
 
-const parseQuery = (query: string | DocumentNode, parse: typeof defaultParse): DocumentNode | Promise<DocumentNode> => {
+const parseQuery = async (query: string | DocumentNode, parse: typeof defaultParse): Promise<DocumentNode> => {
   if (typeof query !== "string" && query.kind === "Document") {
     return query;
   }
-  try {
-    const parseResult = parse(query as string);
-
-    if (parseResult instanceof Promise) {
-      return parseResult.catch((syntaxError) => {
-        throw new HttpError(400, "GraphQL syntax error.", {
-          graphqlErrors: [syntaxError],
-        });
-      });
-    }
-    return parseResult;
-  } catch (syntaxError) {
-    throw new HttpError(400, "GraphQL syntax error.", {
-      graphqlErrors: [syntaxError as GraphQLError],
-    });
-  }
-};
-
-export const validateDocument = (
-  schema: GraphQLSchema,
-  document: DocumentNode,
-  validate: typeof defaultValidate,
-  validationRules?: readonly ValidationRule[]
-): void => {
-  const validationErrors = validate(schema, document, validationRules);
-  if (validationErrors.length) {
-    throw new HttpError(400, "GraphQL validation error.", {
-      graphqlErrors: validationErrors,
-    });
-  }
+  return parse(query as string);
 };
 
 const getExecutableOperation = (document: DocumentNode, operationName?: string): OperationDefinitionNode => {
   const operation = getOperationAST(document, operationName);
 
   if (!operation) {
-    throw new HttpError(400, "Could not determine what operation to execute.");
+    throw new Error("Could not determine what operation to execute.");
   }
 
   return operation;
 };
 
-export const processRequest = async <TContext = {}, TRootValue = {}>(
+export const processRequest = async <
+  TContext = {},
+  TRootValue = {}
+>(
   options: ProcessRequestOptions<TContext, TRootValue>
-): Promise<ProcessRequestResult<TContext, TRootValue>> => {
+): Promise<Response> => {
   const {
     contextFactory,
     execute = defaultExecute,
@@ -80,225 +51,148 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
     variables,
   } = options;
 
+  const transformResult = (payload: ExecutionResult | ExecutionPatchResult) =>
+    formatPayload({
+      payload,
+      context,
+      rootValue,
+      document,
+      operation,
+    });
+
   let context: TContext | undefined;
   let rootValue: TRootValue | undefined;
   let document: DocumentNode | undefined;
   let operation: OperationDefinitionNode | undefined;
 
-  const result = await (async (): Promise<ProcessRequestResult<TContext, TRootValue>> => {
-    const accept = typeof request.headers.get === "function" ? request.headers.get("accept") : (request.headers as any).accept;
-    const isEventStream = accept === "text/event-stream";
+  const isEventStream = request.headers.get('accept') === "text/event-stream";
+
+  try {
+    if (request.method !== "GET" && request.method !== "POST") {
+      return getErrorResponse({
+        status: 405,
+        message: "GraphQL only supports GET and POST requests.",
+        headers: {
+          Allow: "GET, POST",
+        },
+        transformResult,
+        isEventStream,
+      });
+    }
+
+    if (query == null) {
+      return getErrorResponse({
+        status: 400,
+        message: "Must provide query string.",
+        transformResult,
+        isEventStream,
+      });
+    }
 
     try {
-      if (!isHttpMethod("GET", request.method) && !isHttpMethod("POST", request.method)) {
-        throw new HttpError(405, "GraphQL only supports GET and POST requests.", {
-          headers: [{ name: "Allow", value: "GET, POST" }],
-        });
-      }
-
-      if (query == null) {
-        throw new HttpError(400, "Must provide query string.");
-      }
-
       document = await parseQuery(query, parse);
+    } catch (e: any) {
+      return getErrorResponse({
+        status: 400,
+        message: "Syntax error",
+        errors: [e],
+        transformResult,
+        isEventStream,
+      });
+    }
 
-      validateDocument(schema, document, validate, validationRules);
+    const validationErrors = validate(schema, document, validationRules);
+    if (validationErrors.length > 0) {
+      return getErrorResponse({
+        status: 400,
+        message: "Invalid query.",
+        errors: validationErrors,
+        transformResult,
+        isEventStream,
+      });
+    }
 
-      operation = getExecutableOperation(document, operationName);
+    operation = getExecutableOperation(document, operationName);
 
-      if (operation.operation === "mutation" && isHttpMethod("GET", request.method)) {
-        throw new HttpError(405, "Can only perform a mutation operation from a POST request.", {
-          headers: [{ name: "Allow", value: "POST" }],
-        });
+    if (operation.operation === "mutation" && request.method === "GET") {
+      return getErrorResponse({
+        status: 405,
+        message: "Can only perform a mutation operation from a POST request.",
+        headers: {
+          Allow: "POST",
+        },
+        transformResult,
+        isEventStream,
+      });
+    }
+
+    let variableValues: { [name: string]: any } | undefined;
+
+    try {
+      if (variables) {
+        variableValues = typeof variables === "string" ? JSON.parse(variables) : variables;
       }
+    } catch (_error) {
+      return getErrorResponse({
+        message: "Variables are invalid JSON.",
+        status: 400,
+        transformResult,
+        isEventStream,
+      });
+    }
 
-      let variableValues: { [name: string]: any } | undefined;
+    const executionContext: ExecutionContext = {
+      request,
+      document,
+      operation,
+      variables: variableValues,
+    };
+    context = contextFactory ? await contextFactory(executionContext) : ({} as TContext);
+    rootValue = rootValueFactory ? await rootValueFactory(executionContext) : ({} as TRootValue);
 
-      try {
-        if (variables) {
-          variableValues = typeof variables === "string" ? JSON.parse(variables) : variables;
-        }
-      } catch (_error) {
-        throw new HttpError(400, "Variables are invalid JSON.");
-      }
+    if (operation.operation === "subscription") {
+      const result = await subscribe({
+        schema,
+        document,
+        rootValue,
+        contextValue: context,
+        variableValues,
+        operationName,
+      });
 
-      try {
-        const executionContext: ExecutionContext = {
-          request,
-          document,
-          operation,
-          variables: variableValues,
-        };
-        context = contextFactory ? await contextFactory(executionContext) : ({} as TContext);
-        rootValue = rootValueFactory ? await rootValueFactory(executionContext) : ({} as TRootValue);
-
-        if (operation.operation === "subscription") {
-          const result = await subscribe({
-            schema,
-            document,
-            rootValue,
-            context,
-            variableValues,
-            operationName,
-          });
-
-          // If errors are encountered while subscribing to the operation, an execution result
-          // instead of an AsyncIterable.
-          if (isAsyncIterable<ExecutionResult>(result)) {
-            return {
-              type: "PUSH",
-              subscribe: async (onResult) => {
-                for await (const payload of result) {
-                  onResult(
-                    formatPayload({
-                      payload,
-                      context,
-                      rootValue,
-                      document,
-                      operation,
-                    })
-                  );
-                }
-              },
-              unsubscribe: () => {
-                stopAsyncIteration(result);
-              },
-            };
-          } else {
-            if (isEventStream) {
-              return {
-                type: "PUSH",
-                subscribe: async (onResult) => {
-                  onResult(
-                    formatPayload({
-                      payload: result,
-                      context,
-                      rootValue,
-                      document,
-                      operation,
-                    })
-                  );
-                },
-                unsubscribe: () => undefined,
-              };
-            } else {
-              return {
-                type: "RESPONSE",
-                payload: formatPayload({
-                  payload: result,
-                  context,
-                  rootValue,
-                  document,
-                  operation,
-                }),
-                status: 200,
-                headers: [],
-              };
-            }
-          }
-        } else {
-          const result = await execute({
-            schema,
-            document,
-            rootValue,
-            contextValue: context,
-            variableValues,
-            operationName,
-          });
-
-          // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
-          // execution result.
-          if (isAsyncIterable<ExecutionPatchResult>(result)) {
-            return {
-              type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
-              subscribe: async (onResult) => {
-                for await (const payload of result) {
-                  onResult(
-                    formatPayload({
-                      payload,
-                      context,
-                      rootValue,
-                      document,
-                      operation,
-                    })
-                  );
-                }
-              },
-              unsubscribe: () => {
-                stopAsyncIteration(result);
-              },
-            } as MultipartResponse<TContext, TRootValue>;
-          } else {
-            return {
-              type: "RESPONSE",
-              status: 200,
-              headers: [],
-              payload: formatPayload({
-                payload: result,
-                context,
-                rootValue,
-                document,
-                operation,
-              }),
-            };
-          }
-        }
-      } catch (executionError) {
-        if (executionError instanceof GraphQLError) {
-          throw new HttpError(200, "GraphQLError encountered white executed GraphQL request.", {
-            graphqlErrors: [executionError],
-          });
-        } else if (executionError instanceof HttpError) {
-          throw executionError;
-        } else {
-          throw new HttpError(500, "Unexpected error encountered while executing GraphQL request.", {
-            graphqlErrors: [new GraphQLError((executionError as Error).message)],
-          });
-        }
-      }
-    } catch (error) {
-      const payload: ExecutionResult<any> = {
-        errors: ((error as HttpError).graphqlErrors as GraphQLError[]) || [new GraphQLError((error as Error).message)],
-      };
-
-      if (isEventStream) {
-        return {
-          type: "PUSH",
-          subscribe: async (onResult) => {
-            onResult(
-              formatPayload({
-                payload,
-                context,
-                rootValue,
-                document,
-                operation,
-              })
-            );
-          },
-          unsubscribe: () => undefined,
-        };
+      // If errors are encountered while subscribing to the operation, an execution result
+      // instead of an AsyncIterable.
+      if (isAsyncIterable<ExecutionPatchResult>(result)) {
+        return getPushResponse(result, transformResult);
       } else {
-        return {
-          type: "RESPONSE",
-          status: (error as HttpError).status || 500,
-          headers: (error as HttpError).headers || [],
-          payload: formatPayload({
-            payload,
-            context,
-            rootValue,
-            document,
-            operation,
-          }),
-        };
+        if (isEventStream) {
+          return getPushResponse(result, transformResult);
+        } else {
+          return getRegularResponse(result, transformResult);
+        }
+      }
+    } else {
+      const result = await execute({
+        schema,
+        document,
+        rootValue,
+        contextValue: context,
+        variableValues,
+        operationName,
+      });
+
+      // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
+      // execution result.
+      if (isAsyncIterable<ExecutionPatchResult>(result)) {
+        return isEventStream
+          ? getPushResponse(result, transformResult)
+          : getMultipartResponse(result, transformResult);
+      } else {
+        return getRegularResponse(result, transformResult);
       }
     }
-  })();
-
-  return {
-    ...result,
-    context,
-    rootValue,
-    document,
-    operation,
-  };
+  } catch (error: any) {
+    const errors = Array.isArray(error) ? error : error.errors || [error];
+    return getErrorResponse({ message: "Error", status: 500, errors, isEventStream, transformResult });
+  }
 };

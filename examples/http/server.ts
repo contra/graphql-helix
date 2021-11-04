@@ -1,53 +1,35 @@
 import { createServer } from "http";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "graphql-helix";
-import { URL, URLSearchParams } from "url";
+import {
+  getGraphQLParameters,
+  processRequest,
+  renderGraphiQL,
+  getNodeRequest,
+  sendNodeResponse,
+  shouldRenderGraphiQL,
+} from "graphql-helix";
 import { schema } from "./schema";
 
-const server = createServer((req, res) => {
-  const url = new URL(req.url!, `http://${req.headers.host}`);
-  const searchParams = new URLSearchParams(url.search);
+const server = createServer(async (req, res) => {
+  const request = await getNodeRequest(req);
 
-  if (url.pathname !== "/graphql") {
-    res.writeHead(404, {
-      "content-type": "text/plain",
+  if (shouldRenderGraphiQL(request)) {
+    res.writeHead(200, {
+      "content-type": "text/html",
     });
-    res.end("Not found");
-    return;
+    res.end(renderGraphiQL());
+  } else {
+    const { operationName, query, variables } = await getGraphQLParameters(request);
+
+    const result = await processRequest({
+      operationName,
+      query,
+      variables,
+      request,
+      schema,
+    });
+
+    await sendNodeResponse(result, res);
   }
-
-  let payload = "";
-
-  req.on("data", (chunk) => {
-    payload += chunk.toString();
-  });
-
-  req.on("end", async () => {
-    const request = {
-      body: JSON.parse(payload || "{}"),
-      headers: req.headers,
-      method: req.method!,
-      query: Object.fromEntries(searchParams),
-    };
-
-    if (shouldRenderGraphiQL(request)) {
-      res.writeHead(200, {
-        "content-type": "text/html",
-      });
-      res.end(renderGraphiQL());
-    } else {
-      const { operationName, query, variables } = getGraphQLParameters(request);
-
-      const result = await processRequest({
-        operationName,
-        query,
-        variables,
-        request,
-        schema,
-      });
-
-      sendResult(result, res);
-    }
-  });
 });
 
 const port = process.env.PORT || 4000;

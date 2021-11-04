@@ -1,6 +1,6 @@
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "graphql-helix";
+import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "graphql-helix";
 import { schema } from "./schema";
 
 declare module "koa" {
@@ -15,17 +15,12 @@ const app = new Koa();
 app.use(bodyParser());
 
 app.use(async (ctx) => {
-  const request = {
-    body: ctx.request.body,
-    headers: ctx.req.headers,
-    method: ctx.request.method,
-    query: ctx.request.query,
-  };
+  const request = await getNodeRequest(ctx.request);
 
   if (shouldRenderGraphiQL(request)) {
     ctx.body = renderGraphiQL({});
   } else {
-    const { operationName, query, variables } = getGraphQLParameters(request);
+    const { operationName, query, variables } = await getGraphQLParameters(request);
 
     const result = await processRequest({
       operationName,
@@ -35,7 +30,7 @@ app.use(async (ctx) => {
       schema,
     });
 
-    sendResult(result, ctx.res);
+    await sendNodeResponse(result, ctx.res);
   }
 });
 

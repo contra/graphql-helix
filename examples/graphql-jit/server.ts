@@ -4,9 +4,9 @@ import {
   getGraphQLParameters,
   processRequest,
   renderGraphiQL,
-  sendPushResult,
-  sendResponseResult,
+  sendNodeResponse,
   shouldRenderGraphiQL,
+  getNodeRequest,
 } from "graphql-helix";
 import { compileQuery, isCompiledQuery } from "graphql-jit";
 import lru from "tiny-lru";
@@ -19,17 +19,12 @@ const app = express();
 app.use(express.json());
 
 app.use("/graphql", async (req, res) => {
-  const request = {
-    body: req.body,
-    headers: req.headers,
-    method: req.method,
-    query: req.query,
-  };
+  const request = await getNodeRequest(req);
 
   if (shouldRenderGraphiQL(request)) {
     res.send(renderGraphiQL());
   } else {
-    const { operationName, query, variables } = getGraphQLParameters(request);
+    const { operationName, query, variables } = await getGraphQLParameters(request);
     const cacheKey = query || "";
     const cached = cache.get(cacheKey);
     let compiledQuery = cached?.compiledQuery;
@@ -37,7 +32,7 @@ app.use("/graphql", async (req, res) => {
     let validationErrors = cached?.validationErrors;
     console.log({ cached, compiledQuery, document, validationErrors });
 
-    const result = await processRequest({
+    const response = await processRequest({
       operationName,
       query,
       variables,
@@ -73,13 +68,7 @@ app.use("/graphql", async (req, res) => {
       },
     });
 
-    if (result.type === "RESPONSE") {
-      sendResponseResult(result, res);
-    } else if (result.type === "PUSH") {
-      sendPushResult(result, res);
-    } else {
-      // GraphQL JIT does not currently support @defer and @stream
-    }
+    await sendNodeResponse(response, res);
   }
 });
 

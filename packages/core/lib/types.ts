@@ -138,14 +138,9 @@ export interface ExecutionContext {
   variables?: { readonly [name: string]: unknown };
 }
 
-export interface Request {
-  body?: any;
-  headers: Headers;
-  method: string;
-  query: any;
-}
-
-export type Headers = Record<string, string | string[] | undefined> | { get(name: string): string | null };
+export type Headers =
+  | Record<string, string | string[] | undefined>
+  | { get(name: string): string | null };
 
 export interface Result<TContext, TRootValue> {
   context?: TContext;
@@ -154,26 +149,3 @@ export interface Result<TContext, TRootValue> {
   rootValue?: TRootValue;
 }
 
-export interface Response<TContext, TRootValue> extends Result<TContext, TRootValue> {
-  type: "RESPONSE";
-  status: number;
-  headers: { name: string; value: string }[];
-  payload: ExecutionResult;
-}
-
-export interface MultipartResponse<TContext, TRootValue> extends Result<TContext, TRootValue> {
-  type: "MULTIPART_RESPONSE";
-  subscribe: (onResult: (result: ExecutionPatchResult) => void) => Promise<void>;
-  unsubscribe: () => void;
-}
-
-export interface Push<TContext, TRootValue> extends Result<TContext, TRootValue> {
-  type: "PUSH";
-  subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
-  unsubscribe: () => void;
-}
-
-export type ProcessRequestResult<TContext, TRootValue> =
-  | Response<TContext, TRootValue>
-  | MultipartResponse<TContext, TRootValue>
-  | Push<TContext, TRootValue>;

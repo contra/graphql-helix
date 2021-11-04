@@ -1,12 +1,7 @@
-import { Request, Response } from "undici";
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import { getGraphQLParameters, processRequest, getResponse } from "../lib";
-import { ReadableStream } from "stream/web";
-import { parse as qsParse, stringify as qsStringify } from "qs";
-
-declare module "stream/web" {
-  export const ReadableStream: any;
-}
+import { getGraphQLParameters, processRequest } from "../lib";
+import { stringify as qsStringify } from "qs";
+import { Request } from "../lib/util/w3-mocks";
 
 const schema = makeExecutableSchema({
   typeDefs: /* GraphQL */ `
@@ -36,19 +31,9 @@ const schema = makeExecutableSchema({
   },
 });
 
-async function prepareHelixRequestFromW3CRequest(request: Request) {
-  const queryString = request.url.split("?")[1];
-  return {
-    body: request.method === "POST" && (await request.json()),
-    headers: request.headers,
-    method: request.method,
-    query: queryString && qsParse(queryString),
-  };
-}
-
 describe("W3 Compatibility", () => {
   it("should handle regular POST request and responses", async () => {
-    const request = new Request("http://localhost:3000/graphql", {
+    const request: any = new Request("http://localhost:3000/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -57,19 +42,17 @@ describe("W3 Compatibility", () => {
         query: "{ hello }",
       }),
     });
-    const helixRequest = await prepareHelixRequestFromW3CRequest(request);
 
-    const { operationName, query, variables } = getGraphQLParameters(helixRequest);
+    const { operationName, query, variables } = await getGraphQLParameters(request);
 
-    const result = await processRequest({
+    const response = await processRequest({
       operationName,
       query,
       variables,
-      request: helixRequest,
+      request,
       schema,
     });
 
-    const response = getResponse(result, Response as any, ReadableStream);
     const responseJson = await response.json();
     expect(responseJson).toEqual({
       data: {
@@ -78,7 +61,7 @@ describe("W3 Compatibility", () => {
     });
   });
   it("should handle regular GET request and responses", async () => {
-    const request = new Request(
+    const request: any = new Request(
       "http://localhost:3000/graphql?" +
         qsStringify({
           query: "{ hello }",
@@ -87,19 +70,17 @@ describe("W3 Compatibility", () => {
         method: "GET",
       }
     );
-    const helixRequest = await prepareHelixRequestFromW3CRequest(request);
 
-    const { operationName, query, variables } = getGraphQLParameters(helixRequest);
+    const { operationName, query, variables } = await getGraphQLParameters(request);
 
-    const result = await processRequest({
+    const response = await processRequest({
       operationName,
       query,
       variables,
-      request: helixRequest,
+      request,
       schema,
     });
 
-    const response = getResponse(result, Response as any, ReadableStream);
     const responseJson = await response.json();
     expect(responseJson).toEqual({
       data: {
@@ -108,7 +89,7 @@ describe("W3 Compatibility", () => {
     });
   });
   it("should handle push responses", async () => {
-    const request = new Request("http://localhost:3000/graphql", {
+    const request: any = new Request("http://localhost:3000/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -120,19 +101,16 @@ describe("W3 Compatibility", () => {
         },
       }),
     });
-    const helixRequest = await prepareHelixRequestFromW3CRequest(request);
+    const { operationName, query, variables } = await getGraphQLParameters(request);
 
-    const { operationName, query, variables } = getGraphQLParameters(helixRequest);
-
-    const result = await processRequest({
+    const response = await processRequest({
       operationName,
       query,
       variables,
-      request: helixRequest,
+      request,
       schema,
     });
 
-    const response = getResponse(result, Response as any, ReadableStream);
     const finalText = await response.text();
     expect(finalText).toMatchInlineSnapshot(`
       "data: {\\"data\\":{\\"countdown\\":3}}
@@ -147,7 +125,7 @@ describe("W3 Compatibility", () => {
     `);
   });
   it("should handle multipart responses", async () => {
-    const request = new Request("http://localhost:3000/graphql", {
+    const request: any = new Request("http://localhost:3000/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -159,19 +137,17 @@ describe("W3 Compatibility", () => {
         },
       }),
     });
-    const helixRequest = await prepareHelixRequestFromW3CRequest(request);
 
-    const { operationName, query, variables } = getGraphQLParameters(helixRequest);
+    const { operationName, query, variables } = await getGraphQLParameters(request);
 
-    const result = await processRequest({
+    const response = await processRequest({
       operationName,
       query,
       variables,
-      request: helixRequest,
+      request,
       schema,
     });
 
-    const response = getResponse(result, Response as any, ReadableStream);
     const finalText = await response.text();
     expect(finalText).toMatchInlineSnapshot(`
       "---

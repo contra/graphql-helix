@@ -1,19 +1,13 @@
 import Koa, { Context } from "koa";
 import bodyParser from "koa-bodyparser";
-import { PassThrough } from "stream";
-import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
+import { Readable } from "stream";
+import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 
 const graphqlHandler = async (ctx: Context) => {
-  const request = {
-    body: ctx.request.body,
-    headers: ctx.req.headers,
-    method: ctx.request.method,
-    query: ctx.request.query,
-  };
-  const { operationName, query, variables } = getGraphQLParameters(request);
-
-  const result = await processRequest({
+  const request = await getNodeRequest(ctx.request);
+  const { operationName, query, variables } = await getGraphQLParameters(request);
+  const response = await processRequest({
     operationName,
     query,
     variables,
@@ -21,75 +15,18 @@ const graphqlHandler = async (ctx: Context) => {
     schema,
   });
 
-  if (result.type === "RESPONSE") {
-    result.headers.forEach(({ name, value }) => ctx.response.set(name, value));
-    ctx.status = result.status;
-    ctx.body = result.payload;
-  } else if (result.type === "PUSH") {
-    ctx.req.socket.setTimeout(0);
-    ctx.req.socket.setNoDelay(true);
-    ctx.req.socket.setKeepAlive(true);
+  ctx.req.socket.setTimeout(0);
+  ctx.req.socket.setNoDelay(true);
+  ctx.req.socket.setKeepAlive(true);
 
+  response.headers.forEach((value, key) => {
     ctx.set({
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
+      [key]: value
     });
+  })
 
-    const stream = new PassThrough();
-
-    stream.on("close", () => {
-      result.unsubscribe();
-    });
-
-    ctx.status = 200;
-    ctx.body = stream;
-
-    result
-      .subscribe((result) => {
-        stream.write(`data: ${JSON.stringify(result)}\n\n`);
-      })
-      .then(() => {
-        stream.end();
-      });
-  } else {
-    ctx.request.socket.setTimeout(0);
-    ctx.req.socket.setNoDelay(true);
-    ctx.req.socket.setKeepAlive(true);
-
-    ctx.set({
-      Connection: "keep-alive",
-      "Content-Type": 'multipart/mixed; boundary="-"',
-      "Transfer-Encoding": "chunked",
-    });
-
-    const stream = new PassThrough();
-
-    stream.on("close", () => {
-      result.unsubscribe();
-    });
-
-    ctx.status = 200;
-    ctx.body = stream;
-
-    stream.write("---");
-
-    result
-      .subscribe((result) => {
-        const chunk = Buffer.from(JSON.stringify(result), "utf8");
-        const data = ["", "Content-Type: application/json; charset=utf-8", "Content-Length: " + String(chunk.length), "", chunk];
-
-        if (result.hasNext) {
-          data.push("---");
-        }
-
-        stream.write(data.join("\r\n"));
-      })
-      .then(() => {
-        stream.write("\r\n-----\r\n");
-        stream.end();
-      });
-  }
+  ctx.status = response.status;
+  await sendNodeResponse(response, ctx.res);
 };
 
 const graphiqlHandler = async (ctx: Context) => {
@@ -106,12 +43,7 @@ app.use(async (ctx) => {
   } else if (ctx.path === "/graphiql") {
     await graphiqlHandler(ctx);
   } else {
-    const request = {
-      body: ctx.request.body,
-      headers: ctx.req.headers,
-      method: ctx.request.method,
-      query: ctx.request.query,
-    };
+    const request = await getNodeRequest(ctx.request);
 
     if (shouldRenderGraphiQL(request)) {
       await graphiqlHandler(ctx);

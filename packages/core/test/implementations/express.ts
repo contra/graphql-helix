@@ -1,16 +1,11 @@
 import express, { RequestHandler } from "express";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "../../lib";
+import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 
 const graphqlMiddleware: RequestHandler = async (req, res) => {
-  const request = {
-    body: req.body,
-    headers: req.headers,
-    method: req.method,
-    query: req.query,
-  };
-  const { operationName, query, variables } = getGraphQLParameters(request);
-  const result = await processRequest({
+  const request = await getNodeRequest(req);
+  const { operationName, query, variables } = await getGraphQLParameters(request);
+  const response = await processRequest({
     operationName,
     query,
     variables,
@@ -18,7 +13,7 @@ const graphqlMiddleware: RequestHandler = async (req, res) => {
     schema,
   });
 
-  await sendResult(result, res);
+  await sendNodeResponse(response, res);
 };
 
 const graphiqlMiddleware: RequestHandler = async (_req, res) => {
@@ -34,12 +29,7 @@ app.use("/graphql", graphqlMiddleware);
 app.get("/graphiql", graphiqlMiddleware);
 
 app.use("/", async (req, res, next) => {
-  const request = {
-    body: req.body,
-    headers: req.headers,
-    method: req.method,
-    query: req.query,
-  };
+  const request = await getNodeRequest(req);
 
   if (shouldRenderGraphiQL(request)) {
     await graphiqlMiddleware(req, res, next);
@@ -64,3 +54,4 @@ export default {
     });
   },
 };
+
