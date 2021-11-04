@@ -70,8 +70,9 @@ export function getMultipartResponse<TResponse extends Response, TReadableStream
         controller.error(e);
       }
     },
-    cancel() {
+    cancel(controller) {
       stopAsyncIteration(asyncExecutionResult);
+      controller.close();
     },
   });
   return new Response(readableStream, responseInit);
@@ -110,32 +111,61 @@ export function getPushResponse<TResponse extends Response, TReadableStream exte
         controller.error(e);
       }
     },
-    cancel() {
+    cancel(controller) {
       stopAsyncIteration(asyncExecutionResult);
+      controller.close();
     },
   });
   return new Response(readableStream, responseInit);
 }
 
-interface ErrorResponseParams<TResponse extends Response> {
+interface ErrorResponseParams<TResponse extends Response, TReadableStream extends ReadableStream> {
   message: string;
   status?: number;
   headers?: any;
   errors?: { message: string }[] | readonly { message: string }[];
   transformResult?: typeof DEFAULT_TRANSFORM_RESULT_FN;
-  Response: { new (body: BodyInit, responseInit: ResponseInit): TResponse };
+  Response: { new(body: BodyInit, responseInit: ResponseInit): TResponse };
+  ReadableStream: { new(underlyingSource: UnderlyingSource): TReadableStream };
+  isEventStream: boolean;
 }
 
-export function getErrorResponse<TResponse extends Response>({
+async function* getSingleResult(payload: any) {
+  yield payload;
+}
+
+export function getErrorResponse<TResponse extends Response, TReadableStream extends ReadableStream>({
   message,
   status = 500,
   headers = {},
   errors = [{ message }],
+  Response,
+  ReadableStream,
   transformResult = DEFAULT_TRANSFORM_RESULT_FN,
-}: ErrorResponseParams<TResponse>): Response {
+  isEventStream
+}: ErrorResponseParams<TResponse, TReadableStream>): TResponse {
   const payload: any = {
     errors,
   };
+  if (isEventStream) {
+    const asyncExecutionResult = {
+      next() {
+        return {
+          value: payload,
+          done: true,
+        }
+      },
+      [Symbol.asyncIterator]() {
+        return asyncExecutionResult;
+      }
+    }
+    return getPushResponse({
+      asyncExecutionResult: getSingleResult(payload),
+      Response,
+      ReadableStream,
+      transformResult,
+    });
+  }
   return new Response(JSON.stringify(transformResult(payload)), {
     status,
     headers,

@@ -115,7 +115,7 @@ export const processRequest = async <
     if (operation.operation === "mutation" && request.method === "GET") {
       return getErrorResponse({
         status: 405,
-        message: "Must provide query string.",
+        message: "Can only perform a mutation operation from a POST request.",
         headers: {
           Allow: "POST",
         },
@@ -189,10 +189,6 @@ export const processRequest = async <
     }
   } catch (error: any) {
     const errors = Array.isArray(error) ? error : error.errors || [error];
-    const payload: ExecutionResult<any> = {
-      errors,
-    };
-
-    return getRegularResponse({ executionResult: payload, Response, transformResult });
+    return getErrorResponse({ message: 'Error', status: 500, errors, Response, transformResult });
   }
 };

@@ -9,8 +9,8 @@ declare module "stream/web" {
 }
 
 const graphqlMiddleware: RequestHandler = async (req, res) => {
-  const request: any = new Request(req.url, {
-    body: JSON.stringify(req.body),
+  const request: any = new Request(`${req.protocol}://${req.get('host')}${req.originalUrl}`, {
+    ...(req.method === 'POST' ? { body: JSON.stringify(req.body) } : undefined),
     headers: req.headers as any,
     method: req.method,
   })
@@ -41,8 +41,8 @@ app.use("/graphql", graphqlMiddleware);
 app.get("/graphiql", graphiqlMiddleware);
 
 app.use("/", async (req, res, next) => {
-  const request: any = new Request(req.url, {
-    body: JSON.stringify(req.body),
+  const request: any = new Request(`${req.protocol}://${req.get('host')}${req.originalUrl}`, {
+    ...(req.method === 'POST' ? { body: JSON.stringify(req.body) } : undefined),
     headers: req.headers as any,
     method: req.method,
   })
