@@ -13,7 +13,7 @@ import {
 } from "graphql";
 import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index";
 import { HttpError } from "./errors";
-import { ExecutionContext, ExecutionPatchResult, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types";
+import { ExecutionContext, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types";
 
 const parseQuery = (query: string | DocumentNode, parse: typeof defaultParse): DocumentNode | Promise<DocumentNode> => {
   if (typeof query !== "string" && query.kind === "Document") {
@@ -137,14 +137,14 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             schema,
             document,
             rootValue,
-            context,
+            contextValue: context,
             variableValues,
             operationName,
           });
 
           // If errors are encountered while subscribing to the operation, an execution result
           // instead of an AsyncIterable.
-          if (isAsyncIterable<ExecutionResult>(result)) {
+          if (isAsyncIterable(result)) {
             return {
               type: "PUSH",
               subscribe: async (onResult) => {
@@ -208,7 +208,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
 
           // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
           // execution result.
-          if (isAsyncIterable<ExecutionPatchResult>(result)) {
+          if (isAsyncIterable(result)) {
             return {
               type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
               subscribe: async (onResult) => {
