@@ -10,7 +10,7 @@ export const options = {
   thresholds: {
     no_errors: ["rate=1.0"],
     expected_result: ["rate=1.0"],
-    http_req_duration: ["avg<=0.6"],
+    http_req_duration: ["avg<=1"],
   },
 };
 
