@@ -13,7 +13,8 @@ import {
 } from "graphql";
 import { isAsyncIterable, isHttpMethod } from "./util/index";
 import { HttpError } from "./errors";
-import { ExecutionContext, ExecutionPatchResult, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types";
+import { ExecutionContext, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types";
+import { getSingularAsyncIterator } from "./util/getSingularAsyncIterator";
 
 const parseQuery = (query: string | DocumentNode, parse: typeof defaultParse): DocumentNode | Promise<DocumentNode> => {
   if (typeof query !== "string" && query.kind === "Document") {
@@ -146,23 +147,35 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           // instead of an AsyncIterable.
           if (isAsyncIterable(result)) {
             const asyncIterator = result[Symbol.asyncIterator]();
+            const transformedIterator = {
+              ...asyncIterator,
+              next: async () => {
+                const iteratorResult = await asyncIterator.next();
+                if (iteratorResult.done) {
+                  return iteratorResult;
+                }
+                return formatPayload({
+                  payload: iteratorResult.value,
+                  context,
+                  rootValue,
+                  document,
+                  operation,
+                })
+              },
+            };
             return {
               type: "PUSH",
               subscribe: async (onResult) => {
-                let iteratorResult: IteratorResult<ExecutionResult | ExecutionPatchResult>;
-                while (!((iteratorResult = await asyncIterator.next()).done)) {
-                  onResult(
-                    formatPayload({
-                      payload: iteratorResult.value,
-                      context,
-                      rootValue,
-                      document,
-                      operation,
-                    })
-                  );
+                while (true) {
+                  const iteratorResult = await transformedIterator.next();
+                  if (iteratorResult.done) {
+                    break;
+                  }
+                  onResult(iteratorResult.value);
                 }
               },
               unsubscribe: () => asyncIterator.return?.(),
+              [Symbol.asyncIterator]: () => transformedIterator,
             };
           } else {
             if (isEventStream) {
@@ -180,6 +193,15 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                   );
                 },
                 unsubscribe: () => undefined,
+                [Symbol.asyncIterator]: () => getSingularAsyncIterator(
+                  formatPayload({
+                    payload: result,
+                    context,
+                    rootValue,
+                    document,
+                    operation,
+                  })
+                ),
               };
             } else {
               return {
@@ -210,23 +232,35 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           // execution result.
           if (isAsyncIterable(result)) {
             const asyncIterator = result[Symbol.asyncIterator]();
+            const transformedIterator = {
+              ...asyncIterator,
+              next: async () => {
+                const iteratorResult = await asyncIterator.next();
+                if (iteratorResult.done) {
+                  return iteratorResult;
+                }
+                return formatPayload({
+                  payload: iteratorResult.value,
+                  context,
+                  rootValue,
+                  document,
+                  operation,
+                })
+              },
+            };
             return {
               type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
               subscribe: async (onResult) => {
-                let iteratorResult: IteratorResult<ExecutionResult | ExecutionPatchResult>;
-                while (!((iteratorResult = await asyncIterator.next()).done)) {
-                  onResult(
-                    formatPayload({
-                      payload: iteratorResult.value,
-                      context,
-                      rootValue,
-                      document,
-                      operation,
-                    })
-                  );
+                while (true) {
+                  const iteratorResult = await transformedIterator.next();
+                  if (iteratorResult.done) {
+                    break;
+                  }
+                  onResult(iteratorResult);
                 }
               },
-              unsubscribe: () => asyncIterator.return?.(),
+              unsubscribe: () => transformedIterator.return?.(),
+              [Symbol.asyncIterator]: () => transformedIterator,
             } as MultipartResponse<TContext, TRootValue>;
           } else {
             return {
@@ -276,6 +310,15 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             );
           },
           unsubscribe: () => undefined,
+          [Symbol.asyncIterator]: () => getSingularAsyncIterator(
+            formatPayload({
+              payload,
+              context,
+              rootValue,
+              document,
+              operation,
+            })
+          ),
         };
       } else {
         return {

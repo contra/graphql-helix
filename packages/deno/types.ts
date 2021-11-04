@@ -185,6 +185,7 @@ export interface MultipartResponse<TContext, TRootValue>
     onResult: (result: ExecutionPatchResult) => void
   ) => Promise<void>;
   unsubscribe: () => void;
+  [Symbol.asyncIterator]: () => AsyncIterator<ExecutionResult>;
 }
 
 export interface Push<TContext, TRootValue>
@@ -192,6 +193,7 @@ export interface Push<TContext, TRootValue>
   type: "PUSH";
   subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
   unsubscribe: () => void;
+  [Symbol.asyncIterator]: () => AsyncIterator<ExecutionResult>;
 }
 
 export type ProcessRequestResult<TContext, TRootValue> =

@@ -45,13 +45,10 @@ const graphqlHandler = async (ctx: Context) => {
     ctx.status = 200;
     ctx.body = stream;
 
-    result
-      .subscribe((result) => {
-        stream.write(`data: ${JSON.stringify(result)}\n\n`);
-      })
-      .then(() => {
-        stream.end();
-      });
+    for await (const payload of result) {
+      stream.write(`data: ${JSON.stringify(payload)}\n\n`);
+    }
+    stream.end();
   } else {
     ctx.request.socket.setTimeout(0);
     ctx.req.socket.setNoDelay(true);
@@ -74,21 +71,18 @@ const graphqlHandler = async (ctx: Context) => {
 
     stream.write("---");
 
-    result
-      .subscribe((result) => {
-        const chunk = Buffer.from(JSON.stringify(result), "utf8");
-        const data = ["", "Content-Type: application/json; charset=utf-8", "Content-Length: " + String(chunk.length), "", chunk];
+    for await (const payload of result) {
+      const chunk = Buffer.from(JSON.stringify(payload), "utf8");
+      const data = ["", "Content-Type: application/json; charset=utf-8", "Content-Length: " + String(chunk.length), "", chunk];
 
-        if (result.hasNext) {
-          data.push("---");
-        }
+      if (payload.hasNext) {
+        data.push("---");
+      }
 
-        stream.write(data.join("\r\n"));
-      })
-      .then(() => {
-        stream.write("\r\n-----\r\n");
-        stream.end();
-      });
+      stream.write(data.join("\r\n"));
+    }
+    stream.write("\r\n-----\r\n");
+    stream.end();
   }
 };
 

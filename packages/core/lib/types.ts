@@ -179,19 +179,21 @@ export interface Response<TContext, TRootValue>
 }
 
 export interface MultipartResponse<TContext, TRootValue>
-  extends Result<TContext, TRootValue> {
+  extends Result<TContext, TRootValue>, AsyncIterable<ExecutionResult> {
   type: "MULTIPART_RESPONSE";
   subscribe: (
     onResult: (result: ExecutionPatchResult) => void
   ) => Promise<void>;
   unsubscribe: () => void;
+  [Symbol.asyncIterator]: () => AsyncIterator<ExecutionResult>;
 }
 
 export interface Push<TContext, TRootValue>
-  extends Result<TContext, TRootValue> {
+  extends Result<TContext, TRootValue>, AsyncIterable<ExecutionResult> {
   type: "PUSH";
   subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
   unsubscribe: () => void;
+  [Symbol.asyncIterator]: () => AsyncIterator<ExecutionResult>;
 }
 
 export type ProcessRequestResult<TContext, TRootValue> =

@@ -38,7 +38,7 @@ export function getMultipartResponse<TResponse extends Response, TReadableStream
     const readableStream = new ReadableStream({
         async start(controller) {
             controller.enqueue(`---`);
-            await multipartResult.subscribe(patchResult => {
+            for await (const patchResult of multipartResult) {
                 const transformedResult = transformResult(patchResult);
                 const chunk = JSON.stringify(transformResult(transformedResult));
                 const data = ["", "Content-Type: application/json; charset=utf-8", "Content-Length: " + String(chunk.length), "", chunk];
@@ -46,7 +46,7 @@ export function getMultipartResponse<TResponse extends Response, TReadableStream
                     data.push("---");
                 }
                 controller.enqueue(data.join("\r\n"));
-            })
+            }
             controller.enqueue('\r\n-----\r\n');
             controller.close();
         }
@@ -72,9 +72,9 @@ export function getPushResponse<TResponse extends Response, TReadableStream exte
 
     const readableStream = new ReadableStream({
         async start(controller) {
-            await pushResult.subscribe(result => {
+            for await (const result of pushResult) {
                 controller.enqueue(`data: ${JSON.stringify(transformResult(result))}\n\n`);
-            })
+            }
             controller.close();
         }
     });

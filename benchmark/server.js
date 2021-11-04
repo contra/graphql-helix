@@ -55,9 +55,9 @@ app.route({
           result.unsubscribe();
         });
 
-        await result.subscribe((result) => {
-          res.raw.write(`data: ${JSON.stringify(result)}\n\n`);
-        });
+        for await (const payload of result) {
+          res.raw.write(`data: ${JSON.stringify(payload)}\n\n`);
+        }
       } else {
         res.raw.writeHead(200, {
           Connection: "keep-alive",
@@ -71,8 +71,8 @@ app.route({
 
         res.raw.write("---");
 
-        await result.subscribe((result) => {
-          const chunk = Buffer.from(JSON.stringify(result), "utf8");
+        for (const payload of result) {
+          const chunk = Buffer.from(JSON.stringify(payload), "utf8");
           const data = [
             "",
             "Content-Type: application/json; charset=utf-8",
@@ -81,12 +81,12 @@ app.route({
             chunk,
           ];
 
-          if (result.hasNext) {
+          if (payload.hasNext) {
             data.push("---");
           }
 
           res.raw.write(data.join("\r\n"));
-        });
+        }
 
         res.raw.write("\r\n-----\r\n");
         res.raw.end();

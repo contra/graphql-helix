@@ -94,8 +94,8 @@ app.use("/graphql", async (req, res) => {
       // Subscribe and send back each result as a separate chunk. We await the subscribe
       // call. Once we're done executing the request and there are no more results to send
       // to the client, the Promise returned by subscribe will resolve and we can end the response.
-      await result.subscribe((result) => {
-        const chunk = Buffer.from(JSON.stringify(result), "utf8");
+      for await (const payload of result) {
+        const chunk = Buffer.from(JSON.stringify(payload), "utf8");
         const data = [
           "",
           "Content-Type: application/json; charset=utf-8",
@@ -104,12 +104,12 @@ app.use("/graphql", async (req, res) => {
           chunk,
         ];
 
-        if (result.hasNext) {
+        if (payload.hasNext) {
           data.push("---");
         }
 
         res.write(data.join("\r\n"));
-      });
+      }
 
       res.write("\r\n-----\r\n");
       res.end();
@@ -127,9 +127,9 @@ app.use("/graphql", async (req, res) => {
       });
 
       // We subscribe to the event stream and push any new events to the client
-      await result.subscribe((result) => {
-        res.write(`data: ${JSON.stringify(result)}\n\n`);
-      });
+      for await (const payload of result) {
+        res.write(`data: ${JSON.stringify(payload)}\n\n`);
+      }
     }
   }
 });
@@ -405,9 +405,9 @@ if (result.type === "PUSH") {
   });
 
   // We subscribe to any new events and push them down to the client that initiated the subscription.
-  await result.subscribe((result) => {
-    res.write(`data: ${JSON.stringify(result)}\n\n`);
-  });
+  for await (const payload of result) {
+    res.write(`data: ${JSON.stringify(payload)}\n\n`);
+  }
 }
 ```
 
@@ -498,8 +498,8 @@ if (result.type === "MULTIPART_RESPONSE") {
 
   // Subscribe to new results. The callback will be called with the
   // ExecutionResult object that should be sent back to the client for each chunk.
-  await result.subscribe((result) => {
-    const chunk = Buffer.from(JSON.stringify(formatResult(result)), "utf8");
+  for await (const payload of result) {
+    const chunk = Buffer.from(JSON.stringify(payload), "utf8");
     const data = [
       "Content-Type: application/json; charset=utf-8",
       "Content-Length: " + String(chunk.length),
@@ -507,12 +507,12 @@ if (result.type === "MULTIPART_RESPONSE") {
       chunk,
     ];
 
-    if (result.hasNext) {
+    if (payload.hasNext) {
       data.push("---");
     }
 
     res.write(data.join("\r\n"));
-  });
+  }
 
   // The Promise returned by `subscribe` will only resolve once all chunks have been emitted,
   // at which point we can end the request.
