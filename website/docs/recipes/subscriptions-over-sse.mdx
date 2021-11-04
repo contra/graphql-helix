@@ -22,7 +22,7 @@ if (result.type === "PUSH") {
   });
 
   // We subscribe to any new events and push them down to the client that initiated the subscription.
-  for (const payload of result) {
+  for await (const payload of result) {
     res.write(`data: ${JSON.stringify(payload)}\n\n`);
   }
 }
