@@ -147,20 +147,23 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           // instead of an AsyncIterable.
           if (isAsyncIterable(result)) {
             const asyncIterator = result[Symbol.asyncIterator]();
-            const transformedIterator = {
+            const transformedIterator: AsyncIterator<any> = {
               ...asyncIterator,
               next: async () => {
                 const iteratorResult = await asyncIterator.next();
                 if (iteratorResult.done) {
                   return iteratorResult;
                 }
-                return formatPayload({
-                  payload: iteratorResult.value,
-                  context,
-                  rootValue,
-                  document,
-                  operation,
-                })
+                return {
+                  value: formatPayload({
+                    payload: iteratorResult.value,
+                    context,
+                    rootValue,
+                    document,
+                    operation,
+                  }),
+                  done: false,
+                };
               },
             };
             return {
@@ -232,20 +235,23 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           // execution result.
           if (isAsyncIterable(result)) {
             const asyncIterator = result[Symbol.asyncIterator]();
-            const transformedIterator = {
+            const transformedIterator: AsyncIterator<any> = {
               ...asyncIterator,
               next: async () => {
                 const iteratorResult = await asyncIterator.next();
                 if (iteratorResult.done) {
                   return iteratorResult;
                 }
-                return formatPayload({
-                  payload: iteratorResult.value,
-                  context,
-                  rootValue,
-                  document,
-                  operation,
-                })
+                return {
+                  value: formatPayload({
+                    payload: iteratorResult.value,
+                    context,
+                    rootValue,
+                    document,
+                    operation,
+                  }),
+                  done: false,
+                };
               },
             };
             return {
@@ -256,7 +262,10 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                   if (iteratorResult.done) {
                     break;
                   }
-                  onResult(iteratorResult);
+                  onResult(iteratorResult.value);
+                  if (iteratorResult.value?.hasNext === false) {
+                    break;
+                  }
                 }
               },
               unsubscribe: () => transformedIterator.return?.(),
