@@ -148,7 +148,25 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             return {
               type: "PUSH",
               subscribe: async (onResult) => {
-                for await (const payload of result) {
+                try {
+                  for await (const payload of result) {
+                    onResult(
+                      formatPayload({
+                        payload,
+                        context,
+                        rootValue,
+                        document,
+                        operation,
+                      })
+                    );
+                  }
+                } catch (error) {
+                  const payload: ExecutionResult<any> = {
+                    errors: ((error as HttpError).graphqlErrors as GraphQLError[]) || [
+                      new GraphQLError((error as Error).message),
+                    ],
+                  };
+
                   onResult(
                     formatPayload({
                       payload,
@@ -158,6 +176,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                       operation,
                     })
                   );
+                  stopAsyncIteration(result);
                 }
               },
               unsubscribe: () => {

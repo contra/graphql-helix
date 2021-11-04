@@ -637,6 +637,25 @@ implementations.forEach((implementation) => {
         });
         expect(isShowingPlayButton).toEqual(true);
       });
+
+      test("should fail with GraphQL error as subscription response", async () => {
+        page = await browser.newPage();
+        const operation = `subscription { error }`;
+        await page.goto(`http://localhost:${port}/graphiql?query=${operation}`);
+        await page.click(".execute-button");
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+        const [resultContents, isShowingPlayButton] = await page.evaluate((playButtonSelector) => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(playButtonSelector)];
+        }, playButtonSelector);
+
+        expect(JSON.parse(resultContents)).toEqual({
+          errors: [{ message: "This is not okay" }],
+        });
+        expect(isShowingPlayButton).toEqual(true);
+      });
     });
   });
 });
