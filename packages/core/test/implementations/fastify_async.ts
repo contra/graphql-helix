@@ -1,19 +1,19 @@
 import fastify, { RouteHandlerMethod } from "fastify";
 import { parse as graphqlParse } from "graphql";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "../../lib";
+import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL, sendResponse } from "../../lib";
 import { schema } from "../schema";
+import { ReadableStream } from "stream/web";
 
 const sleep = (time: number) => new Promise<void>((resolve) => setTimeout(resolve, time));
 
 const graphqlHandler: RouteHandlerMethod = async (req, res) => {
-  const request = {
-    body: req.body,
-    headers: req.headers,
+  const request: any = new Request(req.url, {
+    body: JSON.stringify(req.body),
+    headers: req.headers as any,
     method: req.method,
-    query: req.query,
-  };
-  const { operationName, query, variables } = getGraphQLParameters(request);
-  const result = await processRequest({
+  })
+  const { operationName, query, variables } = await getGraphQLParameters(request);
+  const response = await processRequest({
     operationName,
     query,
     variables,
@@ -23,9 +23,11 @@ const graphqlHandler: RouteHandlerMethod = async (req, res) => {
       await sleep(50);
       return graphqlParse(source, options);
     },
+    Response: Response as any,
+    ReadableStream,
   });
 
-  await sendResult(result, res.raw);
+  sendResponse(response, res.raw);
   // Tell fastify a response was sent
   res.sent = true;
 };
@@ -53,12 +55,11 @@ app.route({
   method: ["GET", "POST", "PUT"],
   url: "/",
   async handler(req, res) {
-    const request = {
-      body: req.body,
-      headers: req.headers,
+    const request: any = new Request(req.url, {
+      body: JSON.stringify(req.body),
+      headers: req.headers as any,
       method: req.method,
-      query: req.query,
-    };
+    })
 
     if (shouldRenderGraphiQL(request)) {
       await graphiqlHandler.call(this, req, res);
