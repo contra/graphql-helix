@@ -78,6 +78,11 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
     validate = defaultValidate,
     validationRules,
     variables,
+    onError = (error: Error) => {
+      // eslint-disable-next-line no-console
+      console.error(error);
+      return "Internal Server Error";
+    },
   } = options;
 
   let context: TContext | undefined;
@@ -258,7 +263,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
       }
     } catch (error) {
       const payload: ExecutionResult<any> = {
-        errors: ((error as HttpError).graphqlErrors as GraphQLError[]) || [new GraphQLError((error as Error).message)],
+        errors: ((error as HttpError).graphqlErrors as GraphQLError[]) || [new GraphQLError(onError(error as Error))],
       };
 
       if (isEventStream) {

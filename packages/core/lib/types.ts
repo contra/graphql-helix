@@ -131,6 +131,10 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
    * Values for any Variables defined by the Operation.
    */
   variables?: string | { [name: string]: any };
+  /**
+   * An optional function which will be used to format any unexpected errors that occur during execution.
+   */
+  onError?: (error: Error) => string;
 }
 
 export interface FormatPayloadParams<TContext, TRootValue> {
