@@ -617,11 +617,7 @@ implementations.forEach((implementation) => {
           // @ts-ignore
           return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(stopButtonSelector)];
         }, stopButtonSelector);
-        expect(JSON.parse(resultContents)).toEqual({
-          data: {
-            count: 1,
-          },
-        });
+        expect(resultContents).toEqual(JSON.stringify(resultContents, null, 2));
         expect(isShowingStopButton).toEqual(true);
         await new Promise((resolve) => setTimeout(resolve, 3000));
         const [resultContents1, isShowingPlayButton] = await page.evaluate((playButtonSelector) => {
