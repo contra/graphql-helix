@@ -33,10 +33,10 @@ export const processRequest = async <
   TContext = {},
   TRootValue = {},
   TResponse extends Response = Response,
-  TReadableStream extends ReadableStream = ReadableStream,
-  >(
-    options: ProcessRequestOptions<TContext, TRootValue, TResponse, TReadableStream>
-  ): Promise<TResponse> => {
+  TReadableStream extends ReadableStream = ReadableStream
+>(
+  options: ProcessRequestOptions<TContext, TRootValue, TResponse, TReadableStream>
+): Promise<TResponse> => {
   const {
     contextFactory,
     execute = defaultExecute,
@@ -80,7 +80,10 @@ export const processRequest = async <
         headers: {
           Allow: "GET, POST",
         },
-        Response, transformResult, ReadableStream, isEventStream,
+        Response,
+        transformResult,
+        ReadableStream,
+        isEventStream,
       });
     }
 
@@ -88,7 +91,10 @@ export const processRequest = async <
       return getErrorResponse({
         status: 400,
         message: "Must provide query string.",
-        Response, transformResult, ReadableStream, isEventStream,
+        Response,
+        transformResult,
+        ReadableStream,
+        isEventStream,
       });
     }
 
@@ -99,7 +105,10 @@ export const processRequest = async <
         status: 400,
         message: "Syntax error",
         errors: [e],
-        Response, transformResult, ReadableStream, isEventStream,
+        Response,
+        transformResult,
+        ReadableStream,
+        isEventStream,
       });
     }
 
@@ -109,7 +118,10 @@ export const processRequest = async <
         status: 400,
         message: "Invalid query.",
         errors: validationErrors,
-        Response, transformResult, ReadableStream, isEventStream,
+        Response,
+        transformResult,
+        ReadableStream,
+        isEventStream,
       });
     }
 
@@ -122,7 +134,10 @@ export const processRequest = async <
         headers: {
           Allow: "POST",
         },
-        Response, transformResult, ReadableStream, isEventStream,
+        Response,
+        transformResult,
+        ReadableStream,
+        isEventStream,
       });
     }
 
@@ -136,7 +151,10 @@ export const processRequest = async <
       return getErrorResponse({
         message: "Variables are invalid JSON.",
         status: 400,
-        Response, transformResult, ReadableStream, isEventStream,
+        Response,
+        transformResult,
+        ReadableStream,
+        isEventStream,
       });
     }
 
@@ -192,6 +210,6 @@ export const processRequest = async <
     }
   } catch (error: any) {
     const errors = Array.isArray(error) ? error : error.errors || [error];
-    return getErrorResponse({ message: 'Error', status: 500, errors, Response, ReadableStream, isEventStream, transformResult });
+    return getErrorResponse({ message: "Error", status: 500, errors, Response, ReadableStream, isEventStream, transformResult });
   }
 };
