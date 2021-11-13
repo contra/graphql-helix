@@ -23,12 +23,11 @@ export async function sendResponse(
   responseResult: Response,
   rawResponse: RawResponse,
 ) {
+  const headersObj: any = {};
   responseResult.headers.forEach((value, name) => {
-    rawResponse.setHeader(name, value);
-  })
-  rawResponse.writeHead(responseResult.status, {
-    "content-type": "application/json",
+    headersObj[name] = value;
   });
+  rawResponse.writeHead(responseResult.status, headersObj);
   const responseBody = responseResult.body;
   if (responseBody == null) {
     throw new Error("Response body is not supported");

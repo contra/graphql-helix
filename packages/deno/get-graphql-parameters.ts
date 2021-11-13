@@ -13,7 +13,11 @@ export async function getGraphQLParameters(request: Request): Promise<GraphQLPar
       query = url.searchParams.get('query') || undefined;
       const variablesStr = url.searchParams.get('variables');
       if (variablesStr) {
-        variables = JSON.parse(variablesStr);
+        try {
+          variables = JSON.parse(variablesStr);
+        } catch(e) {
+          throw new Error(`Variables are invalid JSON.`);
+        }
       }
       break;
     }
