@@ -617,7 +617,11 @@ implementations.forEach((implementation) => {
           // @ts-ignore
           return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(stopButtonSelector)];
         }, stopButtonSelector);
-        expect(resultContents).toEqual(JSON.stringify(resultContents, null, 2));
+        expect(resultContents).toEqual(JSON.stringify({
+          data: {
+            count: 1,
+          },
+        }, null, 2));
         expect(isShowingStopButton).toEqual(true);
         await new Promise((resolve) => setTimeout(resolve, 3000));
         const [resultContents1, isShowingPlayButton] = await page.evaluate((playButtonSelector) => {
@@ -625,11 +629,11 @@ implementations.forEach((implementation) => {
           // @ts-ignore
           return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(playButtonSelector)];
         }, playButtonSelector);
-        expect(JSON.parse(resultContents1)).toEqual({
+        expect(resultContents1).toEqual(JSON.stringify({
           data: {
             count: 2,
           },
-        });
+        }, null, 2));
         expect(isShowingPlayButton).toEqual(true);
       });
     });
