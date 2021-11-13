@@ -179,6 +179,7 @@ export const init = async ({
           operationName={initialOperationName}
           query={initialQuery}
           ref={graphiqlRef}
+          shouldPersistHeaders
           toolbar={{
             additionalContent: (
               <>
