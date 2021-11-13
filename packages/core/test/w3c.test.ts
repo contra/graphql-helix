@@ -1,7 +1,6 @@
 import { Request, Response } from "undici";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { getGraphQLParameters, processRequest } from "../lib";
-import { ReadableStream } from "stream/web";
 import { stringify as qsStringify } from "qs";
 
 const schema = makeExecutableSchema({
@@ -33,6 +32,7 @@ const schema = makeExecutableSchema({
 });
 
 describe("W3 Compatibility", () => {
+  const { ReadableStream } = require('stream/web');
   it("should handle regular POST request and responses", async () => {
     const request: any = new Request("http://localhost:3000/graphql", {
       method: "POST",

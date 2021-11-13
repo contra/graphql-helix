@@ -33,7 +33,7 @@ const graphqlHandler = async (ctx: Context) => {
     });
   })
 
-  ctx.status = 200;
+  ctx.status = response.status;
   ctx.body = Readable.from(response.body as any);
 };
 
