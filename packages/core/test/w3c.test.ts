@@ -4,10 +4,6 @@ import { getGraphQLParameters, processRequest } from "../lib";
 import { ReadableStream } from "stream/web";
 import { stringify as qsStringify } from "qs";
 
-declare module "stream/web" {
-  export const ReadableStream: any;
-}
-
 const schema = makeExecutableSchema({
   typeDefs: /* GraphQL */ `
     type Query {
