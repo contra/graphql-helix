@@ -7,11 +7,11 @@ import { Request, Response } from 'undici';
 import { ReadableStream } from "stream/web";
 
 const graphqlHandler = async (ctx: Context) => {
-  const request: any = new Request('http://localhost/' + ctx.request.url, {
+  const request: any = new Request(`${ctx.request.protocol}://${ctx.request.host}${ctx.request.url}`, {
     ...(ctx.request.method === 'POST' ? { body: JSON.stringify(ctx.request.body) } : undefined),
     headers: ctx.request.headers as any,
     method: ctx.request.method,
-  })
+  });
   const { operationName, query, variables } = await getGraphQLParameters(request);
   const response = await processRequest({
     operationName,

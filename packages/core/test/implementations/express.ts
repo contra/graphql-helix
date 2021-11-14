@@ -1,5 +1,5 @@
 import express, { RequestHandler } from "express";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResponse, shouldRenderGraphiQL } from "../../lib";
+import { getGraphQLParameters, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 import { Request, Response } from 'undici';
 import { ReadableStream } from "stream/web";
@@ -9,11 +9,11 @@ declare module "stream/web" {
 }
 
 const graphqlMiddleware: RequestHandler = async (req, res) => {
-  const request: any = new Request(`${req.protocol}://${req.get('host')}${req.originalUrl}`, {
+  const request = new Request(`${req.protocol}://${req.headers.host}${req.url}`, {
     ...(req.method === 'POST' ? { body: JSON.stringify(req.body) } : undefined),
     headers: req.headers as any,
     method: req.method,
-  })
+  });
   const { operationName, query, variables } = await getGraphQLParameters(request);
   const response = await processRequest({
     operationName,
@@ -25,7 +25,7 @@ const graphqlMiddleware: RequestHandler = async (req, res) => {
     ReadableStream
   });
 
-  sendResponse(response, res);
+  sendNodeResponse(response, res);
 };
 
 const graphiqlMiddleware: RequestHandler = async (_req, res) => {
