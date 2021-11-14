@@ -2339,10 +2339,10 @@
     "@types/keygrip" "*"
     "@types/node" "*"
 
-"@types/eventsource@1.1.6":
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/@types/eventsource/-/eventsource-1.1.6.tgz#1864655db707dc6c9490efe2cd96bfb7441cd2ee"
-  integrity sha512-y4xcLJ+lcoZ6mN9ndSdKOWg24Nj5uQc4Z/NRdy3HbiGGt5hfH3RLwAXr6V+RzGzOljAk48a09n6iY4BMNumEng==
+"@types/eventsource@1.1.7":
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/@types/eventsource/-/eventsource-1.1.7.tgz#685e864e7a2b1fb07d54c566a1a5c50d0a91ddc6"
+  integrity sha512-ac36T7U0sz2+vrYT3oTU4x0dnNOZcI2rmUFfSA8pIpXKYPNGHMZs8KzJ+WuF6aPRQu8RAvGgnoLUWMXhC7Widw==
 
 "@types/express-serve-static-core@^4.17.18":
   version "4.17.24"
