@@ -1,15 +1,15 @@
 import fastify, { RouteHandlerMethod } from "fastify";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResponse, shouldRenderGraphiQL } from "../../lib";
+import { getGraphQLParameters, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 import { Request, Response } from 'undici';
 import { ReadableStream } from "stream/web";
 
 const graphqlHandler: RouteHandlerMethod = async (req, res) => {
-  const request: any = new Request('http://localhost/' + req.url, {
+  const request = new Request(`${req.protocol}://${req.headers.host}${req.url}`, {
     ...(req.method === 'POST' ? { body: JSON.stringify(req.body) } : undefined),
     headers: req.headers as any,
     method: req.method,
-  })
+  });
   const { operationName, query, variables } = await getGraphQLParameters(request);
   const response = await processRequest({
     operationName,
@@ -21,7 +21,7 @@ const graphqlHandler: RouteHandlerMethod = async (req, res) => {
     ReadableStream,
   });
 
-  sendResponse(response, res.raw);
+  sendNodeResponse(response, res.raw);
   // Tell fastify a response was sent
   res.sent = true;
 };

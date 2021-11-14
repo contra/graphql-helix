@@ -8,7 +8,7 @@ import {
   OperationDefinitionNode,
   ExecutionResult,
 } from "https://cdn.skypack.dev/graphql@16.0.0-experimental-stream-defer.5?dts";
-import { isAsyncIterable } from "./util/index.ts";
+import { isAsyncIterable } from "./util/is-async-iterable.ts";
 import { ExecutionContext, ExecutionPatchResult, ProcessRequestOptions } from "./types.ts";
 import { getMultipartResponse, getPushResponse, getRegularResponse, getErrorResponse } from "./util/w3c.ts";
 
@@ -69,8 +69,7 @@ export const processRequest = async <
   let document: DocumentNode | undefined;
   let operation: OperationDefinitionNode | undefined;
 
-  const accept = typeof request.headers.get === "function" ? request.headers.get("accept") : (request.headers as any).accept;
-  const isEventStream = accept === "text/event-stream";
+  const isEventStream = request.headers.get('accept') === "text/event-stream";
 
   try {
     if (request.method !== "GET" && request.method !== "POST") {

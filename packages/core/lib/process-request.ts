@@ -8,7 +8,7 @@ import {
   OperationDefinitionNode,
   ExecutionResult,
 } from "graphql";
-import { isAsyncIterable } from "./util/index";
+import { isAsyncIterable } from "./util/is-async-iterable";
 import { ExecutionContext, ExecutionPatchResult, ProcessRequestOptions } from "./types";
 import { getMultipartResponse, getPushResponse, getRegularResponse, getErrorResponse } from "./util/w3c";
 
@@ -69,8 +69,7 @@ export const processRequest = async <
   let document: DocumentNode | undefined;
   let operation: OperationDefinitionNode | undefined;
 
-  const accept = typeof request.headers.get === "function" ? request.headers.get("accept") : (request.headers as any).accept;
-  const isEventStream = accept === "text/event-stream";
+  const isEventStream = request.headers.get('accept') === "text/event-stream";
 
   try {
     if (request.method !== "GET" && request.method !== "POST") {
