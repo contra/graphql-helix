@@ -2481,10 +2481,10 @@
   resolved "https://registry.yarnpkg.com/@types/json5/-/json5-0.0.29.tgz#ee28707ae94e11d2b827bcbe5270bcea7f3e71ee"
   integrity sha1-7ihweulOEdK4J7y+UnC86n8+ce4=
 
-"@types/k6@0.32.2":
-  version "0.32.2"
-  resolved "https://registry.yarnpkg.com/@types/k6/-/k6-0.32.2.tgz#9a087d9162b892e67a5c1b61967b5db708339eed"
-  integrity sha512-DUHGrqAaQgwQ3h+XYtUx//SfL26UXetdMjxvT1q9Kb2OM2eOYA2Aa9jqcwp7B1Tbf97CWFx0t2Ma9ONqMsDmaw==
+"@types/k6@0.34.3":
+  version "0.34.3"
+  resolved "https://registry.yarnpkg.com/@types/k6/-/k6-0.34.3.tgz#4b2923ff716bc47f9493b3eb6e009d57b63a1cfd"
+  integrity sha512-+IDtg7q7tmER2ywKBU15gVjG9u9kkrlt/r+xjd8ZBUtdDSyWu+hvC02NHoJ5Is5aLLan/FcLRSKHNgCy3V2DWA==
 
 "@types/keygrip@*":
   version "1.0.2"
