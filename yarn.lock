@@ -2309,10 +2309,10 @@
   resolved "https://registry.yarnpkg.com/@types/comment-json/-/comment-json-1.1.1.tgz#b4ae889912a93e64619f97989aecaff8ce889dca"
   integrity sha512-U70oEqvnkeSSp8BIJwJclERtT13rd9ejK7XkIzMCQQePZe3VW1b7iQggXyW4ZvfGtGeXD0pZw24q5iWNe++HqQ==
 
-"@types/concurrently@^6.2.1":
-  version "6.3.0"
-  resolved "https://registry.yarnpkg.com/@types/concurrently/-/concurrently-6.3.0.tgz#ef6956d0e120f78d1da93d4435da6fe872256d04"
-  integrity sha512-R0M9Dt330vtNgNlBYQYniDfI3I3Sk6cu27M1EKS5VFoio2rZqTMuOBGe9DX+ISM0B6y+RGrgtpWCv2k2VBLtbQ==
+"@types/concurrently@6.4.0":
+  version "6.4.0"
+  resolved "https://registry.yarnpkg.com/@types/concurrently/-/concurrently-6.4.0.tgz#de8e9e5f88b8e00d39fd928172f54a6e7029363f"
+  integrity sha512-CYU1eyFHsIa2IZIsb8gfUOdiewfnZcyM2Hg1Zaq95xnmB0Ix/bTRM8SttqZ2Cjy6JGPZLttHjZewVsDg1yvnJg==
   dependencies:
     "@types/node" "*"
     chalk "^4.1.0"
@@ -4098,10 +4098,10 @@ concat-map@0.0.1:
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
   integrity sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=
 
-concurrently@^6.3.0:
-  version "6.3.0"
-  resolved "https://registry.yarnpkg.com/concurrently/-/concurrently-6.3.0.tgz#63128cb4a6ed54d3c0ed8528728590a5fe54582a"
-  integrity sha512-k4k1jQGHHKsfbqzkUszVf29qECBrkvBKkcPJEUDTyVR7tZd1G/JOfnst4g1sYbFvJ4UjHZisj1aWQR8yLKpGPw==
+concurrently@6.4.0:
+  version "6.4.0"
+  resolved "https://registry.yarnpkg.com/concurrently/-/concurrently-6.4.0.tgz#5387ee86be435a0eb51c292ade8a00acf479f170"
+  integrity sha512-HZ3D0RTQMH3oS4gvtYj1P+NBc6PzE2McEra6yEFcQKrUQ9HvtTGU4Dbne083F034p+LRb7kWU0tPRNvSGs1UCQ==
   dependencies:
     chalk "^4.1.0"
     date-fns "^2.16.1"
