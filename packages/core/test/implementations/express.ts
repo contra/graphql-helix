@@ -1,12 +1,7 @@
 import express, { RequestHandler } from "express";
 import { getGraphQLParameters, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
-import { Request, Response } from 'undici';
-import { ReadableStream } from "stream/web";
-
-declare module "stream/web" {
-  export const ReadableStream: any;
-}
+import { Request, Response, ReadableStream } from 'cross-undici-fetch';
 
 const graphqlMiddleware: RequestHandler = async (req, res) => {
   const request = new Request(`${req.protocol}://${req.headers.host}${req.url}`, {
@@ -21,7 +16,7 @@ const graphqlMiddleware: RequestHandler = async (req, res) => {
     variables,
     request,
     schema,
-    Response: Response as any,
+    Response,
     ReadableStream
   });
 

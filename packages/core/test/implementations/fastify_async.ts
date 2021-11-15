@@ -2,8 +2,7 @@ import fastify, { RouteHandlerMethod } from "fastify";
 import { parse as graphqlParse } from "graphql";
 import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL, sendNodeResponse } from "../../lib";
 import { schema } from "../schema";
-import { Request , Response } from 'undici';
-import { ReadableStream } from "stream/web";
+import { Request, Response, ReadableStream } from "cross-undici-fetch";
 
 const sleep = (time: number) => new Promise<void>((resolve) => setTimeout(resolve, time));
 
@@ -24,7 +23,7 @@ const graphqlHandler: RouteHandlerMethod = async (req, res) => {
       await sleep(50);
       return graphqlParse(source, options);
     },
-    Response: Response as any,
+    Response,
     ReadableStream,
   });
 

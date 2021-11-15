@@ -1,8 +1,7 @@
 import fastify, { RouteHandlerMethod } from "fastify";
 import { getGraphQLParameters, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
-import { schema } from "../schema";
-import { Request, Response } from 'undici';
-import { ReadableStream } from "stream/web";
+import { schema } from "../schema"; 
+import { Request, Response, ReadableStream } from "cross-undici-fetch";
 
 const graphqlHandler: RouteHandlerMethod = async (req, res) => {
   const request = new Request(`${req.protocol}://${req.headers.host}${req.url}`, {
@@ -17,7 +16,7 @@ const graphqlHandler: RouteHandlerMethod = async (req, res) => {
     variables,
     request,
     schema,
-    Response: Response as any,
+    Response,
     ReadableStream,
   });
 

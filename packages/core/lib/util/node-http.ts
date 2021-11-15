@@ -10,22 +10,30 @@ export async function sendNodeResponse(responseResult: Response, nodeResponse: N
     headersObj[name] = value;
   });
   nodeResponse.writeHead(responseResult.status, headersObj);
-  const responseBody: ReadableStream | null = responseResult.body;
+  const responseBody: ReadableStream | null = await responseResult.body;
   if (responseBody == null) {
     throw new Error("Response body is not supported");
   }
-  const reader = responseBody.getReader();
-  while(true) {
-    const { done, value } = await reader.read();
-    if (value) {
-      (nodeResponse as any).write(value);
+  if ('pipe' in responseBody) {
+    // eslint-disable-next-line no-console
+    console.log('a');
+    (responseBody as any).pipe(nodeResponse);
+  } else if ('getReader' in responseBody) {
+    const reader = responseBody.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (value) {
+        (nodeResponse as any).write(value);
+      }
+      if (done) {
+        nodeResponse.end();
+        break;
+      }
     }
-    if (done) {
-      nodeResponse.end();
-      break;
-    }
+    nodeResponse.on('close', () => {
+      reader.releaseLock();
+    })
+  } else {
+    throw new Error(`Unrecognized Response type provided`);
   }
-  nodeResponse.on('close', () => {
-    reader.releaseLock();
-  })
 }
