@@ -1,17 +1,13 @@
 import fastify, { RouteHandlerMethod } from "fastify";
 import { parse as graphqlParse } from "graphql";
-import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL, sendNodeResponse } from "../../lib";
+import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL, sendNodeResponse, getNodeRequest } from "../../lib";
 import { schema } from "../schema";
 import { Request, Response, ReadableStream } from "cross-undici-fetch";
 
 const sleep = (time: number) => new Promise<void>((resolve) => setTimeout(resolve, time));
 
 const graphqlHandler: RouteHandlerMethod = async (req, res) => {
-  const request = new Request(`${req.protocol}://${req.hostname}${req.url}`, {
-    ...(req.method === 'POST' ? { body: JSON.stringify(req.body) } : undefined),
-    headers: req.headers as any,
-    method: req.method,
-  });
+  const request = getNodeRequest(req);
   const { operationName, query, variables } = await getGraphQLParameters(request);
   const response = await processRequest({
     operationName,

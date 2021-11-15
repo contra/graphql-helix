@@ -2,6 +2,49 @@
 import type { ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
 import { isAsyncIterable } from "./is-async-iterable";
+import { Request } from 'cross-undici-fetch';
+
+interface NodeRequest {
+  protocol?: string;
+  hostname?: string;
+  body?: any;
+  url: string;
+  method: string;
+  headers: any;
+}
+
+export function getNodeRequest(nodeRequest: NodeRequest): Request {
+  const fullUrl = `${nodeRequest.protocol || "http"}://${nodeRequest.hostname || nodeRequest.headers.host || "localhost"}${
+    nodeRequest.url
+  }`;
+  if (nodeRequest.method !== "POST") {
+    return new Request(fullUrl, {
+      headers: nodeRequest.headers,
+      method: nodeRequest.method,
+    });
+  } else if (nodeRequest.body) {
+    return new Request(fullUrl, {
+      headers: nodeRequest.headers,
+      method: nodeRequest.method,
+      body: JSON.stringify(nodeRequest.body),
+    });
+  } else if (isAsyncIterable(nodeRequest)) {
+    const body = new ReadableStream({
+      async start(controller) {
+        for await (const chunk of nodeRequest) {
+          controller.enqueue(chunk);
+        }
+        controller.close();
+      },
+    });
+    return new Request(fullUrl, {
+      headers: nodeRequest.headers,
+      method: nodeRequest.method,
+      body,
+    });
+  }
+  throw new Error(`Unknown request`);
+}
 
 export type NodeResponse = ServerResponse | Http2ServerResponse;
 
@@ -26,7 +69,7 @@ export async function sendNodeResponse(responseResult: Response, nodeResponse: N
       }
     }
     nodeResponse.end();
-  } else if ('getReader' in responseBody) {
+  } else if ("getReader" in responseBody) {
     const reader = responseBody.getReader();
     while (true) {
       const { done, value } = await reader.read();
@@ -38,9 +81,9 @@ export async function sendNodeResponse(responseResult: Response, nodeResponse: N
         break;
       }
     }
-    nodeResponse.on('close', () => {
+    nodeResponse.on("close", () => {
       reader.releaseLock();
-    })
+    });
   } else {
     throw new Error(`Unrecognized Response type provided`);
   }

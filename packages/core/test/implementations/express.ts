@@ -1,14 +1,10 @@
 import express, { RequestHandler } from "express";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
+import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 import { Request, Response, ReadableStream } from 'cross-undici-fetch';
 
 const graphqlMiddleware: RequestHandler = async (req, res) => {
-  const request = new Request(`${req.protocol}://${req.headers.host}${req.url}`, {
-    ...(req.method === 'POST' ? { body: JSON.stringify(req.body) } : undefined),
-    headers: req.headers as any,
-    method: req.method,
-  });
+  const request = getNodeRequest(req);
   const { operationName, query, variables } = await getGraphQLParameters(request);
   const response = await processRequest({
     operationName,

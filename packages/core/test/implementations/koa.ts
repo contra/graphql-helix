@@ -1,16 +1,12 @@
 import Koa, { Context } from "koa";
 import bodyParser from "koa-bodyparser";
 import { Readable } from "stream";
-import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
+import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 import { Request, Response, ReadableStream } from "cross-undici-fetch";
 
 const graphqlHandler = async (ctx: Context) => {
-  const request: any = new Request(`${ctx.request.protocol}://${ctx.request.host}${ctx.request.url}`, {
-    ...(ctx.request.method === 'POST' ? { body: JSON.stringify(ctx.request.body) } : undefined),
-    headers: ctx.request.headers as any,
-    method: ctx.request.method,
-  });
+  const request = getNodeRequest(ctx.request);
   const { operationName, query, variables } = await getGraphQLParameters(request);
   const response = await processRequest({
     operationName,
