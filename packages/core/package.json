@@ -45,7 +45,7 @@
     "chalk": "4.1.2",
     "cpy-cli": "3.1.1",
     "del-cli": "4.0.1",
-    "denoify": "0.9.1",
+    "denoify": "0.10.5",
     "eventsource": "1.1.0",
     "get-port": "5.1.1",
     "glob": "7.2.0",
