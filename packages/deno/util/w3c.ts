@@ -46,8 +46,6 @@ export function getMultipartResponse<TResponse extends Response, TReadableStream
   };
   const readableStream = new ReadableStream({
     async start(controller) {
-      // eslint-disable-next-line no-console
-      console.log(controller);
       try {
         controller.enqueue(`---`);
         for await (const patchResult of asyncExecutionResult) {
