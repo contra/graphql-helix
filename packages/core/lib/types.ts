@@ -66,15 +66,6 @@ export interface RenderGraphiQLOptions {
   shouldPersistHeaders?: boolean;
 }
 
-export interface SimpleRequest {
-  url: string;
-  method: string;
-  json(): Promise<any>;
-  headers: {
-    get(key: string): string | string[] | undefined;
-  }
-}
-
 export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * A function whose return value is passed in as the `context` to `execute`.
@@ -104,7 +95,7 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * An object describing the HTTP request.
    */
-  request: SimpleRequest;
+  request: Request;
   /**
    * A function whose return value is passed in as the `rootValue` to `execute`.
    */
@@ -141,7 +132,7 @@ export interface FormatPayloadParams<TContext, TRootValue> {
 }
 
 export interface ExecutionContext {
-  request: SimpleRequest;
+  request: Request;
   document: DocumentNode;
   operation: OperationDefinitionNode;
   variables?: { readonly [name: string]: unknown };

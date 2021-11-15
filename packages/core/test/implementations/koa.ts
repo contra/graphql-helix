@@ -3,10 +3,9 @@ import bodyParser from "koa-bodyparser";
 import { Readable } from "stream";
 import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
-import { Request, Response, ReadableStream } from "cross-undici-fetch";
 
 const graphqlHandler = async (ctx: Context) => {
-  const request = getNodeRequest(ctx.request);
+  const request = await getNodeRequest(ctx.request);
   const { operationName, query, variables } = await getGraphQLParameters(request);
   const response = await processRequest({
     operationName,
@@ -44,7 +43,7 @@ app.use(async (ctx) => {
   } else if (ctx.path === "/graphiql") {
     await graphiqlHandler(ctx);
   } else {
-    const request = getNodeRequest(ctx.request);
+    const request = await getNodeRequest(ctx.request);
 
     if (shouldRenderGraphiQL(request)) {
       await graphiqlHandler(ctx);

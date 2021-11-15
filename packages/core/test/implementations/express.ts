@@ -3,7 +3,7 @@ import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, s
 import { schema } from "../schema";
 
 const graphqlMiddleware: RequestHandler = async (req, res) => {
-  const request = getNodeRequest(req);
+  const request = await getNodeRequest(req);
   const { operationName, query, variables } = await getGraphQLParameters(request);
   const response = await processRequest({
     operationName,
@@ -29,7 +29,7 @@ app.use("/graphql", graphqlMiddleware);
 app.get("/graphiql", graphiqlMiddleware);
 
 app.use("/", async (req, res, next) => {
-  const request = getNodeRequest(req);
+  const request = await getNodeRequest(req);
 
   if (shouldRenderGraphiQL(request)) {
     await graphiqlMiddleware(req, res, next);

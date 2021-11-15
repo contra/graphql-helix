@@ -36,9 +36,6 @@
     "test": "jest",
     "esm:test": "node scripts/test-esm.mjs"
   },
-  "dependencies": {
-    "cross-undici-fetch": "0.0.26"
-  },
   "devDependencies": {
     "@babel/core": "7.16.0",
     "@babel/plugin-proposal-class-properties": "7.16.0",
@@ -71,12 +68,6 @@
   },
   "peerDependencies": {
     "graphql": "^15.3.0 || ^16.0.0"
-  },
-  "denoify": {
-    "replacer": "scripts/denoify-replacer.js",
-    "ports": {
-      "cross-undici-fetch": "https://raw.githubusercontent.com/ardatan/cross-fetch/main/dist/deno-ponyfill.ts"
-    }
   },
   "exports": {
     ".": {

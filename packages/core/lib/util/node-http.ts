@@ -2,7 +2,7 @@
 import type { ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
 import { isAsyncIterable } from "./is-async-iterable";
-import { Request } from 'cross-undici-fetch';
+import { Request, getReadableStreamCtor } from "./w3-mocks";
 
 interface NodeRequest {
   protocol?: string;
@@ -13,7 +13,7 @@ interface NodeRequest {
   headers: any;
 }
 
-export function getNodeRequest(nodeRequest: NodeRequest): Request {
+export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request> {
   const fullUrl = `${nodeRequest.protocol || "http"}://${nodeRequest.hostname || nodeRequest.headers.host || "localhost"}${
     nodeRequest.url
   }`;
@@ -29,6 +29,7 @@ export function getNodeRequest(nodeRequest: NodeRequest): Request {
       body: JSON.stringify(nodeRequest.body),
     });
   } else if (isAsyncIterable(nodeRequest)) {
+    const ReadableStream = await getReadableStreamCtor();
     const body = new ReadableStream({
       async start(controller) {
         for await (const chunk of nodeRequest) {

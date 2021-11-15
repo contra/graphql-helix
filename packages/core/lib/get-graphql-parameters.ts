@@ -1,6 +1,6 @@
-import { GraphQLParams, SimpleRequest } from "./types";
+import { GraphQLParams } from "./types";
 
-export async function getGraphQLParameters(request: SimpleRequest): Promise<GraphQLParams> {
+export async function getGraphQLParameters(request: Request): Promise<GraphQLParams> {
   const url = new URL(request.url);
 
   let operationName: string | undefined;

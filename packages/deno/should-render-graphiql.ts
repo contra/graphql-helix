@@ -1,5 +1,3 @@
-import { SimpleRequest } from "./types.ts";
-
-export const shouldRenderGraphiQL = ({ headers, method }: SimpleRequest): boolean => {
+export const shouldRenderGraphiQL = ({ headers, method }: Request): boolean => {
   return method === 'GET' && !!(headers?.get('accept')?.includes("text/html"));
 };

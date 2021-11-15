@@ -1,7 +1,7 @@
-import { Request, Response, ReadableStream } from "cross-undici-fetch";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { getGraphQLParameters, processRequest } from "../lib";
 import { stringify as qsStringify } from "qs";
+import { Request } from "../lib/util/w3-mocks";
 
 const schema = makeExecutableSchema({
   typeDefs: /* GraphQL */ `
@@ -51,8 +51,6 @@ describe("W3 Compatibility", () => {
       variables,
       request,
       schema,
-      Response,
-      ReadableStream,
     });
 
     const responseJson = await response.json();
@@ -81,8 +79,6 @@ describe("W3 Compatibility", () => {
       variables,
       request,
       schema,
-      Response,
-      ReadableStream,
     });
 
     const responseJson = await response.json();
@@ -113,8 +109,6 @@ describe("W3 Compatibility", () => {
       variables,
       request,
       schema,
-      Response,
-      ReadableStream,
     });
 
     const finalText = await response.text();
@@ -152,8 +146,6 @@ describe("W3 Compatibility", () => {
       variables,
       request,
       schema,
-      Response,
-      ReadableStream,
     });
 
     const finalText = await response.text();

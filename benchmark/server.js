@@ -9,7 +9,6 @@ const {
   shouldRenderGraphiQL,
   sendNodeResponse,
 } = require("../packages/core");
-const { Request, Response, ReadableStream } = require("cross-undici-fetch");
 
 const app = fastify();
 

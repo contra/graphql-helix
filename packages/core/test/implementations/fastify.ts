@@ -3,7 +3,7 @@ import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, s
 import { schema } from "../schema"; 
 
 const graphqlHandler: RouteHandlerMethod = async (req, res) => {
-  const request = getNodeRequest(req);
+  const request = await getNodeRequest(req);
   const { operationName, query, variables } = await getGraphQLParameters(request);
   const response = await processRequest({
     operationName,
@@ -41,7 +41,7 @@ app.route({
   method: ["GET", "POST", "PUT"],
   url: "/",
   async handler(req, res) {
-    const request = getNodeRequest(req);
+    const request = await getNodeRequest(req);
 
     if (shouldRenderGraphiQL(request)) {
       await graphiqlHandler.call(this, req, res);
