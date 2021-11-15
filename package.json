@@ -52,7 +52,7 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-promise": "5.1.1",
     "husky": "7.0.4",
-    "lint-staged": "11.1.2",
+    "lint-staged": "11.2.6",
     "prettier": "2.4.1",
     "patch-package": "6.4.7",
     "wait-on": "6.0.0"

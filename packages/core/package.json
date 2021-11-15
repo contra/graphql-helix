@@ -54,7 +54,7 @@
     "graphql": "16.0.0-experimental-stream-defer.5",
     "husky": "7.0.4",
     "jest": "27.3.1",
-    "lint-staged": "11.1.2",
+    "lint-staged": "11.2.6",
     "move-file-cli": "3.0.0",
     "puppeteer": "10.4.0",
     "replacestream": "4.0.3",
