@@ -3,8 +3,7 @@ import bodyParser from "koa-bodyparser";
 import { Readable } from "stream";
 import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
-import { Request, Response } from 'undici';
-import { ReadableStream } from "stream/web";
+import { Request, Response, ReadableStream } from "cross-undici-fetch";
 
 const graphqlHandler = async (ctx: Context) => {
   const request: any = new Request(`${ctx.request.protocol}://${ctx.request.host}${ctx.request.url}`, {
@@ -19,7 +18,7 @@ const graphqlHandler = async (ctx: Context) => {
     variables,
     request,
     schema,
-    Response: Response as any,
+    Response,
     ReadableStream,
   });
 

@@ -7,10 +7,9 @@ const {
   processRequest,
   renderGraphiQL,
   shouldRenderGraphiQL,
-  sendResponse,
+  sendNodeResponse,
 } = require("../packages/core");
-const { Request, Response } = require('undici');
-const { ReadableStream } = require('stream/web');
+const { Request, Response, ReadableStream } = require("cross-undici-fetch");
 
 const app = fastify();
 
@@ -44,7 +43,7 @@ app.route({
         ReadableStream,
       });
 
-      sendResponse(response, res.raw);
+      sendNodeResponse(response, res.raw);
       // Tell fastify a response was sent
       res.sent = true;
     }

@@ -1,4 +1,4 @@
-import { Request, Response } from "undici";
+import { Request, Response, ReadableStream } from "cross-undici-fetch";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { getGraphQLParameters, processRequest } from "../lib";
 import { stringify as qsStringify } from "qs";
@@ -32,7 +32,6 @@ const schema = makeExecutableSchema({
 });
 
 describe("W3 Compatibility", () => {
-  const { ReadableStream } = require('stream/web');
   it("should handle regular POST request and responses", async () => {
     const request: any = new Request("http://localhost:3000/graphql", {
       method: "POST",
@@ -52,7 +51,7 @@ describe("W3 Compatibility", () => {
       variables,
       request,
       schema,
-      Response: Response as any,
+      Response,
       ReadableStream,
     });
 
@@ -82,7 +81,7 @@ describe("W3 Compatibility", () => {
       variables,
       request,
       schema,
-      Response: Response as any,
+      Response,
       ReadableStream,
     });
 
@@ -114,7 +113,7 @@ describe("W3 Compatibility", () => {
       variables,
       request,
       schema,
-      Response: Response as any,
+      Response,
       ReadableStream,
     });
 
@@ -153,7 +152,7 @@ describe("W3 Compatibility", () => {
       variables,
       request,
       schema,
-      Response: Response as any,
+      Response,
       ReadableStream,
     });
 
