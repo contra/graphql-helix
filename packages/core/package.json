@@ -36,6 +36,9 @@
     "test": "jest",
     "esm:test": "node scripts/test-esm.mjs"
   },
+  "dependencies": {
+    "cross-undici-fetch": "0.0.26"
+  },
   "devDependencies": {
     "@babel/core": "7.16.0",
     "@babel/plugin-proposal-class-properties": "7.16.0",
@@ -49,7 +52,6 @@
     "chance": "1.1.8",
     "chalk": "4.1.2",
     "cpy-cli": "3.1.1",
-    "cross-undici-fetch": "0.0.25",
     "del-cli": "4.0.1",
     "denoify": "0.10.5",
     "eventsource": "1.1.0",
@@ -71,7 +73,10 @@
     "graphql": "^15.3.0 || ^16.0.0"
   },
   "denoify": {
-    "replacer": "scripts/denoify-replacer.js"
+    "replacer": "scripts/denoify-replacer.js",
+    "ports": {
+      "cross-undici-fetch": "https://raw.githubusercontent.com/ardatan/cross-fetch/main/dist/deno-ponyfill.ts"
+    }
   },
   "exports": {
     ".": {

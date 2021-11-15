@@ -10,7 +10,7 @@ import {
 } from "https://cdn.skypack.dev/graphql@16.0.0-experimental-stream-defer.5?dts";
 import { isAsyncIterable } from "./util/is-async-iterable.ts";
 import { ExecutionContext, ExecutionPatchResult, ProcessRequestOptions } from "./types.ts";
-import { getMultipartResponse, getPushResponse, getRegularResponse, getErrorResponse } from "./util/w3c.ts";
+import { getMultipartResponse, getPushResponse, getRegularResponse, getErrorResponse } from "./util/get-response.ts";
 
 const parseQuery = async (query: string | DocumentNode, parse: typeof defaultParse): Promise<DocumentNode> => {
   if (typeof query !== "string" && query.kind === "Document") {
@@ -31,12 +31,10 @@ const getExecutableOperation = (document: DocumentNode, operationName?: string):
 
 export const processRequest = async <
   TContext = {},
-  TRootValue = {},
-  TResponse extends Response = Response,
-  TReadableStream extends ReadableStream = ReadableStream
+  TRootValue = {}
 >(
-  options: ProcessRequestOptions<TContext, TRootValue, TResponse, TReadableStream>
-): Promise<TResponse> => {
+  options: ProcessRequestOptions<TContext, TRootValue>
+): Promise<Response> => {
   const {
     contextFactory,
     execute = defaultExecute,
@@ -51,8 +49,6 @@ export const processRequest = async <
     validate = defaultValidate,
     validationRules,
     variables,
-    Response,
-    ReadableStream,
   } = options;
 
   const transformResult = (payload: ExecutionResult | ExecutionPatchResult) =>
@@ -79,9 +75,7 @@ export const processRequest = async <
         headers: {
           Allow: "GET, POST",
         },
-        Response,
         transformResult,
-        ReadableStream,
         isEventStream,
       });
     }
@@ -90,9 +84,7 @@ export const processRequest = async <
       return getErrorResponse({
         status: 400,
         message: "Must provide query string.",
-        Response,
         transformResult,
-        ReadableStream,
         isEventStream,
       });
     }
@@ -104,9 +96,7 @@ export const processRequest = async <
         status: 400,
         message: "Syntax error",
         errors: [e],
-        Response,
         transformResult,
-        ReadableStream,
         isEventStream,
       });
     }
@@ -117,9 +107,7 @@ export const processRequest = async <
         status: 400,
         message: "Invalid query.",
         errors: validationErrors,
-        Response,
         transformResult,
-        ReadableStream,
         isEventStream,
       });
     }
@@ -133,9 +121,7 @@ export const processRequest = async <
         headers: {
           Allow: "POST",
         },
-        Response,
         transformResult,
-        ReadableStream,
         isEventStream,
       });
     }
@@ -150,9 +136,7 @@ export const processRequest = async <
       return getErrorResponse({
         message: "Variables are invalid JSON.",
         status: 400,
-        Response,
         transformResult,
-        ReadableStream,
         isEventStream,
       });
     }
@@ -179,12 +163,12 @@ export const processRequest = async <
       // If errors are encountered while subscribing to the operation, an execution result
       // instead of an AsyncIterable.
       if (isAsyncIterable<ExecutionPatchResult>(result)) {
-        return getPushResponse({ asyncExecutionResult: result, Response, ReadableStream, transformResult });
+        return getPushResponse(result, transformResult);
       } else {
         if (isEventStream) {
-          return getPushResponse({ asyncExecutionResult: result, Response, ReadableStream, transformResult });
+          return getPushResponse(result, transformResult);
         } else {
-          return getRegularResponse({ executionResult: result, Response, transformResult });
+          return getRegularResponse(result, transformResult);
         }
       }
     } else {
@@ -201,14 +185,14 @@ export const processRequest = async <
       // execution result.
       if (isAsyncIterable<ExecutionPatchResult>(result)) {
         return isEventStream
-          ? getPushResponse({ asyncExecutionResult: result, Response, ReadableStream, transformResult })
-          : getMultipartResponse({ asyncExecutionResult: result, Response, ReadableStream, transformResult });
+          ? getPushResponse(result, transformResult)
+          : getMultipartResponse(result, transformResult);
       } else {
-        return getRegularResponse({ executionResult: result, Response });
+        return getRegularResponse(result, transformResult);
       }
     }
   } catch (error: any) {
     const errors = Array.isArray(error) ? error : error.errors || [error];
-    return getErrorResponse({ message: "Error", status: 500, errors, Response, ReadableStream, isEventStream, transformResult });
+    return getErrorResponse({ message: "Error", status: 500, errors, isEventStream, transformResult });
   }
 };

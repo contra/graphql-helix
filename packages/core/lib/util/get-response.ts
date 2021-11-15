@@ -1,19 +1,12 @@
 import { ExecutionResult } from "graphql";
 import { stopAsyncIteration } from "./stop-async-iteration";
 import { ExecutionPatchResult } from "../types";
+import { ReadableStream, Response } from "cross-undici-fetch";
 
 export type TransformResultFn = (result: ExecutionResult | ExecutionPatchResult) => any;
 export const DEFAULT_TRANSFORM_RESULT_FN: TransformResultFn = (result: ExecutionResult) => result;
 
-export function getRegularResponse<TResponse extends Response>({
-  executionResult,
-  Response,
-  transformResult = DEFAULT_TRANSFORM_RESULT_FN,
-}: {
-  executionResult: ExecutionResult;
-  Response: { new (body: BodyInit, responseInit: ResponseInit): TResponse };
-  transformResult?: TransformResultFn;
-}): TResponse {
+export function getRegularResponse(executionResult: ExecutionResult, transformResult = DEFAULT_TRANSFORM_RESULT_FN): Response {
   const headersInit: HeadersInit = [];
   const responseInit: ResponseInit = {
     headers: headersInit,
@@ -24,17 +17,10 @@ export function getRegularResponse<TResponse extends Response>({
   return new Response(responseBody, responseInit);
 }
 
-export function getMultipartResponse<TResponse extends Response, TReadableStream extends ReadableStream>({
-  asyncExecutionResult,
-  Response,
-  ReadableStream,
-  transformResult = DEFAULT_TRANSFORM_RESULT_FN,
-}: {
-  asyncExecutionResult: AsyncIterable<ExecutionPatchResult<any>>;
-  Response: { new (readableStream: TReadableStream, responseInit: ResponseInit): TResponse };
-  ReadableStream: { new (underlyingSource: UnderlyingSource): TReadableStream };
-  transformResult?: TransformResultFn;
-}): TResponse {
+export function getMultipartResponse(
+  asyncExecutionResult: AsyncIterable<ExecutionPatchResult<any>>,
+  transformResult = DEFAULT_TRANSFORM_RESULT_FN
+): Response {
   const headersInit: HeadersInit = {
     Connection: "keep-alive",
     "Content-Type": 'multipart/mixed; boundary="-"',
@@ -78,17 +64,10 @@ export function getMultipartResponse<TResponse extends Response, TReadableStream
   return new Response(readableStream, responseInit);
 }
 
-export function getPushResponse<TResponse extends Response, TReadableStream extends ReadableStream>({
-  asyncExecutionResult,
-  Response,
-  ReadableStream,
-  transformResult = DEFAULT_TRANSFORM_RESULT_FN,
-}: {
-  asyncExecutionResult: AsyncIterable<ExecutionResult<any>>;
-  Response: { new (readableStream: TReadableStream, responseInit: ResponseInit): TResponse };
-  ReadableStream: { new (underlyingSource: UnderlyingSource): TReadableStream };
-  transformResult?: TransformResultFn;
-}): TResponse {
+export function getPushResponse(
+  asyncExecutionResult: AsyncIterable<ExecutionResult<any>>,
+  transformResult = DEFAULT_TRANSFORM_RESULT_FN
+): Response {
   const headersInit: HeadersInit = {
     "Content-Type": "text/event-stream",
     Connection: "keep-alive",
@@ -119,14 +98,12 @@ export function getPushResponse<TResponse extends Response, TReadableStream exte
   return new Response(readableStream, responseInit);
 }
 
-interface ErrorResponseParams<TResponse extends Response, TReadableStream extends ReadableStream> {
+interface ErrorResponseParams {
   message: string;
   status?: number;
   headers?: any;
   errors?: { message: string }[] | readonly { message: string }[];
   transformResult?: typeof DEFAULT_TRANSFORM_RESULT_FN;
-  Response: { new(body: BodyInit, responseInit: ResponseInit): TResponse };
-  ReadableStream: { new(underlyingSource: UnderlyingSource): TReadableStream };
   isEventStream: boolean;
 }
 
@@ -134,16 +111,14 @@ async function* getSingleResult(payload: any) {
   yield payload;
 }
 
-export function getErrorResponse<TResponse extends Response, TReadableStream extends ReadableStream>({
+export function getErrorResponse({
   message,
   status = 500,
   headers = {},
   errors = [{ message }],
-  Response,
-  ReadableStream,
   transformResult = DEFAULT_TRANSFORM_RESULT_FN,
-  isEventStream
-}: ErrorResponseParams<TResponse, TReadableStream>): TResponse {
+  isEventStream,
+}: ErrorResponseParams): Response {
   const payload: any = {
     errors,
   };
@@ -153,18 +128,13 @@ export function getErrorResponse<TResponse extends Response, TReadableStream ext
         return {
           value: payload,
           done: true,
-        }
+        };
       },
       [Symbol.asyncIterator]() {
         return asyncExecutionResult;
-      }
-    }
-    return getPushResponse({
-      asyncExecutionResult: getSingleResult(payload),
-      Response,
-      ReadableStream,
-      transformResult,
-    });
+      },
+    };
+    return getPushResponse(getSingleResult(payload), transformResult);
   }
   return new Response(JSON.stringify(transformResult(payload)), {
     status,

@@ -19,8 +19,6 @@ const graphqlHandler: RouteHandlerMethod = async (req, res) => {
       await sleep(50);
       return graphqlParse(source, options);
     },
-    Response,
-    ReadableStream,
   });
 
   sendNodeResponse(response, res.raw);

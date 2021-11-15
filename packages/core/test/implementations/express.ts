@@ -1,7 +1,6 @@
 import express, { RequestHandler } from "express";
 import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
-import { Request, Response, ReadableStream } from 'cross-undici-fetch';
 
 const graphqlMiddleware: RequestHandler = async (req, res) => {
   const request = getNodeRequest(req);
@@ -12,8 +11,6 @@ const graphqlMiddleware: RequestHandler = async (req, res) => {
     variables,
     request,
     schema,
-    Response,
-    ReadableStream
   });
 
   sendNodeResponse(response, res);
@@ -32,11 +29,7 @@ app.use("/graphql", graphqlMiddleware);
 app.get("/graphiql", graphiqlMiddleware);
 
 app.use("/", async (req, res, next) => {
-  const request: any = new Request(`${req.protocol}://${req.get('host')}${req.originalUrl}`, {
-    ...(req.method === 'POST' ? { body: JSON.stringify(req.body) } : undefined),
-    headers: req.headers as any,
-    method: req.method,
-  })
+  const request = getNodeRequest(req);
 
   if (shouldRenderGraphiQL(request)) {
     await graphiqlMiddleware(req, res, next);

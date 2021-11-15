@@ -14,8 +14,6 @@ const graphqlHandler = async (ctx: Context) => {
     variables,
     request,
     schema,
-    Response,
-    ReadableStream,
   });
 
   ctx.req.socket.setTimeout(0);
@@ -46,11 +44,7 @@ app.use(async (ctx) => {
   } else if (ctx.path === "/graphiql") {
     await graphiqlHandler(ctx);
   } else {
-    const request: any = new Request(ctx.request.url, {
-      body: JSON.stringify(ctx.request.body),
-      headers: ctx.request.headers as any,
-      method: ctx.request.method,
-    })
+    const request = getNodeRequest(ctx.request);
 
     if (shouldRenderGraphiQL(request)) {
       await graphiqlHandler(ctx);

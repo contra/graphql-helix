@@ -81,7 +81,7 @@ export interface SimpleRequest {
   }
 }
 
-export interface ProcessRequestOptions<TContext, TRootValue, TResponse extends Response, TReadableStream extends ReadableStream> {
+export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * A function whose return value is passed in as the `context` to `execute`.
    */
@@ -140,8 +140,6 @@ export interface ProcessRequestOptions<TContext, TRootValue, TResponse extends R
    * Values for any Variables defined by the Operation.
    */
   variables?: string | { [name: string]: any };
-  Response: { new(body: BodyInit, responseInit: ResponseInit): TResponse },
-  ReadableStream: { new(underlyingSource: UnderlyingSource): TReadableStream },
 }
 
 export interface FormatPayloadParams<TContext, TRootValue> {
