@@ -1,4 +1,4 @@
-import { DocumentNode, ExecutionResult, GraphQLError, GraphQLSchema, OperationDefinitionNode, ValidationRule } from "graphql";
+import { DocumentNode, ExecutionResult, GraphQLError, GraphQLSchema, OperationDefinitionNode, ValidationRule } from "https://cdn.skypack.dev/graphql@16.0.0-experimental-stream-defer.5?dts";
 
 export interface ExecutionPatchResult<TData = { [key: string]: any }, TExtensions = { [key: string]: any }> {
   errors?: ReadonlyArray<GraphQLError>;

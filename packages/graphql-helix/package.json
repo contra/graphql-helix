@@ -1,5 +1,5 @@
 {
-  "name": "@graphql-helix/core",
+  "name": "graphql-helix",
   "version": "1.9.1",
   "description": "A highly evolved GraphQL HTTP Server 🧬",
   "keywords": [
@@ -29,38 +29,21 @@
     "dist-esm"
   ],
   "scripts": {
-    "build": "yarn build-deno && yarn run build-node",
-    "build-deno": "denoify && del-cli ../deno-core --force && move-file deno_dist ../deno-core && cpy ../../README.md ../deno-core",
+    "build": "yarn build-render-graphiql && yarn build-core && yarn build-deno && yarn run build-node",
+    "build-core": "cd ../core && yarn build",
+    "build-deno": "denoify && del-cli ../deno --force && move-file deno_dist ../deno && cpy ../../README.md ../deno",
     "build-node": "del-cli dist && del-cli dist-esm && tsc && tsc -b tsconfig.esm.json && node scripts/esm-post-process.js",
+    "build-render-graphiql": "cd ../graphiql && yarn run build",
     "test": "jest test/integration.test.ts",
     "esm:test": "node scripts/test-esm.mjs"
   },
+  "dependencies": {
+    "@graphql-helix/core": "1.9.1",
+    "@graphql-helix/graphiql": "1.1.0"
+  },
   "devDependencies": {
-    "@types/chance": "1.1.3",
-    "@types/eventsource": "1.1.7",
-    "@types/jest": "27.0.2",
-    "@graphql-tools/schema": "8.3.1",
-    "chance": "1.1.8",
-    "chalk": "4.1.2",
-    "cpy-cli": "3.1.1",
     "del-cli": "4.0.1",
-    "denoify": "0.10.5",
-    "eventsource": "1.1.0",
-    "get-port": "5.1.1",
-    "glob": "7.2.0",
-    "globby": "12.0.2",
-    "got": "11.8.2",
-    "graphql": "16.0.0-experimental-stream-defer.5",
-    "husky": "7.0.4",
-    "jest": "27.3.1",
-    "lint-staged": "11.2.6",
-    "move-file-cli": "3.0.0",
-    "puppeteer": "10.4.0",
-    "replacestream": "4.0.3",
-    "ts-jest": "27.0.7",
-    "ts-node": "10.4.0",
-    "typescript": "4.4.4",
-    "undici": "4.10.0"
+    "typescript": "4.4.4"
   },
   "peerDependencies": {
     "graphql": "^15.3.0 || ^16.0.0"
