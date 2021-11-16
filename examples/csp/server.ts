@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 import express from "express";
-import { sendResult, getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "graphql-helix";
+import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL, getNodeRequest, sendNodeResponse } from "graphql-helix";
 import helmet from "helmet";
 import { schema } from "./schema";
 
@@ -24,17 +24,12 @@ app.use((req, res, next) =>
 );
 
 app.use("/graphql", async (req, res) => {
-  const request = {
-    body: req.body,
-    headers: req.headers,
-    method: req.method,
-    query: req.query,
-  };
+  const request = await getNodeRequest(req);
 
   if (shouldRenderGraphiQL(request)) {
     res.send(renderGraphiQL({ nonce: res.locals.cspNonce }));
   } else {
-    const { operationName, query, variables } = getGraphQLParameters(request);
+    const { operationName, query, variables } = await getGraphQLParameters(request);
 
     const result = await processRequest({
       operationName,
@@ -44,7 +39,7 @@ app.use("/graphql", async (req, res) => {
       schema,
     });
 
-    sendResult(result, res);
+    await sendNodeResponse(result, res);
   }
 });
 

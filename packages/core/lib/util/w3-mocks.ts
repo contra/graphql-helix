@@ -1,18 +1,18 @@
 import { isAsyncIterable } from "./is-async-iterable";
 
-type Callback<T> = (result: IteratorResult<T> ) => void;
+type Callback<T> = (result: ReadableStreamDefaultReadResult<T> ) => void;
 
-export const ReadableStream = globalThis.ReadableStream || class ReadableStream<T> {
+export const ReadableStream = globalThis.ReadableStream || class ReadableStreamPonyfill<T> {
     constructor(private source: UnderlyingSource<T>) {}
 
     getReader() {
         let listening = true;
         const pullQueue: Callback<T>[] = [];
-        const pushQueue: IteratorResult<T>[] = [];
+        const pushQueue: ReadableStreamDefaultReadResult<T>[] = [];
 
         const pushValue = (value: T) => {
             if (pullQueue.length !== 0) {
-                pullQueue.shift()!({ value, done: false });
+                pullQueue.shift()!({ value, done: false } as const);
             } else {
                 pushQueue.push({ value, done: false });
             }
@@ -20,14 +20,14 @@ export const ReadableStream = globalThis.ReadableStream || class ReadableStream<
 
         const pushDone = () => {
             if (pullQueue.length !== 0) {
-                pullQueue.shift()!({ value: undefined, done: true });
+                pullQueue.shift()!({ value: undefined, done: true } as const);
             } else {
-                pushQueue.push({ value: undefined, done: true });
+                pushQueue.push({ value: undefined, done: true } as const);
             }
         };
 
         const pullValue = () =>
-            new Promise<IteratorResult<T>>(resolve => {
+            new Promise<ReadableStreamDefaultReadResult<T>>(resolve => {
                 if (pushQueue.length !== 0) {
                     const element = pushQueue.shift()!;
                     resolve(element);
@@ -40,12 +40,12 @@ export const ReadableStream = globalThis.ReadableStream || class ReadableStream<
             if (listening) {
                 listening = false;
                 for (const resolve of pullQueue) {
-                    resolve({ value: undefined, done: true });
+                    resolve({ value: undefined, done: true } as const);
                 }
                 pullQueue.length = 0;
                 pushQueue.length = 0;
             }
-            return Promise.resolve({ value: undefined, done: true });
+            return Promise.resolve({ value: undefined, done: true } as const);
         };
 
         const controller = {
@@ -67,10 +67,15 @@ export const ReadableStream = globalThis.ReadableStream || class ReadableStream<
             releaseLock: () => {
                 emptyQueue();
                 this.source.cancel?.(controller);
-            }
+            },
+            cancel: async () => {
+                emptyQueue();
+                this.source.cancel?.(controller);
+            },
+            closed: Promise.resolve(undefined),
         }
     }
-};
+} as unknown as typeof globalThis['ReadableStream'];
 
 class BodyPonyfill {
     constructor(private source?: ReadableStream | string) { }
@@ -161,7 +166,7 @@ export const Request =
         get method() {
             return this.init?.method ?? "GET";
         }
-    };
+    } as unknown as typeof globalThis['Request'];
 
 export const Response =
     globalThis.Response ||
@@ -193,4 +198,4 @@ export const Response =
         get status() {
             return this.init?.status ?? 200;
         }
-    };
+    } as unknown as typeof globalThis['Response'];

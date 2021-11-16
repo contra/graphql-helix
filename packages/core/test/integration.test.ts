@@ -386,8 +386,7 @@ implementations.forEach((implementation) => {
         expect(errors[0].message).toEqual("Can only perform a mutation operation from a POST request.");
       });
 
-      // TODO
-      test.skip("GET malformed variables", async () => {
+      test("GET malformed variables", async () => {
         const {
           statusCode,
           body: { errors },

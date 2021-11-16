@@ -11,14 +11,7 @@ export async function getGraphQLParameters(request: Request): Promise<GraphQLPar
     case 'GET': {
       operationName = url.searchParams.get('operationName') || undefined;
       query = url.searchParams.get('query') || undefined;
-      const variablesStr = url.searchParams.get('variables');
-      if (variablesStr) {
-        try {
-          variables = JSON.parse(variablesStr);
-        } catch(e) {
-          throw new Error(`Variables are invalid JSON.`);
-        }
-      }
+      variables = url.searchParams.get('variables') || undefined;
       break;
     }
     case 'POST': {

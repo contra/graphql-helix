@@ -1,6 +1,6 @@
 import express from "express";
 import { ExecutionResult, GraphQLError } from "graphql";
-import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL, sendResult } from "graphql-helix";
+import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL, getNodeRequest, sendNodeResponse } from "graphql-helix";
 import { schema } from "./schema";
 
 const formatResult = (result: ExecutionResult) => {
@@ -29,17 +29,12 @@ const app = express();
 app.use(express.json());
 
 app.use("/graphql", async (req, res) => {
-  const request = {
-    body: req.body,
-    headers: req.headers,
-    method: req.method,
-    query: req.query,
-  };
+  const request = await getNodeRequest(req);
 
   if (shouldRenderGraphiQL(request)) {
     res.send(renderGraphiQL());
   } else {
-    const { operationName, query, variables } = getGraphQLParameters(request);
+    const { operationName, query, variables } = await getGraphQLParameters(request);
 
     const result = await processRequest({
       operationName,
@@ -47,9 +42,10 @@ app.use("/graphql", async (req, res) => {
       variables,
       request,
       schema,
+      formatPayload: ({ payload }) => formatResult(payload),
     });
 
-    sendResult(result, res, formatResult);
+    await sendNodeResponse(result, res);
   }
 });
 

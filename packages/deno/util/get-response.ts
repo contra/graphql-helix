@@ -1,5 +1,4 @@
 import { ExecutionResult } from "https://cdn.skypack.dev/graphql@16.0.0-experimental-stream-defer.5?dts";
-import { stopAsyncIteration } from "./stop-async-iteration.ts";
 import { ExecutionPatchResult } from "../types.ts";
 import { ReadableStream, Response } from "./w3-mocks.ts";
 
@@ -34,9 +33,16 @@ export function getMultipartResponse(
     async start(controller) {
       try {
         controller.enqueue(`---`);
-        for await (const patchResult of asyncExecutionResult) {
-          const transformedResult = transformResult(patchResult);
-          const chunk = JSON.stringify(transformResult(transformedResult));
+        const iterator = asyncExecutionResult[Symbol.asyncIterator]();
+        while (true) {
+          const { done, value } = await iterator.next();
+          if (done) {
+            controller.enqueue("\r\n-----\r\n");
+            controller.close();
+            break;
+          }
+          const transformedResult = transformResult(value);
+          const chunk = JSON.stringify(transformedResult);
           const data = [
             "",
             "Content-Type: application/json; charset=utf-8",
@@ -44,21 +50,14 @@ export function getMultipartResponse(
             "",
             chunk,
           ];
-          if (patchResult.hasNext) {
+          if (value.hasNext) {
             data.push("---");
           }
           controller.enqueue(data.join("\r\n"));
         }
-        stopAsyncIteration(asyncExecutionResult);
-        controller.enqueue("\r\n-----\r\n");
-        controller.close();
       } catch (e) {
         controller.error(e);
       }
-    },
-    cancel(controller) {
-      stopAsyncIteration(asyncExecutionResult);
-      controller.close();
     },
   });
   return new Response(readableStream, responseInit);
@@ -81,18 +80,21 @@ export function getPushResponse(
   const readableStream = new ReadableStream({
     async start(controller) {
       try {
-        for await (const result of asyncExecutionResult) {
-          controller.enqueue(`data: ${JSON.stringify(transformResult(result))}\n\n`);
+        const iterator = asyncExecutionResult[Symbol.asyncIterator]();
+        while (true) {
+          const { done, value } = await iterator.next();
+          if (done) {
+            controller.close();
+            break;
+          }
+          const transformedResult = transformResult(value);
+          const chunk = JSON.stringify(transformedResult);
+          controller.enqueue(`data: ${chunk}\n\n`);
         }
-        stopAsyncIteration(asyncExecutionResult);
         controller.close();
       } catch (e) {
         controller.error(e);
       }
-    },
-    cancel(controller) {
-      stopAsyncIteration(asyncExecutionResult);
-      controller.close();
     },
   });
   return new Response(readableStream, responseInit);
@@ -123,17 +125,6 @@ export function getErrorResponse({
     errors,
   };
   if (isEventStream) {
-    const asyncExecutionResult = {
-      next() {
-        return {
-          value: payload,
-          done: true,
-        };
-      },
-      [Symbol.asyncIterator]() {
-        return asyncExecutionResult;
-      },
-    };
     return getPushResponse(getSingleResult(payload), transformResult);
   }
   return new Response(JSON.stringify(transformResult(payload)), {

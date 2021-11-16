@@ -1,6 +1,6 @@
 import express from "express";
 import { parse, DocumentNode, GraphQLError } from "graphql";
-import { processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "graphql-helix";
+import { getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "graphql-helix";
 import { schema } from "./schema";
 
 const queryMap: Record<string, DocumentNode> = {
@@ -13,12 +13,7 @@ const app = express();
 app.use(express.json());
 
 app.use("/graphql", async (req, res) => {
-  const request = {
-    body: req.body,
-    headers: req.headers,
-    method: req.method,
-    query: req.query,
-  };
+  const request = await getNodeRequest(req);
 
   if (shouldRenderGraphiQL(request)) {
     res.send(renderGraphiQL());
@@ -55,7 +50,7 @@ app.use("/graphql", async (req, res) => {
       schema,
     });
 
-    sendResult(result, res);
+    await sendNodeResponse(result, res);
   }
 });
 

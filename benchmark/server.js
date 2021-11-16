@@ -7,6 +7,7 @@ const {
   processRequest,
   renderGraphiQL,
   shouldRenderGraphiQL,
+  getNodeRequest,
   sendNodeResponse,
 } = require("../packages/core");
 
@@ -16,12 +17,7 @@ app.route({
   method: ["GET", "POST"],
   url: "/graphql",
   async handler(req, res) {
-    const request = new Request(req.url, {
-      body: JSON.stringify(req.body),
-      // @ts-ignore
-      headers: req.headers,
-      method: req.method,
-    })
+    const request = await getNodeRequest(req);
 
     // @ts-ignore
     if (shouldRenderGraphiQL(request)) {
@@ -34,15 +30,11 @@ app.route({
         operationName,
         query,
         variables,
-        // @ts-ignore
         request,
         schema,
-        // @ts-ignore
-        Response,
-        ReadableStream,
       });
 
-      sendNodeResponse(response, res.raw);
+      await sendNodeResponse(response, res.raw);
       // Tell fastify a response was sent
       res.sent = true;
     }

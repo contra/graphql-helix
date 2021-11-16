@@ -8,14 +8,14 @@ interface NodeRequest {
   protocol?: string;
   hostname?: string;
   body?: any;
-  url: string;
-  method: string;
+  url?: string;
+  method?: string;
   headers: any;
 }
 
 export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request> {
   const fullUrl = `${nodeRequest.protocol || "http"}://${nodeRequest.hostname || nodeRequest.headers.host || "localhost"}${
-    nodeRequest.url
+    nodeRequest.url || '/graphql'
   }`;
   if (nodeRequest.method !== "POST") {
     return new Request(fullUrl, {

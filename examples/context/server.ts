@@ -16,7 +16,7 @@ app.use(
 );
 
 app.use("/graphql", async (req, res) => {
-  const request = getNodeRequest(req);
+  const request = await getNodeRequest(req);
 
   if (shouldRenderGraphiQL(request)) {
     res.send(renderGraphiQL());
@@ -34,7 +34,7 @@ app.use("/graphql", async (req, res) => {
       }),
     });
 
-    sendNodeResponse(result, res);
+    await sendNodeResponse(result, res);
   }
 });
 
