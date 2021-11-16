@@ -11,9 +11,10 @@ import {
   ValidationRule,
   ExecutionResult,
 } from "https://cdn.skypack.dev/graphql@16.0.0-experimental-stream-defer.5?dts";
-import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index.ts";
+import { isAsyncIterable, isHttpMethod } from "./util/index.ts";
 import { HttpError } from "./errors.ts";
-import { ExecutionContext, ExecutionPatchResult, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types.ts";
+import { ExecutionContext, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types.ts";
+import { getSingularAsyncIterator } from "./util/getSingularAsyncIterator.ts";
 
 const parseQuery = (query: string | DocumentNode, parse: typeof defaultParse): DocumentNode | Promise<DocumentNode> => {
   if (typeof query !== "string" && query.kind === "Document") {
@@ -137,32 +138,47 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             schema,
             document,
             rootValue,
-            context,
+            contextValue: context,
             variableValues,
             operationName,
           });
 
           // If errors are encountered while subscribing to the operation, an execution result
           // instead of an AsyncIterable.
-          if (isAsyncIterable<ExecutionResult>(result)) {
+          if (isAsyncIterable(result)) {
+            const asyncIterator = result[Symbol.asyncIterator]();
+            const transformedIterator: AsyncIterator<any> = {
+              ...asyncIterator,
+              next: async () => {
+                const iteratorResult = await asyncIterator.next();
+                if (iteratorResult.done) {
+                  return iteratorResult;
+                }
+                return {
+                  value: formatPayload({
+                    payload: iteratorResult.value,
+                    context,
+                    rootValue,
+                    document,
+                    operation,
+                  }),
+                  done: false,
+                };
+              },
+            };
             return {
               type: "PUSH",
               subscribe: async (onResult) => {
-                for await (const payload of result) {
-                  onResult(
-                    formatPayload({
-                      payload,
-                      context,
-                      rootValue,
-                      document,
-                      operation,
-                    })
-                  );
+                while (true) {
+                  const iteratorResult = await transformedIterator.next();
+                  if (iteratorResult.done) {
+                    break;
+                  }
+                  onResult(iteratorResult.value);
                 }
               },
-              unsubscribe: () => {
-                stopAsyncIteration(result);
-              },
+              unsubscribe: () => asyncIterator.return?.(),
+              [Symbol.asyncIterator]: () => transformedIterator,
             };
           } else {
             if (isEventStream) {
@@ -180,6 +196,15 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                   );
                 },
                 unsubscribe: () => undefined,
+                [Symbol.asyncIterator]: () => getSingularAsyncIterator(
+                  formatPayload({
+                    payload: result,
+                    context,
+                    rootValue,
+                    document,
+                    operation,
+                  })
+                ),
               };
             } else {
               return {
@@ -208,25 +233,43 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
 
           // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
           // execution result.
-          if (isAsyncIterable<ExecutionPatchResult>(result)) {
+          if (isAsyncIterable(result)) {
+            const asyncIterator = result[Symbol.asyncIterator]();
+            const transformedIterator: AsyncIterator<any> = {
+              ...asyncIterator,
+              next: async () => {
+                const iteratorResult = await asyncIterator.next();
+                if (iteratorResult.done) {
+                  return iteratorResult;
+                }
+                return {
+                  value: formatPayload({
+                    payload: iteratorResult.value,
+                    context,
+                    rootValue,
+                    document,
+                    operation,
+                  }),
+                  done: false,
+                };
+              },
+            };
             return {
               type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
               subscribe: async (onResult) => {
-                for await (const payload of result) {
-                  onResult(
-                    formatPayload({
-                      payload,
-                      context,
-                      rootValue,
-                      document,
-                      operation,
-                    })
-                  );
+                while (true) {
+                  const iteratorResult = await transformedIterator.next();
+                  if (iteratorResult.done) {
+                    break;
+                  }
+                  onResult(iteratorResult.value);
+                  if (iteratorResult.value?.hasNext === false) {
+                    break;
+                  }
                 }
               },
-              unsubscribe: () => {
-                stopAsyncIteration(result);
-              },
+              unsubscribe: () => transformedIterator.return?.(),
+              [Symbol.asyncIterator]: () => transformedIterator,
             } as MultipartResponse<TContext, TRootValue>;
           } else {
             return {
@@ -276,6 +319,15 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             );
           },
           unsubscribe: () => undefined,
+          [Symbol.asyncIterator]: () => getSingularAsyncIterator(
+            formatPayload({
+              payload,
+              context,
+              rootValue,
+              document,
+              operation,
+            })
+          ),
         };
       } else {
         return {

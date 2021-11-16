@@ -89,7 +89,7 @@ implementations.forEach((implementation) => {
         } = await post({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */`
             query {
               echo(text: "hello world")
             }
@@ -106,7 +106,7 @@ implementations.forEach((implementation) => {
         } = await post({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */`
             query ($text: String!) {
               echo(text: $text)
             }
@@ -120,7 +120,7 @@ implementations.forEach((implementation) => {
       test("POST query with @defer", async () => {
         const stream = got.stream.post(`http://localhost:${port}/graphql`, {
           json: {
-            query: `
+            query: /* GraphQL */`
                 query {
                   hello
                   ...QueryFragment @defer
@@ -144,7 +144,7 @@ implementations.forEach((implementation) => {
       test("POST query with @stream", async () => {
         const stream = got.stream.post(`http://localhost:${port}/graphql`, {
           json: {
-            query: `
+            query: /* GraphQL */`
                 query {
                   stream @stream(initialCount: 1)
                 }
@@ -168,7 +168,7 @@ implementations.forEach((implementation) => {
         } = await post({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */`
             mutation ($number: Int!) {
               setFavoriteNumber(number: $number)
             }
@@ -185,7 +185,7 @@ implementations.forEach((implementation) => {
         } = await post({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */`
             query OperationA {
               alwaysTrue
             }
@@ -252,7 +252,7 @@ implementations.forEach((implementation) => {
         } = await get({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */`
             query {
               echo(text: "hello world")
             }
@@ -269,7 +269,7 @@ implementations.forEach((implementation) => {
         } = await get({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */`
             query ($text: String!) {
               echo(text: $text)
             }
@@ -286,7 +286,7 @@ implementations.forEach((implementation) => {
         } = await get({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */`
             query OperationA {
               alwaysTrue
             }
@@ -329,7 +329,7 @@ implementations.forEach((implementation) => {
       test("GET query with @defer", async () => {
         const stream = got.stream.get(`http://localhost:${port}/graphql`, {
           searchParams: {
-            query: `
+            query: /* GraphQL */`
                 query {
                   hello
                   ...QueryFragment @defer
@@ -353,7 +353,7 @@ implementations.forEach((implementation) => {
       test("GET query with @stream", async () => {
         const stream = got.stream.get(`http://localhost:${port}/graphql`, {
           searchParams: {
-            query: `
+            query: /* GraphQL */`
                 query {
                   stream @stream(initialCount: 1)
                 }
@@ -377,7 +377,7 @@ implementations.forEach((implementation) => {
         } = await get({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */`
             mutation {
               setFavoriteNumber(number: 42)
             }
@@ -393,7 +393,7 @@ implementations.forEach((implementation) => {
           body: { errors },
         } = await got.get<any>(`http://localhost:${port}/graphql`, {
           searchParams: {
-            query: `
+            query: /* GraphQL */`
                 query($text: String!) {
                   echo(text: $text)
                 }
@@ -413,7 +413,7 @@ implementations.forEach((implementation) => {
           body: { errors },
         } = await got.put<any>(`http://localhost:${port}/graphql`, {
           searchParams: {
-            query: `{ echo(text: "hello world") }`,
+            query: /* GraphQL */`{ echo(text: "hello world") }`,
           },
           responseType: "json",
           throwHttpErrors: false,
@@ -430,7 +430,7 @@ implementations.forEach((implementation) => {
             accept: "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
           },
           searchParams: {
-            query: `
+            query: /* GraphQL */`
                 query {
                   echo(text: "hello world")
                 }
@@ -448,7 +448,7 @@ implementations.forEach((implementation) => {
         } = await post({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */`
             query {
               echo(text: "hello world")
             }
@@ -464,7 +464,7 @@ implementations.forEach((implementation) => {
         } = await get({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */`
             query {
               echo(text: "hello world")
             }
@@ -480,7 +480,7 @@ implementations.forEach((implementation) => {
             accept: "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
           },
           searchParams: {
-            query: `
+            query: /* GraphQL */`
                 query {
                   echo(text: "hello world")
                 }

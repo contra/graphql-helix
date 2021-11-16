@@ -1,15 +1,20 @@
 import { Request, Response } from "undici";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { getGraphQLParameters, processRequest, getResponse } from "../lib";
-import { ReadableStream } from "stream/web";
 import { parse as qsParse, stringify as qsStringify } from "qs";
 
 declare module "stream/web" {
   export const ReadableStream: any;
 }
 
-const schema = makeExecutableSchema({
-  typeDefs: /* GraphQL */ `
+
+describe("W3 Compatibility", () => {
+  if (parseInt(process.versions.node.split('.')[0]) < 16) {
+    it('dummy', () => { });
+    return;
+  }
+  const schema = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
     type Query {
       hello: String
       slowHello: String
@@ -18,35 +23,34 @@ const schema = makeExecutableSchema({
       countdown(from: Int): Int
     }
   `,
-  resolvers: {
-    Query: {
-      hello: () => "world",
-      slowHello: () => new Promise((resolve) => setTimeout(() => resolve("world"), 300)),
-    },
-    Subscription: {
-      countdown: {
-        subscribe: async function* () {
-          for (let i = 3; i >= 0; i--) {
-            yield i;
-          }
+    resolvers: {
+      Query: {
+        hello: () => "world",
+        slowHello: () => new Promise((resolve) => setTimeout(() => resolve("world"), 300)),
+      },
+      Subscription: {
+        countdown: {
+          subscribe: async function* () {
+            for (let i = 3; i >= 0; i--) {
+              yield i;
+            }
+          },
+          resolve: (payload) => payload,
         },
-        resolve: (payload) => payload,
       },
     },
-  },
-});
+  });
 
-async function prepareHelixRequestFromW3CRequest(request: Request) {
-  const queryString = request.url.split("?")[1];
-  return {
-    body: request.method === "POST" && (await request.json()),
-    headers: request.headers,
-    method: request.method,
-    query: queryString && qsParse(queryString),
-  };
-}
-
-describe("W3 Compatibility", () => {
+  async function prepareHelixRequestFromW3CRequest(request: Request) {
+    const queryString = request.url.split("?")[1];
+    return {
+      body: request.method === "POST" && (await request.json()),
+      headers: request.headers,
+      method: request.method,
+      query: queryString && qsParse(queryString),
+    };
+  }
+  const { ReadableStream }: typeof import('stream/web') = require("stream/web");
   it("should handle regular POST request and responses", async () => {
     const request = new Request("http://localhost:3000/graphql", {
       method: "POST",

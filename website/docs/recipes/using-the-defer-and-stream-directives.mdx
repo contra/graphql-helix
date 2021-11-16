@@ -23,16 +23,16 @@ if (result.type === "MULTIPART_RESPONSE") {
 
   // Subscribe to new results. The callback will be called with the
   // ExecutionResult object that should be sent back to the client for each chunk.
-  await result.subscribe((result) => {
-    const chunk = Buffer.from(JSON.stringify(formatResult(result)), "utf8");
+  for await (const payload of result) {
+    const chunk = Buffer.from(JSON.stringify(payload), "utf8");
     const data = ["Content-Type: application/json; charset=utf-8", "Content-Length: " + String(chunk.length), "", chunk];
 
-    if (result.hasNext) {
+    if (payload.hasNext) {
       data.push("---");
     }
 
     res.write(data.join("\r\n"));
-  });
+  }
 
   // The Promise returned by `subscribe` will only resolve once all chunks have been emitted,
   // at which point we can end the request.

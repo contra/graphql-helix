@@ -33,7 +33,7 @@
     "build-deno": "denoify && del-cli ../deno --force && move-file deno_dist ../deno && cpy ../../README.md ../deno",
     "build-node": "del-cli dist && del-cli dist-esm && tsc && tsc -b tsconfig.esm.json && node scripts/esm-post-process.js",
     "build-render-graphiql": "cd ../graphiql && yarn run build",
-    "test": "jest test/integration.test.ts",
+    "test": "jest --forceExit --no-watchman",
     "esm:test": "node scripts/test-esm.mjs"
   },
   "devDependencies": {
@@ -65,6 +65,9 @@
   },
   "peerDependencies": {
     "graphql": "^15.3.0 || ^16.0.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.1"
   },
   "denoify": {
     "replacer": "scripts/denoify-replacer.js"

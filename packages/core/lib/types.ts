@@ -1,5 +1,6 @@
 import {
   DocumentNode,
+  ExecutionArgs,
   ExecutionResult,
   GraphQLError,
   GraphQLSchema,
@@ -8,8 +9,8 @@ import {
 } from "graphql";
 
 export interface ExecutionPatchResult<
-  TData = { [key: string]: any },
-  TExtensions = { [key: string]: any }
+  TData = any,
+  TExtensions = any
 > {
   errors?: ReadonlyArray<GraphQLError>;
   data?: TData | null;
@@ -72,6 +73,9 @@ export interface RenderGraphiQLOptions {
   hybridSubscriptionTransportConfig?: HybridSubscriptionTransportConfig;
 }
 
+type ExecuteFn = (args: ExecutionArgs) => ExecutionResult | Promise<ExecutionResult | AsyncIterable<ExecutionResult>>;
+type SubscribeFn = (args: ExecutionArgs) => Promise<ExecutionResult | AsyncIterable<ExecutionResult | ExecutionPatchResult>>;
+
 export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * A function whose return value is passed in as the `context` to `execute`.
@@ -82,7 +86,11 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * An optional function which will be used to execute instead of default `execute` from `graphql-js`.
    */
-  execute?: (...args: any[]) => any;
+  execute?: ExecuteFn;
+  /**
+   * An optional function which will be used to subscribe instead of default `subscribe` from `graphql-js`.
+   */
+  subscribe?: SubscribeFn;
   /**
    * An optional function that can be used to transform every payload (i.e. the `data` object and `errors` array) that's
    * emitted by `processRequest`.
@@ -114,10 +122,6 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
    * The GraphQL schema used to process the request.
    */
   schema: GraphQLSchema;
-  /**
-   * An optional function which will be used to subscribe instead of default `subscribe` from `graphql-js`.
-   */
-  subscribe?: (...args: any[]) => any;
   /**
    * An optional function which will be used to validate instead of default `validate` from `graphql-js`.
    */
@@ -175,19 +179,21 @@ export interface Response<TContext, TRootValue>
 }
 
 export interface MultipartResponse<TContext, TRootValue>
-  extends Result<TContext, TRootValue> {
+  extends Result<TContext, TRootValue>, AsyncIterable<ExecutionResult> {
   type: "MULTIPART_RESPONSE";
   subscribe: (
     onResult: (result: ExecutionPatchResult) => void
   ) => Promise<void>;
   unsubscribe: () => void;
+  [Symbol.asyncIterator]: () => AsyncIterator<ExecutionResult>;
 }
 
 export interface Push<TContext, TRootValue>
-  extends Result<TContext, TRootValue> {
+  extends Result<TContext, TRootValue>, AsyncIterable<ExecutionResult> {
   type: "PUSH";
   subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
   unsubscribe: () => void;
+  [Symbol.asyncIterator]: () => AsyncIterator<ExecutionResult>;
 }
 
 export type ProcessRequestResult<TContext, TRootValue> =

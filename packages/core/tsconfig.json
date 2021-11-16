@@ -13,7 +13,8 @@
     "noUnusedParameters": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "importHelpers": true
   },
   "exclude": [
     "deno_dist",
