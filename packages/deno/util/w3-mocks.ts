@@ -4,6 +4,7 @@ type Callback<T> = (result: IteratorResult<T> ) => void;
 
 export const ReadableStream = globalThis.ReadableStream || class ReadableStream<T> {
     constructor(private source: UnderlyingSource<T>) {}
+
     getReader() {
         let listening = true;
         const pullQueue: Callback<T>[] = [];
@@ -62,6 +63,10 @@ export const ReadableStream = globalThis.ReadableStream || class ReadableStream<
         return {
             async read() {
                 return listening ? pullValue() : emptyQueue();
+            },
+            releaseLock: () => {
+                emptyQueue();
+                this.source.cancel?.(controller);
             }
         }
     }
