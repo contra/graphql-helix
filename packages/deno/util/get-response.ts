@@ -1,7 +1,7 @@
 import { ExecutionResult } from "https://cdn.skypack.dev/graphql@16.0.0-experimental-stream-defer.5?dts";
 import { stopAsyncIteration } from "./stop-async-iteration.ts";
 import { ExecutionPatchResult } from "../types.ts";
-import { ReadableStream, Response } from "https://raw.githubusercontent.com/ardatan/cross-fetch/main/dist/deno-ponyfill.ts";
+import { ReadableStream, Response } from "./w3-mocks.ts";
 
 export type TransformResultFn = (result: ExecutionResult | ExecutionPatchResult) => any;
 export const DEFAULT_TRANSFORM_RESULT_FN: TransformResultFn = (result: ExecutionResult) => result;

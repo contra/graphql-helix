@@ -2,7 +2,7 @@
 import type { ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
 import { isAsyncIterable } from "./is-async-iterable";
-import { Request, getReadableStreamCtor } from "./w3-mocks";
+import { Request, ReadableStream } from "./w3-mocks";
 
 interface NodeRequest {
   protocol?: string;
@@ -29,7 +29,6 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
       body: JSON.stringify(nodeRequest.body),
     });
   } else if (isAsyncIterable(nodeRequest)) {
-    const ReadableStream = await getReadableStreamCtor();
     const body = new ReadableStream({
       async start(controller) {
         for await (const chunk of nodeRequest) {

@@ -13,7 +13,7 @@ const graphqlHandler: RouteHandlerMethod = async (req, res) => {
     schema,
   });
 
-  sendNodeResponse(response, res.raw);
+  await sendNodeResponse(response, res.raw);
   // Tell fastify a response was sent
   res.sent = true;
 };

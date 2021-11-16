@@ -1,7 +1,7 @@
 import Koa, { Context } from "koa";
 import bodyParser from "koa-bodyparser";
 import { Readable } from "stream";
-import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
+import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 
 const graphqlHandler = async (ctx: Context) => {
@@ -26,7 +26,7 @@ const graphqlHandler = async (ctx: Context) => {
   })
 
   ctx.status = response.status;
-  ctx.body = Readable.from(response.body as any);
+  await sendNodeResponse(response, ctx.res);
 };
 
 const graphiqlHandler = async (ctx: Context) => {

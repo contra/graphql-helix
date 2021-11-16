@@ -1,7 +1,7 @@
 import { ExecutionResult } from "graphql";
 import { stopAsyncIteration } from "./stop-async-iteration";
 import { ExecutionPatchResult } from "../types";
-import { getReadableStreamCtor, Response } from "./w3-mocks";
+import { ReadableStream, Response } from "./w3-mocks";
 
 export type TransformResultFn = (result: ExecutionResult | ExecutionPatchResult) => any;
 export const DEFAULT_TRANSFORM_RESULT_FN: TransformResultFn = (result: ExecutionResult) => result;
@@ -17,10 +17,10 @@ export function getRegularResponse(executionResult: ExecutionResult, transformRe
   return new Response(responseBody, responseInit);
 }
 
-export async function getMultipartResponse(
+export function getMultipartResponse(
   asyncExecutionResult: AsyncIterable<ExecutionPatchResult<any>>,
   transformResult = DEFAULT_TRANSFORM_RESULT_FN
-): Promise<Response> {
+): Response {
   const headersInit: HeadersInit = {
     Connection: "keep-alive",
     "Content-Type": 'multipart/mixed; boundary="-"',
@@ -30,7 +30,6 @@ export async function getMultipartResponse(
     headers: headersInit,
     status: 200,
   };
-  const ReadableStream = await getReadableStreamCtor();
   const readableStream = new ReadableStream({
     async start(controller) {
       try {
@@ -65,10 +64,10 @@ export async function getMultipartResponse(
   return new Response(readableStream, responseInit);
 }
 
-export async function getPushResponse(
+export function getPushResponse(
   asyncExecutionResult: AsyncIterable<ExecutionResult<any>>,
   transformResult = DEFAULT_TRANSFORM_RESULT_FN
-): Promise<Response> {
+): Response {
   const headersInit: HeadersInit = {
     "Content-Type": "text/event-stream",
     Connection: "keep-alive",
@@ -79,7 +78,6 @@ export async function getPushResponse(
     status: 200,
   };
 
-  const ReadableStream = await getReadableStreamCtor();
   const readableStream = new ReadableStream({
     async start(controller) {
       try {
@@ -113,14 +111,14 @@ async function* getSingleResult(payload: any) {
   yield payload;
 }
 
-export async function getErrorResponse({
+export function getErrorResponse({
   message,
   status = 500,
   headers = {},
   errors = [{ message }],
   transformResult = DEFAULT_TRANSFORM_RESULT_FN,
   isEventStream,
-}: ErrorResponseParams): Promise<Response> {
+}: ErrorResponseParams): Response {
   const payload: any = {
     errors,
   };

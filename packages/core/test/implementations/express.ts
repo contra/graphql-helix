@@ -13,7 +13,7 @@ const graphqlMiddleware: RequestHandler = async (req, res) => {
     schema,
   });
 
-  sendNodeResponse(response, res);
+  await sendNodeResponse(response, res);
 };
 
 const graphiqlMiddleware: RequestHandler = async (_req, res) => {
