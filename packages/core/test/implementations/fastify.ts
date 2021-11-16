@@ -1,5 +1,5 @@
 import fastify, { RouteHandlerMethod } from "fastify";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "../../lib";
+import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "../../../graphql-helix";
 import { schema } from "../schema";
 
 const graphqlHandler: RouteHandlerMethod = async (req, res) => {

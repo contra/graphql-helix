@@ -1,7 +1,7 @@
 import Koa, { Context } from "koa";
 import bodyParser from "koa-bodyparser";
 import { PassThrough } from "stream";
-import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
+import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../../graphql-helix";
 import { schema } from "../schema";
 
 const graphqlHandler = async (ctx: Context) => {

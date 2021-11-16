@@ -31,7 +31,7 @@ jobs:
         run: yarn install --frozen-lockfile --ignore-engines --update-checksums
       - run: yarn build
       - run: yarn lint
-      - run: yarn workspace graphql-helix test
+      - run: yarn workspace @graphql-helix/core test
         env:
           CI: true
-      - run: yarn workspace graphql-helix esm:test
+      - run: yarn workspace @graphql-helix/core esm:test
