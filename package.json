@@ -17,6 +17,7 @@
     "prepare": "yarn husky install",
     "prerelease": "yarn build",
     "release": "changeset publish",
+    "release:canary": "(node scripts/canary-release.js && yarn build && yarn changeset publish --tag canary) || echo Skipping Canary...",
     "build": "yarn workspace graphql-helix build",
     "lint": "eslint --ext .ts,.tsx .",
     "update-examples": "node scripts/update-examples",
