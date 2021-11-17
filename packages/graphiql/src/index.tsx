@@ -26,6 +26,7 @@ export interface Options {
     default: keyof HybridSubscriptionTransportConfig;
     config: HybridSubscriptionTransportConfig;
   };
+  shouldPersistHeaders?: boolean;
 }
 
 const getOperationWithFragments = (document: DocumentNode, operationName: string): DocumentNode => {
@@ -89,6 +90,7 @@ export const init = async ({
   subscriptionsEndpoint = endpoint,
   useWebSocketLegacyProtocol,
   hybridSubscriptionTransportConfig,
+  shouldPersistHeaders,
 }: Options = {}): Promise<void> => {
   const urlLoader = new UrlLoader();
 
@@ -179,6 +181,7 @@ export const init = async ({
           operationName={initialOperationName}
           query={initialQuery}
           ref={graphiqlRef}
+          shouldPersistHeaders={shouldPersistHeaders}
           toolbar={{
             additionalContent: (
               <>

@@ -15,6 +15,7 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
     subscriptionsEndpoint,
     useWebSocketLegacyProtocol,
     hybridSubscriptionTransportConfig,
+    shouldPersistHeaders,
   } = options;
   const nonceAttribute = nonce ? `nonce="${nonce}"` : "";
   // eslint-disable-next-line no-template-curly-in-string
@@ -60,6 +61,7 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
         subscriptionsEndpoint: ${safeSerialize(subscriptionsEndpoint)},
         useWebSocketLegacyProtocol: ${safeSerialize(useWebSocketLegacyProtocol)},
         hybridSubscriptionTransportConfig: ${safeSerialize(hybridSubscriptionTransportConfig)},
+        shouldPersistHeaders: ${safeSerialize(shouldPersistHeaders)},
       });
     </script>
   </body>

@@ -43,4 +43,8 @@ export interface RenderGraphiQLOptions {
    */
   useWebSocketLegacyProtocol?: boolean;
   hybridSubscriptionTransportConfig?: HybridSubscriptionTransportConfig;
+  /**
+   * Persist headers in local storage.
+   */
+  shouldPersistHeaders?: boolean;
 }
