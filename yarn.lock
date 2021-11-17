@@ -6733,10 +6733,10 @@ i18next-fs-backend@^1.0.7:
   resolved "https://registry.yarnpkg.com/i18next-fs-backend/-/i18next-fs-backend-1.1.1.tgz#1d8028926803f63784ffa0f2b1478fb369f92735"
   integrity sha512-RFkfy10hNxJqc7MVAp5iAZq0Tum6msBCNebEe3OelOBvrROvzHUPaR8Qe10RQrOGokTm0W4vJGEJzruFkEt+hQ==
 
-i18next@^20.1.0:
-  version "20.6.1"
-  resolved "https://registry.yarnpkg.com/i18next/-/i18next-20.6.1.tgz#535e5f6e5baeb685c7d25df70db63bf3cc0aa345"
-  integrity sha512-yCMYTMEJ9ihCwEQQ3phLo7I/Pwycf8uAx+sRHwwk5U9Aui/IZYgQRyMqXafQOw5QQ7DM1Z+WyEXWIqSuJHhG2A==
+i18next@^21.4.1:
+  version "21.5.1"
+  resolved "https://registry.yarnpkg.com/i18next/-/i18next-21.5.1.tgz#e9a1f1e522835d05e9a8405552d2c2b037dadad4"
+  integrity sha512-fmpns1dbYYgyOkiATp1rg5gyXzvBdvM0YQFDCM38BoqybG2Rs3looAv+e24ghFeeozD1fteUtDTZ36SQ0a+ycg==
   dependencies:
     "@babel/runtime" "^7.12.0"
 
@@ -8676,16 +8676,16 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-next-i18next@8.10.0:
-  version "8.10.0"
-  resolved "https://registry.yarnpkg.com/next-i18next/-/next-i18next-8.10.0.tgz#94440d796d7c3d16a74218ac72df296daf13aaa3"
-  integrity sha512-nY3tw+uU6lzZq7YfqRr0lFBiz15txIeYBX5R6rVeAK8wWFsCRJpZ6lTm02DMC+MfD1G6LmtpR6bmOOaBD3TR9A==
+next-i18next@9.1.0:
+  version "9.1.0"
+  resolved "https://registry.yarnpkg.com/next-i18next/-/next-i18next-9.1.0.tgz#4842598a6063ebeddad7494136e3578389908f69"
+  integrity sha512-M9ySHHVaB7b/Y+/wJmOADE40Clu5Tq0/vFCr9Sl09Htogs5sVN/r/4ZxrW5x1bWAAXqWBdxFcbyzDru85WK82Q==
   dependencies:
     "@babel/runtime" "^7.13.17"
     "@types/hoist-non-react-statics" "^3.3.1"
     core-js "^3"
     hoist-non-react-statics "^3.2.0"
-    i18next "^20.1.0"
+    i18next "^21.4.1"
     i18next-fs-backend "^1.0.7"
     react-i18next "^11.8.13"
 
