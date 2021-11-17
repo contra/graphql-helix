@@ -15,6 +15,6 @@
     "express": "4.17.1",
     "express-session": "1.17.2",
     "graphql": "16.0.0-experimental-stream-defer.5",
-    "graphql-helix": "^1.9.1"
+    "graphql-helix": "^1.10.0"
   }
 }

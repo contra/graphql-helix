@@ -1,5 +1,11 @@
 # graphql-helix
 
+## 1.10.0
+
+### Minor Changes
+
+- d50e833: graphiql: allow to store headers in localStorage (false by default)
+
 ## 1.9.1
 
 ### Patch Changes
