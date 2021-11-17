@@ -1,16 +1,6 @@
-import {
-  DocumentNode,
-  ExecutionResult,
-  GraphQLError,
-  GraphQLSchema,
-  OperationDefinitionNode,
-  ValidationRule,
-} from "graphql";
+import { DocumentNode, ExecutionResult, GraphQLError, GraphQLSchema, OperationDefinitionNode, ValidationRule } from "graphql";
 
-export interface ExecutionPatchResult<
-  TData = { [key: string]: any },
-  TExtensions = { [key: string]: any }
-> {
+export interface ExecutionPatchResult<TData = { [key: string]: any }, TExtensions = { [key: string]: any }> {
   errors?: ReadonlyArray<GraphQLError>;
   data?: TData | null;
   path?: ReadonlyArray<string | number>;
@@ -70,15 +60,17 @@ export interface RenderGraphiQLOptions {
    */
   useWebSocketLegacyProtocol?: boolean;
   hybridSubscriptionTransportConfig?: HybridSubscriptionTransportConfig;
+  /**
+   * Persist headers in local storage.
+   */
+  shouldPersistHeaders?: boolean;
 }
 
 export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * A function whose return value is passed in as the `context` to `execute`.
    */
-  contextFactory?: (
-    executionContext: ExecutionContext
-  ) => Promise<TContext> | TContext;
+  contextFactory?: (executionContext: ExecutionContext) => Promise<TContext> | TContext;
   /**
    * An optional function which will be used to execute instead of default `execute` from `graphql-js`.
    */
@@ -107,9 +99,7 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * A function whose return value is passed in as the `rootValue` to `execute`.
    */
-  rootValueFactory?: (
-    executionContext: ExecutionContext
-  ) => Promise<TRootValue> | TRootValue;
+  rootValueFactory?: (executionContext: ExecutionContext) => Promise<TRootValue> | TRootValue;
   /**
    * The GraphQL schema used to process the request.
    */
@@ -155,9 +145,7 @@ export interface Request {
   query: any;
 }
 
-export type Headers =
-  | Record<string, string | string[] | undefined>
-  | { get(name: string): string | null };
+export type Headers = Record<string, string | string[] | undefined> | { get(name: string): string | null };
 
 export interface Result<TContext, TRootValue> {
   context?: TContext;
@@ -166,25 +154,20 @@ export interface Result<TContext, TRootValue> {
   rootValue?: TRootValue;
 }
 
-export interface Response<TContext, TRootValue>
-  extends Result<TContext, TRootValue> {
+export interface Response<TContext, TRootValue> extends Result<TContext, TRootValue> {
   type: "RESPONSE";
   status: number;
   headers: { name: string; value: string }[];
   payload: ExecutionResult;
 }
 
-export interface MultipartResponse<TContext, TRootValue>
-  extends Result<TContext, TRootValue> {
+export interface MultipartResponse<TContext, TRootValue> extends Result<TContext, TRootValue> {
   type: "MULTIPART_RESPONSE";
-  subscribe: (
-    onResult: (result: ExecutionPatchResult) => void
-  ) => Promise<void>;
+  subscribe: (onResult: (result: ExecutionPatchResult) => void) => Promise<void>;
   unsubscribe: () => void;
 }
 
-export interface Push<TContext, TRootValue>
-  extends Result<TContext, TRootValue> {
+export interface Push<TContext, TRootValue> extends Result<TContext, TRootValue> {
   type: "PUSH";
   subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
   unsubscribe: () => void;
