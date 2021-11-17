@@ -1,5 +1,5 @@
 ---
-"@graphql-helix/graphiql": minor
+"graphql-helix": minor
 ---
 
-Persist headers
+graphiql: allow to store headers in localStorage (false by default)
