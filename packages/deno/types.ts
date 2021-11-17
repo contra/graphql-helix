@@ -1,16 +1,6 @@
-import {
-  DocumentNode,
-  ExecutionResult,
-  GraphQLError,
-  GraphQLSchema,
-  OperationDefinitionNode,
-  ValidationRule,
-} from "https://cdn.skypack.dev/graphql@16.0.0-experimental-stream-defer.5?dts";
+import { DocumentNode, ExecutionResult, GraphQLError, GraphQLSchema, OperationDefinitionNode, ValidationRule } from "https://cdn.skypack.dev/graphql@16.0.0-experimental-stream-defer.5?dts";
 
-export interface ExecutionPatchResult<
-  TData = { [key: string]: any },
-  TExtensions = { [key: string]: any }
-> {
+export interface ExecutionPatchResult<TData = { [key: string]: any }, TExtensions = { [key: string]: any }> {
   errors?: ReadonlyArray<GraphQLError>;
   data?: TData | null;
   path?: ReadonlyArray<string | number>;
@@ -70,15 +60,17 @@ export interface RenderGraphiQLOptions {
    */
   useWebSocketLegacyProtocol?: boolean;
   hybridSubscriptionTransportConfig?: HybridSubscriptionTransportConfig;
+  /**
+   * Persist headers in local storage.
+   */
+  shouldPersistHeaders?: boolean;
 }
 
 export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * A function whose return value is passed in as the `context` to `execute`.
    */
-  contextFactory?: (
-    executionContext: ExecutionContext
-  ) => Promise<TContext> | TContext;
+  contextFactory?: (executionContext: ExecutionContext) => Promise<TContext> | TContext;
   /**
    * An optional function which will be used to execute instead of default `execute` from `graphql-js`.
    */
@@ -107,9 +99,7 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
   /**
    * A function whose return value is passed in as the `rootValue` to `execute`.
    */
-  rootValueFactory?: (
-    executionContext: ExecutionContext
-  ) => Promise<TRootValue> | TRootValue;
+  rootValueFactory?: (executionContext: ExecutionContext) => Promise<TRootValue> | TRootValue;
   /**
    * The GraphQL schema used to process the request.
    */
