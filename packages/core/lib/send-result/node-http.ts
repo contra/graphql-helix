@@ -15,10 +15,10 @@ export async function sendResponseResult(
   for (const { name, value } of responseResult.headers) {
     rawResponse.setHeader(name, value);
   }
-  const data = Buffer.from(JSON.stringify(transformResult(responseResult.payload)))
+  const data = JSON.stringify(transformResult(responseResult.payload))
   rawResponse.writeHead(responseResult.status, {
     "content-type": "application/json",
-    "content-length": data.length
+    "content-length": Buffer.byteLength(data, "utf8")
   });
   rawResponse.end(data);
 }
