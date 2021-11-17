@@ -34,7 +34,7 @@ The following example shows how to integrate GraphQL Helix with Node.js using Ex
 
 ```js
 import express, { RequestHandler } from "express";
-import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL, sendResult } from "../lib";
+import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL, sendResult } from "graphql-helix";
 import { schema } from "./schema";
 
 const app = express();
