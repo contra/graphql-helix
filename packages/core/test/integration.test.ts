@@ -86,6 +86,7 @@ implementations.forEach((implementation) => {
       test("POST basic query", async () => {
         const {
           body: { data, errors },
+          headers,
         } = await post({
           path: "/graphql",
           port,
@@ -97,6 +98,7 @@ implementations.forEach((implementation) => {
         });
         expect(errors).toBeUndefined();
         expect(data?.echo).toBeDefined();
+        expect(headers['content-length']).toBeDefined();
       });
 
       test("POST query with variables", async () => {
@@ -249,6 +251,7 @@ implementations.forEach((implementation) => {
       test("GET basic query", async () => {
         const {
           body: { data, errors },
+          headers,
         } = await get({
           path: "/graphql",
           port,
@@ -260,6 +263,7 @@ implementations.forEach((implementation) => {
         });
         expect(errors).toBeUndefined();
         expect(data?.echo).toBeDefined();
+        expect(headers['content-length']).toBeDefined();
       });
 
       test("GET query with variables", async () => {
