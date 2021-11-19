@@ -190,7 +190,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         rootValue = rootValueFactory ? await rootValueFactory(executionContext) : ({} as TRootValue);
 
         if (operation.operation === "subscription") {
-          if (isHttpMethod("GET", request.method)) {
+          if (!isHttpMethod("GET", request.method)) {
             throw new HttpError(405, "Can only perform subscription operation from a GET request.", {
               headers: [...defaultSingleResponseHeaders, { name: "Allow", value: "GET" }],
             });
