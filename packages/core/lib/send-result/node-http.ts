@@ -15,9 +15,7 @@ export async function sendResponseResult(
   for (const { name, value } of responseResult.headers) {
     rawResponse.setHeader(name, value);
   }
-  rawResponse.writeHead(responseResult.status, {
-    "content-type": "application/json",
-  });
+  rawResponse.writeHead(responseResult.status);
   rawResponse.end(JSON.stringify(transformResult(responseResult.payload)));
 }
 
@@ -73,7 +71,7 @@ export async function sendPushResult(
 
   await pushResult.subscribe((result) => {
     // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
- rawResponse.write(`data: ${JSON.stringify(transformResult(result))}\n\n`);   
+    rawResponse.write(`data: ${JSON.stringify(transformResult(result))}\n\n`);
   });
   rawResponse.end();
 }
