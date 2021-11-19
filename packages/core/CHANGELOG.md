@@ -1,5 +1,11 @@
 # graphql-helix
 
+## 1.10.2
+
+### Patch Changes
+
+- ea28821: fix missing context in subscribe function
+
 ## 1.10.1
 
 ### Patch Changes
