@@ -97,12 +97,12 @@ const getRankedProtocols = (accept: unknown) => {
   return rankedProtocols;
 };
 
-// If clients accepts application/graphql+json use that - otherwise use application/json
+// If clients does not accept application/graphql+json use application/json - otherwise respect the order in the accept header
 const getSingleResponseContentType = (protocols: RankedProtocols): "application/graphql+json" | "application/json" => {
-  if (protocols["application/graphql+json"] !== -1) {
-    return "application/graphql+json";
+  if (protocols["application/graphql+json"] === -1) {
+    return "application/json";
   }
-  return "application/json";
+  return protocols["application/graphql+json"] > protocols["application/json"] ? "application/graphql+json" : "application/json";
 };
 
 export const processRequest = async <TContext = {}, TRootValue = {}>(
