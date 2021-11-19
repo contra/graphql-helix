@@ -16,10 +16,10 @@ export async function sendResponseResult(
   for (const { name, value } of responseResult.headers) {
     rawResponse.setHeader(name, value);
   }
-  const data = JSON.stringify(transformResult(responseResult.payload))
+  const data = JSON.stringify(transformResult(responseResult.payload));
   rawResponse.writeHead(responseResult.status, {
     "content-type": "application/json",
-    "content-length": calculateByteLength(data)
+    "content-length": calculateByteLength(data),
   });
   rawResponse.end(data);
 }
@@ -42,9 +42,15 @@ export async function sendMultipartResponseResult(
   // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
   rawResponse.write("---");
 
-  await multipartResult.subscribe(result => {
+  await multipartResult.subscribe((result) => {
     const chunk = JSON.stringify(transformResult(result));
-    const data = ["", "Content-Type: application/json; charset=utf-8", "Content-Length: " + calculateByteLength(chunk), "", chunk];
+    const data = [
+      "",
+      "Content-Type: application/json; charset=utf-8",
+      "Content-Length: " + calculateByteLength(chunk),
+      "",
+      chunk,
+    ];
 
     if (result.hasNext) {
       data.push("---");
@@ -76,7 +82,7 @@ export async function sendPushResult(
 
   await pushResult.subscribe((result) => {
     // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
- rawResponse.write(`data: ${JSON.stringify(transformResult(result))}\n\n`);   
+    rawResponse.write(`data: ${JSON.stringify(transformResult(result))}\n\n`);
   });
   rawResponse.end();
 }

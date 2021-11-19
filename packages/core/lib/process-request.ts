@@ -61,6 +61,50 @@ const getExecutableOperation = (document: DocumentNode, operationName?: string):
   return operation;
 };
 
+type AcceptedProtocols = "application/graphql+json" | /* LEGACY */ "application/json" | "text/event-stream" | "multipart/mixed";
+
+type RankedProtocols = Record<AcceptedProtocols, number>;
+
+/**
+ * Returns a map of ranked protocols. Use it for determining which protocol should be used
+ * @param accept Accept header string
+ * @returns
+ */
+const getRankedProtocols = (accept: unknown) => {
+  const rankedProtocols: RankedProtocols = {
+    "application/graphql+json": -1,
+    "application/json": -1 /* LEGACY */,
+    "text/event-stream": -1,
+    "multipart/mixed": -1,
+  };
+
+  if (typeof accept !== "string") {
+    return rankedProtocols;
+  }
+
+  const supportedProtocols = accept.split(",").map((str) => str.trim());
+
+  let index = 0;
+  for (const protocol of supportedProtocols) {
+    if (protocol in rankedProtocols) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      rankedProtocols[protocol] = index;
+      index++;
+    }
+  }
+
+  return rankedProtocols;
+};
+
+// If clients accepts application/graphql+json use that - otherwise use application/json
+const getSingleResponseContentType = (protocols: RankedProtocols): "application/graphql+json" | "application/json" => {
+  if (protocols["application/graphql+json"] !== -1) {
+    return "application/graphql+json";
+  }
+  return "application/json";
+};
+
 export const processRequest = async <TContext = {}, TRootValue = {}>(
   options: ProcessRequestOptions<TContext, TRootValue>
 ): Promise<ProcessRequestResult<TContext, TRootValue>> => {
@@ -86,18 +130,29 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
   let operation: OperationDefinitionNode | undefined;
 
   const result = await (async (): Promise<ProcessRequestResult<TContext, TRootValue>> => {
-    const accept = typeof request.headers.get === "function" ? request.headers.get("accept") : (request.headers as any).accept;
-    const isEventStream = accept === "text/event-stream";
+    const accept: unknown =
+      typeof request.headers.get === "function" ? request.headers.get("accept") : (request.headers as any).accept;
+
+    const rankedProtocols = getRankedProtocols(accept);
+
+    const isEventStreamAccepted = rankedProtocols["text/event-stream"] !== -1;
+
+    const defaultSingleResponseHeaders = [
+      {
+        name: "Content-Type",
+        value: getSingleResponseContentType(rankedProtocols),
+      },
+    ];
 
     try {
       if (!isHttpMethod("GET", request.method) && !isHttpMethod("POST", request.method)) {
         throw new HttpError(405, "GraphQL only supports GET and POST requests.", {
-          headers: [{ name: "Allow", value: "GET, POST" }],
+          headers: [...defaultSingleResponseHeaders, { name: "Allow", value: "GET, POST" }],
         });
       }
 
       if (query == null) {
-        throw new HttpError(400, "Must provide query string.");
+        throw new HttpError(400, "Must provide query string.", { headers: defaultSingleResponseHeaders });
       }
 
       document = await parseQuery(query, parse);
@@ -108,7 +163,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
 
       if (operation.operation === "mutation" && isHttpMethod("GET", request.method)) {
         throw new HttpError(405, "Can only perform a mutation operation from a POST request.", {
-          headers: [{ name: "Allow", value: "POST" }],
+          headers: [...defaultSingleResponseHeaders, { name: "Allow", value: "POST" }],
         });
       }
 
@@ -119,7 +174,9 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           variableValues = typeof variables === "string" ? JSON.parse(variables) : variables;
         }
       } catch (_error) {
-        throw new HttpError(400, "Variables are invalid JSON.");
+        throw new HttpError(400, "Variables are invalid JSON.", {
+          headers: defaultSingleResponseHeaders,
+        });
       }
 
       try {
@@ -133,6 +190,11 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         rootValue = rootValueFactory ? await rootValueFactory(executionContext) : ({} as TRootValue);
 
         if (operation.operation === "subscription") {
+          if (isHttpMethod("GET", request.method)) {
+            throw new HttpError(405, "Can only perform subscription operation from a GET request.", {
+              headers: [...defaultSingleResponseHeaders, { name: "Allow", value: "GET" }],
+            });
+          }
           const result = await subscribe({
             schema,
             document,
@@ -183,38 +245,22 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                 stopAsyncIteration(result);
               },
             };
-          } else {
-            if (isEventStream) {
-              return {
-                type: "PUSH",
-                subscribe: async (onResult) => {
-                  onResult(
-                    formatPayload({
-                      payload: result,
-                      context,
-                      rootValue,
-                      document,
-                      operation,
-                    })
-                  );
-                },
-                unsubscribe: () => undefined,
-              };
-            } else {
-              return {
-                type: "RESPONSE",
-                payload: formatPayload({
+          }
+          return {
+            type: "PUSH",
+            subscribe: async (onResult) => {
+              onResult(
+                formatPayload({
                   payload: result,
                   context,
                   rootValue,
                   document,
                   operation,
-                }),
-                status: 200,
-                headers: [],
-              };
-            }
-          }
+                })
+              );
+            },
+            unsubscribe: () => undefined,
+          };
         } else {
           const result = await execute({
             schema,
@@ -229,7 +275,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           // execution result.
           if (isAsyncIterable<ExecutionPatchResult>(result)) {
             return {
-              type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
+              type: isHttpMethod("GET", request.method) ? "PUSH" : "MULTIPART_RESPONSE",
               subscribe: async (onResult) => {
                 for await (const payload of result) {
                   onResult(
@@ -251,7 +297,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             return {
               type: "RESPONSE",
               status: 200,
-              headers: [],
+              headers: defaultSingleResponseHeaders,
               payload: formatPayload({
                 payload: result,
                 context,
@@ -266,12 +312,14 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         if (executionError instanceof GraphQLError) {
           throw new HttpError(200, "GraphQLError encountered white executed GraphQL request.", {
             graphqlErrors: [executionError],
+            headers: defaultSingleResponseHeaders,
           });
         } else if (executionError instanceof HttpError) {
           throw executionError;
         } else {
           throw new HttpError(500, "Unexpected error encountered while executing GraphQL request.", {
             graphqlErrors: [new GraphQLError((executionError as Error).message)],
+            headers: defaultSingleResponseHeaders,
           });
         }
       }
@@ -280,7 +328,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         errors: ((error as HttpError).graphqlErrors as GraphQLError[]) || [new GraphQLError((error as Error).message)],
       };
 
-      if (isEventStream) {
+      if (isEventStreamAccepted) {
         return {
           type: "PUSH",
           subscribe: async (onResult) => {
