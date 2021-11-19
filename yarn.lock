@@ -11881,10 +11881,10 @@ unbzip2-stream@1.4.3:
     buffer "^5.2.1"
     through "^2.3.8"
 
-undici@4.10.0:
-  version "4.10.0"
-  resolved "https://registry.yarnpkg.com/undici/-/undici-4.10.0.tgz#f2684de9cbe2ab0a85a477ce0ec59b739be4438d"
-  integrity sha512-W7NwyQzfiSYIZ+maOvz/u9tPFyAYhstF9XhtohK7txvD1jg41oatcHVq6Zls81LhzGvh4BN5WpQGuMiT4IipoA==
+undici@4.10.2:
+  version "4.10.2"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-4.10.2.tgz#27e360f2d4202ef98dfc1c8e13dcd329660a6d7c"
+  integrity sha512-QoQH4PpV3dqJwr4h1HazggbB4f5CBknvYANjI9hxXCml+AAzLoh4HBkce0Jc0wW/pmVbrus8Gfeo8QounE+/9g==
 
 undici@^4.9.3:
   version "4.9.3"
