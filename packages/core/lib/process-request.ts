@@ -137,7 +137,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             schema,
             document,
             rootValue,
-            context,
+            contextValue: context,
             variableValues,
             operationName,
           });
