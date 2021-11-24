@@ -8,21 +8,21 @@ const {
   renderGraphiQL,
   shouldRenderGraphiQL,
   getNodeRequest,
-  sendNodeResponse,
 } = require("../packages/core");
+const { Readable } = require("stream");
 
 const app = fastify();
 
 app.route({
   method: ["GET", "POST"],
   url: "/graphql",
-  async handler(req, res) {
+  async handler(req, reply) {
     const request = await getNodeRequest(req);
 
     // @ts-ignore
     if (shouldRenderGraphiQL(request)) {
-      res.type("text/html");
-      res.send(renderGraphiQL({}));
+      reply.type("text/html");
+      reply.send(renderGraphiQL({}));
     } else {
       // @ts-ignore
       const { operationName, query, variables } = await getGraphQLParameters(request);
@@ -34,9 +34,12 @@ app.route({
         schema,
       });
 
-      await sendNodeResponse(response, res.raw);
-      // Tell fastify a response was sent
-      res.sent = true;
+      response.headers.forEach((value, key) => {
+        reply.header(key, value);
+      });
+
+      reply.status(response.status);
+      reply.send(Readable.from(response.body));
     }
   },
 });
