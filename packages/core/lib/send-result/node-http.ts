@@ -3,6 +3,7 @@ import type { ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
 import { HttpError } from "../errors";
 import type { Response, MultipartResponse, Push, ProcessRequestResult } from "../types";
+import { calculateByteLength } from "../util/calculate-byte-length";
 import { TransformResultFn, DEFAULT_TRANSFORM_RESULT_FN } from "./utils";
 
 export type RawResponse = ServerResponse | Http2ServerResponse;
@@ -41,9 +42,9 @@ export async function sendMultipartResponseResult(
   // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
   rawResponse.write("---");
 
-  await multipartResult.subscribe((result) => {
-    const chunk = Buffer.from(JSON.stringify(transformResult(result)), "utf8");
-    const data = ["", "Content-Type: application/json; charset=utf-8", "Content-Length: " + String(chunk.length), "", chunk];
+  await multipartResult.subscribe(result => {
+    const chunk = JSON.stringify(transformResult(result));
+    const data = ["", "Content-Type: application/json; charset=utf-8", "Content-Length: " + calculateByteLength(chunk), "", chunk];
 
     if (result.hasNext) {
       data.push("---");
