@@ -33,7 +33,7 @@ const schema = makeExecutableSchema({
 
 describe("W3 Compatibility", () => {
   it("should handle regular POST request and responses", async () => {
-    const request: any = new Request("http://localhost:3000/graphql", {
+    const request = new Request("http://localhost:3000/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -61,7 +61,7 @@ describe("W3 Compatibility", () => {
     });
   });
   it("should handle regular GET request and responses", async () => {
-    const request: any = new Request(
+    const request = new Request(
       "http://localhost:3000/graphql?" +
         qsStringify({
           query: "{ hello }",
@@ -89,7 +89,7 @@ describe("W3 Compatibility", () => {
     });
   });
   it("should handle push responses", async () => {
-    const request: any = new Request("http://localhost:3000/graphql", {
+    const request = new Request("http://localhost:3000/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -125,7 +125,7 @@ describe("W3 Compatibility", () => {
     `);
   });
   it("should handle multipart responses", async () => {
-    const request: any = new Request("http://localhost:3000/graphql", {
+    const request = new Request("http://localhost:3000/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

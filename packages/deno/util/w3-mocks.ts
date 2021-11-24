@@ -78,59 +78,51 @@ export const ReadableStream = globalThis.ReadableStream || class ReadableStreamP
 } as unknown as typeof globalThis['ReadableStream'];
 
 class BodyPonyfill {
-    constructor(private source?: ReadableStream | string) { }
-
-    async text() {
-        if (this.source != null) {
-            if (typeof this.source === "string") {
-                return this.source;
-            } else if (isAsyncIterable(this.source)) {
-                const chunks = [];
-                for await (const chunk of this.source) {
-                    chunks.push(chunk);
-                }
-                return chunks.join("");
-            } else if ("getReader" in this.source) {
-                const reader = this.source.getReader();
-                const chunks = [];
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) {
-                        break;
+    private body: ReadableStream | null = null;
+    constructor(source?: ReadableStream | string) {
+        if (source != null) {
+            if (typeof source === "string") {
+                this.body = new ReadableStream({
+                    start(controller) {
+                        controller.enqueue(source);
+                        controller.close();
                     }
-                    chunks.push(value);
-                }
-                return chunks.join("");
+                });
+            } else if(isAsyncIterable(source)) {
+                this.body = new ReadableStream({
+                    start(controller) {
+                        for (const chunk of source as any) {
+                            controller.enqueue(chunk);
+                        }
+                        controller.close();
+                    }
+                });
+            } else if ('getReader' in source) {
+                this.body = source;
             }
         }
-        return undefined;
+    }
+
+    async text() {
+        if (this.body != null) {
+            const reader = this.body.getReader();
+            const chunks = [];
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    break;
+                }
+                chunks.push(value);
+            }
+            return chunks.join("");
+        }
+        return null;
     }
 
     async json() {
         const text = await this.text();
         if (text) {
             return JSON.parse(text);
-        }
-    }
-
-    get body() {
-        const oneTimeGenerator = (val: any) =>
-            async function* () {
-                yield val;
-            };
-        if (typeof this.source === "string") {
-            return {
-                getReader: () => ({
-                    read: async () => ({
-                        done: true,
-                        value: this.source,
-                    }),
-                    releaseLock: () => { },
-                }),
-                [Symbol.asyncIterator]: oneTimeGenerator(this.source),
-            };
-        } else {
-            return this.source;
         }
     }
 }
