@@ -1,6 +1,5 @@
 import Koa, { Context } from "koa";
 import bodyParser from "koa-bodyparser";
-import { Readable } from "stream";
 import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 
@@ -19,13 +18,6 @@ const graphqlHandler = async (ctx: Context) => {
   ctx.req.socket.setNoDelay(true);
   ctx.req.socket.setKeepAlive(true);
 
-  response.headers.forEach((value, key) => {
-    ctx.set({
-      [key]: value
-    });
-  })
-
-  ctx.status = response.status;
   await sendNodeResponse(response, ctx.res);
 };
 

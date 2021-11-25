@@ -1,12 +1,12 @@
-import fastify, { RouteHandlerMethod } from "fastify";
+import fastify, { FastifyReply, RouteHandlerMethod } from "fastify";
 import { parse as graphqlParse } from "graphql";
+import { Readable } from "stream";
 import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL, sendNodeResponse, getNodeRequest } from "../../lib";
 import { schema } from "../schema";
 
 const sleep = (time: number) => new Promise<void>((resolve) => setTimeout(resolve, time));
 
-const graphqlHandler: RouteHandlerMethod = async (req, res) => {
-  const request = await getNodeRequest(req);
+const graphqlHandler = async (request: Request, reply: FastifyReply) => {
   const { operationName, query, variables } = await getGraphQLParameters(request);
   const response = await processRequest({
     operationName,
@@ -20,40 +20,48 @@ const graphqlHandler: RouteHandlerMethod = async (req, res) => {
     },
   });
 
-  await sendNodeResponse(response, res.raw);
-  // Tell fastify a response was sent
-  res.sent = true;
+  response.headers.forEach((value, key) => {
+    reply.header(key, value);
+  });
+
+  reply.status(response.status);
+  reply.send(response.body);
 };
 
-const graphiqlHandler: RouteHandlerMethod = async (_req, res) => {
-  res.type("text/html");
-  res.send(renderGraphiQL({}));
+const graphiqlHandler = async (reply: FastifyReply) => {
+  reply.type("text/html");
+  reply.send(renderGraphiQL({}));
 };
 
 const app = fastify();
-
 app.route({
   method: ["GET", "POST", "PUT"],
   url: "/graphql",
-  handler: graphqlHandler,
+  async handler(req, reply) {
+    const request = await getNodeRequest(req);
+
+    await graphqlHandler(request, reply);
+  },
 });
 
 app.route({
   method: ["GET"],
   url: "/graphiql",
-  handler: graphiqlHandler,
+  async handler(_req, reply) {
+    await graphiqlHandler(reply);
+  },
 });
 
 app.route({
   method: ["GET", "POST", "PUT"],
   url: "/",
-  async handler(req, res) {
+  async handler(req, reply) {
     const request = await getNodeRequest(req);
 
     if (shouldRenderGraphiQL(request)) {
-      await graphiqlHandler.call(this, req, res);
+      await graphiqlHandler(reply);
     } else {
-      await graphqlHandler.call(this, req, res);
+      await graphqlHandler(request, reply);
     }
   },
 });

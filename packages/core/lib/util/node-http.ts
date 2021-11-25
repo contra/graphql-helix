@@ -2,7 +2,9 @@
 import type { ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
 import { isAsyncIterable } from "./is-async-iterable";
-import { Request, ReadableStream } from "./w3-mocks";
+import { Request } from "./w3-ponyfills/Request";
+import { ReadableStream } from "./w3-ponyfills/ReadableStream";
+import { Body } from "./w3-ponyfills/Body";
 
 interface NodeRequest {
   protocol?: string;
@@ -23,11 +25,22 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
       method: nodeRequest.method,
     });
   } else if (nodeRequest.body) {
-    return new Request(fullUrl, {
+    const request = new Request(fullUrl, {
       headers: nodeRequest.headers,
       method: nodeRequest.method,
-      body: JSON.stringify(nodeRequest.body),
     });
+    Object.defineProperties(request, {
+      json: {
+        value: async () => nodeRequest.body,
+      },
+      text: {
+        value: async () => JSON.stringify(nodeRequest.body),
+      },
+      body: {
+        get: () => new Body(JSON.stringify(nodeRequest.body)),
+      }
+    });
+    return request;
   } else if (isAsyncIterable(nodeRequest)) {
     const body = new ReadableStream({
       async start(controller) {

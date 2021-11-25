@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /// @ts-check
 const { fastify } = require("fastify");
+const { Readable } = require("stream");
 const schema = require("./schema");
 const {
   getGraphQLParameters,
@@ -8,7 +8,6 @@ const {
   renderGraphiQL,
   shouldRenderGraphiQL,
   getNodeRequest,
-  sendNodeResponse,
 } = require("../packages/core");
 
 const app = fastify();
@@ -16,15 +15,13 @@ const app = fastify();
 app.route({
   method: ["GET", "POST"],
   url: "/graphql",
-  async handler(req, res) {
+  async handler(req, reply) {
     const request = await getNodeRequest(req);
 
-    // @ts-ignore
     if (shouldRenderGraphiQL(request)) {
-      res.type("text/html");
-      res.send(renderGraphiQL({}));
+      reply.type("text/html");
+      reply.send(renderGraphiQL({}));
     } else {
-      // @ts-ignore
       const { operationName, query, variables } = await getGraphQLParameters(request);
       const response = await processRequest({
         operationName,
@@ -34,14 +31,17 @@ app.route({
         schema,
       });
 
-      await sendNodeResponse(response, res.raw);
-      // Tell fastify a response was sent
-      res.sent = true;
+      response.headers.forEach((value, key) => {
+        reply.header(key, value);
+      });
+
+      reply.status(response.status);
+      reply.send(response.body);
     }
   },
 });
 
-app.listen(5000, () => {
+app.listen(5000, '0.0.0.0', () => {
   // eslint-disable-next-line no-console
   console.log(`GraphQL Test Server is running... Ready for K6!`);
 });
