@@ -1,6 +1,5 @@
-import fastify, { FastifyReply, RouteHandlerMethod } from "fastify";
-import { Readable } from "stream";
-import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
+import fastify, { FastifyReply } from "fastify";
+import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 
 const graphqlHandler = async (request: Request, reply: FastifyReply) => {
@@ -18,7 +17,7 @@ const graphqlHandler = async (request: Request, reply: FastifyReply) => {
   });
 
   reply.status(response.status);
-  reply.send(Readable.from(response.body));
+  reply.send(response.body);
 };
 
 const graphiqlHandler = async (reply: FastifyReply) => {

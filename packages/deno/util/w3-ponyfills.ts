@@ -1,20 +1,26 @@
-import { isAsyncIterable } from "./is-async-iterable";
+import type { Writable } from "https://deno.land/std@0.85.0/node/stream.ts";
+import { isAsyncIterable } from "./is-async-iterable.ts";
 
 type Callback<T> = (result: ReadableStreamDefaultReadResult<T>) => void;
 
 export const ReadableStream = globalThis.ReadableStream || class ReadableStreamPonyfill<T> {
     constructor(private source: UnderlyingSource<T>) { }
 
-    async * [Symbol.asyncIterator]() {
+    [Symbol.asyncIterator](): AsyncIterator<T> {
         const reader = this.getReader();
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) {
-                break;
+        return {
+            next() {
+                return reader.read() as Promise<IteratorResult<T>>;
+            },
+            async throw() {
+                await reader.cancel();
+                return { done: true, value: undefined };
+            },
+            return() {
+                reader.releaseLock();
+                return Promise.resolve({ done: true, value: undefined });
             }
-            yield value;
         }
-        reader.releaseLock();
     }
 
     getReader() {
@@ -60,7 +66,7 @@ export const ReadableStream = globalThis.ReadableStream || class ReadableStreamP
             return Promise.resolve({ value: undefined, done: true } as const);
         };
 
-        const controller = {
+        const controller: ReadableStreamController<T> = {
             desiredSize: Infinity,
             error: () => {
             },
@@ -86,6 +92,19 @@ export const ReadableStream = globalThis.ReadableStream || class ReadableStreamP
             },
             closed: Promise.resolve(undefined),
         }
+    }
+
+    pipe(writable: Writable) {
+        const controller: ReadableStreamController<T> = {
+            desiredSize: Infinity,
+            error: e => writable.emit("error", e),
+            enqueue: value => writable.write(value),
+            close: () => writable.end(),
+        };
+        this.source.start?.(controller);
+        writable.on("close", () => this.source.cancel?.());
+        
+        return writable;
     }
 } as unknown as typeof globalThis['ReadableStream'];
 

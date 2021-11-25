@@ -1,6 +1,5 @@
 import fastify from "fastify";
 import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "graphql-helix";
-import { Readable } from "stream";
 import { schema } from "./schema";
 
 const app = fastify();
@@ -24,13 +23,12 @@ app.route({
         schema,
       });
 
-
       response.headers.forEach((value, key) => {
         reply.header(key, value);
       });
 
       reply.status(response.status);
-      reply.send(Readable.from(response.body));
+      reply.send(response.body);
     }
   },
 });

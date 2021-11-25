@@ -2,7 +2,8 @@
 import type { ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
 import { isAsyncIterable } from "./is-async-iterable";
-import { Request, ReadableStream } from "./w3-mocks";
+import { Request } from "./w3-ponyfills/Request";
+import { ReadableStream } from "./w3-ponyfills/ReadableStream";
 
 interface NodeRequest {
   protocol?: string;

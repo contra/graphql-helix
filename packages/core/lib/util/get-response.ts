@@ -1,7 +1,8 @@
 import { ExecutionResult } from "graphql";
 import { ExecutionPatchResult } from "../types";
 import { calculateByteLength } from "./calculate-byte-length";
-import { ReadableStream, Response } from "./w3-mocks";
+import { ReadableStream } from "./w3-ponyfills/ReadableStream";
+import { Response } from "./w3-ponyfills/Response";
 
 export type TransformResultFn = (result: ExecutionResult | ExecutionPatchResult) => any;
 export const DEFAULT_TRANSFORM_RESULT_FN: TransformResultFn = (result: ExecutionResult) => result;

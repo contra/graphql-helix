@@ -1,5 +1,6 @@
 /// @ts-check
 const { fastify } = require("fastify");
+const { Readable } = require("stream");
 const schema = require("./schema");
 const {
   getGraphQLParameters,
@@ -7,7 +8,6 @@ const {
   renderGraphiQL,
   shouldRenderGraphiQL,
   getNodeRequest,
-  sendNodeResponse,
 } = require("../packages/core");
 
 const app = fastify();
@@ -31,8 +31,12 @@ app.route({
         schema,
       });
 
-      sendNodeResponse(response, reply.raw);
-      reply.sent = true;
+      response.headers.forEach((value, key) => {
+        reply.header(key, value);
+      });
+
+      reply.status(response.status);
+      reply.send(response.body);
     }
   },
 });

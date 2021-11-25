@@ -25,7 +25,7 @@ const graphqlHandler = async (request: Request, reply: FastifyReply) => {
   });
 
   reply.status(response.status);
-  reply.send(Readable.from(response.body));
+  reply.send(response.body);
 };
 
 const graphiqlHandler = async (reply: FastifyReply) => {
