@@ -15,10 +15,12 @@ export async function sendResponseResult(
   for (const { name, value } of responseResult.headers) {
     rawResponse.setHeader(name, value);
   }
+  const data = JSON.stringify(transformResult(responseResult.payload))
   rawResponse.writeHead(responseResult.status, {
     "content-type": "application/json",
+    "content-length": Buffer.byteLength(data, "utf8")
   });
-  rawResponse.end(JSON.stringify(transformResult(responseResult.payload)));
+  rawResponse.end(data);
 }
 
 export async function sendMultipartResponseResult(
