@@ -13,7 +13,14 @@ import {
 } from "graphql";
 import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index";
 import { HttpError } from "./errors";
-import { ExecutionContext, ExecutionPatchResult, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types";
+import {
+  ExecutionContext,
+  ExecutionPatchResult,
+  MultipartResponse,
+  ProcessRequestOptions,
+  ProcessRequestResult,
+  Request,
+} from "./types";
 
 const parseQuery = (query: string | DocumentNode, parse: typeof defaultParse): DocumentNode | Promise<DocumentNode> => {
   if (typeof query !== "string" && query.kind === "Document") {
@@ -70,7 +77,7 @@ type RankedProtocols = Record<AcceptedProtocols, number>;
  * @param accept Accept header string
  * @returns
  */
-const getRankedProtocols = (accept: unknown) => {
+const getRankedProtocols = (accept: unknown, contentType: unknown) => {
   const rankedProtocols: RankedProtocols = {
     "application/graphql+json": -1,
     "application/json": -1 /* LEGACY */,
@@ -79,6 +86,13 @@ const getRankedProtocols = (accept: unknown) => {
   };
 
   if (typeof accept !== "string") {
+    // if no accept is provided we rank up the content-type
+    if (typeof contentType === "string" && contentType in rankedProtocols) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      rankedProtocols[contentType]++;
+    }
+
     return rankedProtocols;
   }
 
@@ -102,8 +116,12 @@ const getSingleResponseContentType = (protocols: RankedProtocols): "application/
   if (protocols["application/graphql+json"] === -1) {
     return "application/json";
   }
+  // TODO: spec ambiguity with https://github.com/graphql/graphql-over-http
   return protocols["application/graphql+json"] > protocols["application/json"] ? "application/graphql+json" : "application/json";
 };
+
+const getHeader = (request: Request, headerName: string): unknown =>
+  typeof request.headers.get === "function" ? request.headers.get(headerName) : (request.headers as any)[headerName];
 
 export const processRequest = async <TContext = {}, TRootValue = {}>(
   options: ProcessRequestOptions<TContext, TRootValue>
@@ -130,10 +148,10 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
   let operation: OperationDefinitionNode | undefined;
 
   const result = await (async (): Promise<ProcessRequestResult<TContext, TRootValue>> => {
-    const accept: unknown =
-      typeof request.headers.get === "function" ? request.headers.get("accept") : (request.headers as any).accept;
+    const accept: unknown = getHeader(request, "accept");
+    const contentType: unknown = getHeader(request, "contentType");
 
-    const rankedProtocols = getRankedProtocols(accept);
+    const rankedProtocols = getRankedProtocols(accept, contentType);
 
     const isEventStreamAccepted = rankedProtocols["text/event-stream"] !== -1;
 
