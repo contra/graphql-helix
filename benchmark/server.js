@@ -7,8 +7,8 @@ const {
   renderGraphiQL,
   shouldRenderGraphiQL,
   getNodeRequest,
+  sendNodeResponse,
 } = require("../packages/core");
-const { Readable } = require("stream");
 
 const app = fastify();
 
@@ -31,12 +31,8 @@ app.route({
         schema,
       });
 
-      response.headers.forEach((value, key) => {
-        reply.header(key, value);
-      });
-
-      reply.status(response.status);
-      reply.send(Readable.from(response.body));
+      sendNodeResponse(response, reply.raw);
+      reply.sent = true;
     }
   },
 });
