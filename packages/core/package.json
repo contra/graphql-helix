@@ -33,7 +33,7 @@
     "build-deno": "denoify && del-cli ../deno --force && move-file deno_dist ../deno && cpy ../../README.md ../deno",
     "build-node": "del-cli dist && del-cli dist-esm && tsc && tsc -b tsconfig.esm.json && node scripts/esm-post-process.js",
     "build-render-graphiql": "cd ../graphiql && yarn run build",
-    "test": "jest test/integration.test.ts",
+    "test": "jest",
     "esm:test": "node scripts/test-esm.mjs"
   },
   "devDependencies": {
@@ -44,6 +44,7 @@
     "chance": "1.1.8",
     "chalk": "4.1.2",
     "cpy-cli": "3.1.1",
+    "cross-undici-fetch": "0.0.26",
     "del-cli": "4.0.1",
     "denoify": "0.10.5",
     "eventsource": "1.1.0",
@@ -60,8 +61,7 @@
     "replacestream": "4.0.3",
     "ts-jest": "27.0.7",
     "ts-node": "10.4.0",
-    "typescript": "4.5.2",
-    "undici": "4.10.2"
+    "typescript": "4.5.2"
   },
   "peerDependencies": {
     "graphql": "^15.3.0 || ^16.0.0"
