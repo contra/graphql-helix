@@ -1,6 +1,6 @@
 import { ExecutionResult } from "graphql";
 import { ExecutionPatchResult } from "../types";
-import { calculateStringByteLength } from "./calculate-string-byte-length";
+import { calculateByteLength } from "./calculate-byte-length";
 import { ReadableStream, Response } from "./w3-mocks";
 
 export type TransformResultFn = (result: ExecutionResult | ExecutionPatchResult) => any;
@@ -9,10 +9,11 @@ export const DEFAULT_TRANSFORM_RESULT_FN: TransformResultFn = (result: Execution
 export function getRegularResponse(executionResult: ExecutionResult, transformResult = DEFAULT_TRANSFORM_RESULT_FN): Response {
   const transformedResult = transformResult(executionResult);
   const responseBody = JSON.stringify(transformedResult);
-  const contentLength = calculateStringByteLength(responseBody);
-  const headersInit: HeadersInit = [
-    ["Content-Length", contentLength.toString()]
-  ];
+  const contentLength = calculateByteLength(responseBody);
+  const headersInit: HeadersInit = {
+    "Content-Type": 'application/json',
+    "Content-Length": contentLength.toString()
+  };
   const responseInit: ResponseInit = {
     headers: headersInit,
     status: 200,
@@ -47,10 +48,11 @@ export function getMultipartResponse(
           }
           const transformedResult = transformResult(value);
           const chunk = JSON.stringify(transformedResult);
+          const contentLength = calculateByteLength(chunk);
           const data = [
             "",
             "Content-Type: application/json; charset=utf-8",
-            "Content-Length: " + calculateStringByteLength(chunk),
+            "Content-Length: " + contentLength.toString(),
             "",
             chunk,
           ];
