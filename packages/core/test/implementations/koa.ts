@@ -98,7 +98,7 @@ const graphiqlHandler = async (ctx: Context) => {
 
 const app = new Koa();
 
-app.use(bodyParser());
+app.use(bodyParser({ extendTypes: { json: ["application/graphql+json"] } }));
 
 app.use(async (ctx) => {
   if (ctx.path === "/graphql") {

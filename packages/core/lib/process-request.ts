@@ -72,6 +72,8 @@ type AcceptedProtocols = "application/graphql+json" | /* LEGACY */ "application/
 
 type RankedProtocols = Record<AcceptedProtocols, number>;
 
+const parseBaseProtocol = (protocol: string) => protocol.split(";")[0].trim();
+
 /**
  * Returns a map of ranked protocols. Use it for determining which protocol should be used
  * @param accept Accept header string
@@ -85,26 +87,28 @@ const getRankedProtocols = (accept: unknown, contentType: unknown) => {
     "multipart/mixed": -1,
   };
 
-  if (typeof accept !== "string") {
-    // if no accept is provided we rank up the content-type
-    if (typeof contentType === "string" && contentType in rankedProtocols) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      rankedProtocols[contentType]++;
-    }
+  let index = 0;
 
-    return rankedProtocols;
+  if (typeof accept === "string") {
+    const supportedProtocols = accept.split(",").map(parseBaseProtocol);
+
+    for (const protocol of supportedProtocols) {
+      if (protocol in rankedProtocols) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        rankedProtocols[protocol] = index;
+        index++;
+      }
+    }
   }
 
-  const supportedProtocols = accept.split(",").map((str) => str.trim());
-
-  let index = 0;
-  for (const protocol of supportedProtocols) {
-    if (protocol in rankedProtocols) {
+  // if no accept is provided we rank up the content-type
+  if (typeof contentType === "string" && index === 0) {
+    const parsedContentType = parseBaseProtocol(contentType);
+    if (parsedContentType in rankedProtocols) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      rankedProtocols[protocol] = index;
-      index++;
+      rankedProtocols[contentType] = index;
     }
   }
 
@@ -149,7 +153,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
 
   const result = await (async (): Promise<ProcessRequestResult<TContext, TRootValue>> => {
     const accept: unknown = getHeader(request, "accept");
-    const contentType: unknown = getHeader(request, "contentType");
+    const contentType: unknown = getHeader(request, "content-type");
 
     const rankedProtocols = getRankedProtocols(accept, contentType);
 

@@ -1,7 +1,7 @@
 import { Chance } from "chance";
 import EventSource from "eventsource";
 import getPort from "get-port";
-import got from "got";
+import fetch from "cross-undici-fetch";
 import puppeteer from "puppeteer";
 import { getIntrospectionQuery } from "graphql";
 import implementations from "./implementations";
@@ -14,21 +14,38 @@ const get = async ({
   port,
   query,
   variables,
+  contentType,
+  accept,
 }: {
   operationName?: string;
   path: string;
   port: number;
   query?: string;
   variables?: any;
+  contentType?: string;
+  accept?: string;
 }) => {
-  return got.get<any>(`http://localhost:${port}${path}`, {
-    searchParams: {
-      query,
-      variables: variables ? JSON.stringify(variables) : undefined,
-      operationName,
-    },
-    responseType: "json",
-    throwHttpErrors: false,
+  const url = new URL(`http://localhost:${port}${path}`);
+  if (query) {
+    url.searchParams.set("query", query);
+  }
+  if (variables) {
+    url.searchParams.set("variables", JSON.stringify(variables));
+  }
+  if (operationName) {
+    url.searchParams.set("operationName", operationName);
+  }
+  const headers: Record<string, string> = {};
+  if (contentType) {
+    headers["content-type"] = contentType;
+  }
+  if (accept) {
+    // eslint-disable-next-line dot-notation
+    headers["accept"] = accept;
+  }
+  return fetch(url.toString(), {
+    method: "GET",
+    headers,
   });
 };
 
@@ -38,21 +55,33 @@ const post = async ({
   port,
   query,
   variables,
+  contentType = "application/json",
+  accept,
 }: {
   operationName?: string;
   path: string;
   port: number;
   query?: string;
   variables?: any;
+  contentType?: string;
+  accept?: string;
 }) => {
-  return got.post<any>(`http://localhost:${port}${path}`, {
-    json: {
+  const headers: Record<string, string> = {};
+  if (contentType) {
+    headers["content-type"] = contentType;
+  }
+  if (accept) {
+    // eslint-disable-next-line dot-notation
+    headers["accept"] = accept;
+  }
+  return fetch(`http://localhost:${port}${path}`, {
+    method: "POST",
+    body: JSON.stringify({
       query,
       variables,
       operationName,
-    },
-    responseType: "json",
-    throwHttpErrors: false,
+    }),
+    headers,
   });
 };
 
@@ -72,71 +101,115 @@ implementations.forEach((implementation) => {
 
     describe("path: /graphql", () => {
       test("POST introspection query", async () => {
-        const {
-          body: { data, errors },
-        } = await post({
+        const response = await post({
           path: "/graphql",
           port,
           query: getIntrospectionQuery(),
         });
-        expect(errors).toBeUndefined();
-        expect(data).toBeDefined();
+        expect(response.status).toEqual(200);
+        expect(response.headers.get("content-type")).toEqual("application/json");
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data).toBeDefined();
       });
 
       test("POST basic query", async () => {
-        const {
-          body: { data, errors },
-          headers,
-        } = await post({
+        const response = await post({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */ `
             query {
               echo(text: "hello world")
             }
           `,
         });
-        expect(errors).toBeUndefined();
-        expect(data?.echo).toBeDefined();
-        expect(headers['content-length']).toBeDefined();
+        expect(response.status).toEqual(200);
+        expect(response.headers.get("content-type")).toEqual("application/json");
+        expect(response.headers.get("content-length")).toBeDefined();
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data?.echo).toBeDefined();
+      });
+
+      test("POST with application/graphql+json request content-type yields correct response content-type", async () => {
+        const response = await post({
+          path: "/graphql",
+          port,
+          query: /* GraphQL */ `
+            query {
+              echo(text: "hello world")
+            }
+          `,
+          contentType: "application/graphql+json",
+        });
+        expect(response.status).toEqual(200);
+        expect(response.headers.get("content-type")).toEqual("application/graphql+json");
+        expect(response.headers.get("content-length")).toBeDefined();
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data?.echo).toBeDefined();
+      });
+
+      test("POST with content-type 'application/graphql+json' request and accept 'application/json' header yields 'application/json' content-type", async () => {
+        const response = await post({
+          path: "/graphql",
+          port,
+          query: /* GraphQL */ `
+            query {
+              echo(text: "hello world")
+            }
+          `,
+          contentType: "application/graphql+json",
+          accept: "application/json",
+        });
+        expect(response.status).toEqual(200);
+        expect(response.headers.get("content-type")).toEqual("application/json");
+        expect(response.headers.get("content-length")).toBeDefined();
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data?.echo).toBeDefined();
       });
 
       test("POST query with variables", async () => {
         const text = chance.word();
-        const {
-          body: { data, errors },
-        } = await post({
+        const response = await post({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */ `
             query ($text: String!) {
               echo(text: $text)
             }
           `,
           variables: { text },
         });
-        expect(errors).toBeUndefined();
-        expect(data?.echo).toEqual(text);
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data?.echo).toEqual(text);
       });
 
       test("POST query with @defer", async () => {
-        const stream = got.stream.post(`http://localhost:${port}/graphql`, {
-          json: {
-            query: `
-                query {
-                  hello
-                  ...QueryFragment @defer
-                }
+        const response = await post({
+          path: "/graphql",
+          port,
+          query: /* GraphQL */ `
+            query {
+              hello
+              ...QueryFragment @defer
+            }
 
-                fragment QueryFragment on Query {
-                  goodbye
-                }
-              `,
-          },
+            fragment QueryFragment on Query {
+              goodbye
+            }
+          `,
         });
+        expect(response.status).toEqual(200);
+        expect(response.headers.get("content-type")).toEqual('multipart/mixed; boundary="-"');
         const chunks: string[] = [];
-        for await (const chunk of stream) {
-          chunks.push(chunk.toString());
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        for await (const value of response.body) {
+          chunks.push(value.toString());
         }
         expect(chunks).toHaveLength(2);
         expect(chunks[0].includes(`{"data":{"hello":"hello"},"hasNext":true}`)).toEqual(true);
@@ -144,18 +217,20 @@ implementations.forEach((implementation) => {
       });
 
       test("POST query with @stream", async () => {
-        const stream = got.stream.post(`http://localhost:${port}/graphql`, {
-          json: {
-            query: `
-                query {
-                  stream @stream(initialCount: 1)
-                }
-              `,
-          },
+        const response = await post({
+          path: "/graphql",
+          port,
+          query: /* GraphQL */ `
+            query {
+              stream @stream(initialCount: 1)
+            }
+          `,
         });
         const chunks: string[] = [];
-        for await (const chunk of stream) {
-          chunks.push(chunk.toString());
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        for await (const value of response.body) {
+          chunks.push(value.toString());
         }
         expect(chunks).toHaveLength(3);
         expect(chunks[0].includes(`{"data":{"stream":["A"]},"hasNext":true}`)).toEqual(true);
@@ -165,29 +240,26 @@ implementations.forEach((implementation) => {
 
       test("POST mutation with variables", async () => {
         const number = chance.integer({ min: 1, max: 1000 });
-        const {
-          body: { data, errors },
-        } = await post({
+        const response = await post({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */ `
             mutation ($number: Int!) {
               setFavoriteNumber(number: $number)
             }
           `,
           variables: { number },
         });
-        expect(errors).toBeUndefined();
-        expect(data?.setFavoriteNumber).toEqual(number);
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data?.setFavoriteNumber).toEqual(number);
       });
 
       test("POST multiple operations with operationName", async () => {
-        const {
-          body: { data, errors },
-        } = await post({
+        const response = await post({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */ `
             query OperationA {
               alwaysTrue
             }
@@ -198,99 +270,94 @@ implementations.forEach((implementation) => {
           `,
           operationName: "OperationB",
         });
-        expect(errors).toBeUndefined();
-        expect(data?.alwaysFalse).toEqual(false);
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data?.alwaysFalse).toEqual(false);
       });
 
       test("POST malformed query", async () => {
-        const {
-          statusCode,
-          body: { errors },
-        } = await post({
+        const response = await post({
           path: "/graphql",
           port,
           query: "query {alwaysTrue",
         });
-        expect(statusCode).toEqual(400);
-        expect(errors[0].message).toEqual("Syntax Error: Expected Name, found <EOF>.");
+        expect(response.status).toEqual(400);
+        const body = await response.json();
+        expect(body.errors[0].message).toEqual("Syntax Error: Expected Name, found <EOF>.");
       });
 
       test("POST validation errors", async () => {
-        const { statusCode } = await post({
+        const response = await post({
           path: "/graphql",
           port,
           query: "query {alwaysTru}",
         });
-        expect(statusCode).toEqual(400);
+        expect(response.status).toEqual(400);
       });
 
       test("POST missing query", async () => {
-        const {
-          statusCode,
-          body: { errors },
-        } = await post({
+        const response = await post({
           path: "/graphql",
           port,
         });
-        expect(statusCode).toEqual(400);
-        expect(errors[0].message).toEqual("Must provide query string.");
+        expect(response.status).toEqual(400);
+        const body = await response.json();
+        expect(body.data).toBeUndefined();
+        expect(body.errors[0].message).toEqual("Must provide query string.");
       });
 
       test("GET introspection query", async () => {
-        const {
-          body: { data, errors },
-        } = await get({
+        const response = await get({
           path: "/graphql",
           port,
           query: getIntrospectionQuery(),
         });
-        expect(errors).toBeUndefined();
-        expect(data).toBeDefined();
+        expect(response.status).toEqual(200);
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data).toBeDefined();
       });
 
       test("GET basic query", async () => {
-        const {
-          body: { data, errors },
-          headers,
-        } = await get({
+        const response = await get({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */ `
             query {
               echo(text: "hello world")
             }
           `,
         });
-        expect(errors).toBeUndefined();
-        expect(data?.echo).toBeDefined();
-        expect(headers['content-length']).toBeDefined();
+        expect(response.status).toEqual(200);
+        expect(response.headers.get("content-length")).toBeDefined();
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data?.echo).toBeDefined();
       });
 
       test("GET query with variables", async () => {
         const text = chance.word();
-        const {
-          body: { data, errors },
-        } = await get({
+        const response = await get({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */ `
             query ($text: String!) {
               echo(text: $text)
             }
           `,
           variables: { text },
         });
-        expect(errors).toBeUndefined();
-        expect(data?.echo).toEqual(text);
+        expect(response.status).toEqual(200);
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data?.echo).toEqual(text);
       });
 
       test("GET multiple operations with operationName", async () => {
-        const {
-          body: { data, errors },
-        } = await get({
+        const response = await get({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */ `
             query OperationA {
               alwaysTrue
             }
@@ -301,8 +368,10 @@ implementations.forEach((implementation) => {
           `,
           operationName: "OperationB",
         });
-        expect(errors).toBeUndefined();
-        expect(data?.alwaysFalse).toEqual(false);
+        expect(response.status).toEqual(200);
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data?.alwaysFalse).toEqual(false);
       });
 
       test("GET subscription", async () => {
@@ -331,22 +400,24 @@ implementations.forEach((implementation) => {
       });
 
       test("GET query with @defer", async () => {
-        const stream = got.stream.get(`http://localhost:${port}/graphql`, {
-          searchParams: {
-            query: `
-                query {
-                  hello
-                  ...QueryFragment @defer
-                }
+        const response = await get({
+          path: "/graphql",
+          port,
+          query: /* GraphQL */ `
+            query {
+              hello
+              ...QueryFragment @defer
+            }
 
-                fragment QueryFragment on Query {
-                  goodbye
-                }
-              `,
-          },
+            fragment QueryFragment on Query {
+              goodbye
+            }
+          `,
         });
         const chunks: string[] = [];
-        for await (const chunk of stream) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        for await (const chunk of response.body) {
           chunks.push(chunk.toString());
         }
         expect(chunks).toHaveLength(2);
@@ -355,17 +426,19 @@ implementations.forEach((implementation) => {
       });
 
       test("GET query with @stream", async () => {
-        const stream = got.stream.get(`http://localhost:${port}/graphql`, {
-          searchParams: {
-            query: `
-                query {
-                  stream @stream(initialCount: 1)
-                }
-              `,
-          },
+        const response = await get({
+          path: "/graphql",
+          port,
+          query: /* GraphQL */ `
+            query {
+              stream @stream(initialCount: 1)
+            }
+          `,
         });
         const chunks: string[] = [];
-        for await (const chunk of stream) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        for await (const chunk of response.body) {
           chunks.push(chunk.toString());
         }
         expect(chunks).toHaveLength(3);
@@ -375,127 +448,126 @@ implementations.forEach((implementation) => {
       });
 
       test("GET mutation", async () => {
-        const {
-          statusCode,
-          body: { errors },
-        } = await get({
+        const response = await get({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */ `
             mutation {
               setFavoriteNumber(number: 42)
             }
           `,
         });
-        expect(statusCode).toEqual(405);
-        expect(errors[0].message).toEqual("Can only perform a mutation operation from a POST request.");
+        expect(response.status).toEqual(405);
+
+        const body = await response.json();
+        expect(body.errors[0].message).toEqual("Can only perform a mutation operation from a POST request.");
       });
 
-      test("GET malformed variables", async () => {
-        const {
-          statusCode,
-          body: { errors },
-        } = await got.get<any>(`http://localhost:${port}/graphql`, {
-          searchParams: {
-            query: `
-                query($text: String!) {
-                  echo(text: $text)
-                }
-              `,
-            variables: JSON.stringify({ text: "hello" }).substring(1),
-          },
-          responseType: "json",
-          throwHttpErrors: false,
+      test.only("GET malformed variables", async () => {
+        const response = await get({
+          path: "/graphql",
+          port,
+          query: /* GraphQL */ `
+            query ($text: String!) {
+              echo(text: $text)
+            }
+          `,
+          variables: JSON.stringify({ text: "hello" }).substring(1),
+          contentType: "application/json",
         });
-        expect(statusCode).toEqual(400);
-        expect(errors[0].message).toEqual("Variables are invalid JSON.");
+        expect(response.headers.get("content-type")).toEqual("application/json");
+
+        expect(response.status).toEqual(400);
+        const body = await response.json();
+        expect(body.errors[0].message).toEqual("Variables are invalid JSON.");
       });
 
       test("PUT unsupported method", async () => {
-        const {
-          statusCode,
-          body: { errors },
-        } = await got.put<any>(`http://localhost:${port}/graphql`, {
-          searchParams: {
-            query: `{ echo(text: "hello world") }`,
-          },
-          responseType: "json",
-          throwHttpErrors: false,
+        const url = new URL(`http://localhost:${port}/graphql`);
+        url.searchParams.set(
+          "query",
+          /* GraphQL */ `
+            {
+              echo(text: "hello world")
+            }
+          `
+        );
+        const response = await fetch(url.toString(), {
+          method: "PUT",
         });
-        expect(statusCode).toEqual(405);
-        expect(errors[0].message).toEqual("GraphQL only supports GET and POST requests.");
+        expect(response.status).toEqual(405);
+        const body = await response.json();
+        expect(body.errors[0].message).toEqual("GraphQL only supports GET and POST requests.");
       });
-    });
 
-    describe("path: /graphiql", () => {
-      test("GET GraphiQL interface", async () => {
-        const { body } = await got.get<any>(`http://localhost:${port}/graphiql`, {
-          headers: {
+      describe("path: /graphiql", () => {
+        test("GET GraphiQL interface", async () => {
+          const response = await get({
+            port,
+            path: "/graphiql",
             accept: "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
-          },
-          searchParams: {
-            query: `
-                query {
-                  echo(text: "hello world")
-                }
-              `,
-          },
+            query: /* GraphQL */ `
+              query {
+                echo(text: "hello world")
+              }
+            `,
+          });
+          expect(response.status).toEqual(200);
+          const text = await response.text();
+          expect(text.includes("<!DOCTYPE html>")).toEqual(true);
         });
-        expect(body.includes("<!DOCTYPE html>")).toEqual(true);
       });
     });
 
     describe("path: /", () => {
       test("POST basic query", async () => {
-        const {
-          body: { data, errors },
-        } = await post({
+        const response = await post({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */ `
             query {
               echo(text: "hello world")
             }
           `,
         });
-        expect(errors).toBeUndefined();
-        expect(data?.echo).toBeDefined();
+        expect(response.status).toEqual(200);
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data?.echo).toBeDefined();
       });
 
       test("GET basic query", async () => {
-        const {
-          body: { data, errors },
-        } = await get({
+        const response = await get({
           path: "/graphql",
           port,
-          query: `
+          query: /* GraphQL */ `
             query {
               echo(text: "hello world")
             }
           `,
         });
-        expect(errors).toBeUndefined();
-        expect(data?.echo).toBeDefined();
+        const body = await response.json();
+        expect(body.errors).toBeUndefined();
+        expect(body.data?.echo).toBeDefined();
       });
 
       test("GET GraphiQL interface", async () => {
-        const { body } = await got.get<any>(`http://localhost:${port}/graphiql`, {
-          headers: {
-            accept: "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
-          },
-          searchParams: {
-            query: `
-                query {
-                  echo(text: "hello world")
-                }
-              `,
-          },
+        const response = await get({
+          port,
+          path: "/graphiql",
+          accept: "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
+          query: /* GraphQL */ `
+            query {
+              echo(text: "hello world")
+            }
+          `,
         });
+        const body = await response.json();
         expect(body.includes("<!DOCTYPE html>")).toEqual(true);
       });
     });
 
-    describe("GraphiQL functionality", () => {
+    describe.skip("GraphiQL functionality", () => {
       let browser: puppeteer.Browser;
       let page: puppeteer.Page | undefined;
 

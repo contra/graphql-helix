@@ -30,6 +30,8 @@ const graphiqlHandler: RouteHandlerMethod = async (_req, res) => {
 
 const app = fastify();
 
+app.addContentTypeParser("application/graphql+json", { parseAs: "string" }, app.getDefaultJsonParser("ignore", "ignore"));
+
 app.route({
   method: ["GET", "POST", "PUT"],
   url: "/graphql",
