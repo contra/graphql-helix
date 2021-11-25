@@ -19,7 +19,7 @@ export async function sendResponseResult(
   const data = JSON.stringify(transformResult(responseResult.payload))
   rawResponse.writeHead(responseResult.status, {
     "content-type": "application/json",
-    "content-length": Buffer.byteLength(data, "utf8")
+    "content-length": calculateByteLength(data)
   });
   rawResponse.end(data);
 }

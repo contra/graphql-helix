@@ -18,7 +18,7 @@ describe("utils", () => {
     const textEncoder = new TextEncoder();
     it("should calculate byte length of strings that have both UTF-8 and non UTF-8 characters correctly", () => {
       let randomString = "";
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 25; i++) {
         randomString += String.fromCharCode(getRandomInt(0, 0xffff));
       }
       expect(calculateByteLength(randomString)).toEqual(textEncoder.encode(randomString).byteLength);
