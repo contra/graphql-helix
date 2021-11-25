@@ -19,6 +19,7 @@
     "release": "changeset publish",
     "release:canary": "(node scripts/canary-release.js && yarn build && yarn changeset publish --tag canary) || echo Skipping Canary...",
     "build": "yarn workspace graphql-helix build",
+    "test": "yarn workspace graphql-helix test",
     "lint": "eslint --ext .ts,.tsx .",
     "update-examples": "node scripts/update-examples",
     "loadtest:start-server": "node ./benchmark/server.js",
