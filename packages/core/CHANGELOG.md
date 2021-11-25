@@ -1,5 +1,11 @@
 # graphql-helix
 
+## 1.10.3
+
+### Patch Changes
+
+- d6071a1: Set content-length header on sendResponseResult
+
 ## 1.10.2
 
 ### Patch Changes
