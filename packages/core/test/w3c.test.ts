@@ -1,7 +1,6 @@
-import { Request, Response } from "undici";
+import { Request, Response, ReadableStream } from "cross-undici-fetch";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { getGraphQLParameters, processRequest, getResponse } from "../lib";
-import { ReadableStream } from "stream/web";
 import { parse as qsParse, stringify as qsStringify } from "qs";
 
 declare module "stream/web" {
