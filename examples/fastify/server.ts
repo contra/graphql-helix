@@ -1,5 +1,6 @@
 import fastify from "fastify";
 import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "graphql-helix";
+import { Readable } from "stream";
 import { schema } from "./schema";
 
 const app = fastify();
@@ -15,7 +16,7 @@ app.route({
       reply.send(renderGraphiQL({}));
     } else {
       const { operationName, query, variables } = await getGraphQLParameters(request);
-      const result = await processRequest({
+      const response = await processRequest({
         operationName,
         query,
         variables,
@@ -24,12 +25,12 @@ app.route({
       });
 
 
-      result.headers.forEach((value, key) => {
+      response.headers.forEach((value, key) => {
         reply.header(key, value);
       });
 
-      reply.status(result.status);
-      reply.send(result.body);
+      reply.status(response.status);
+      reply.send(Readable.from(response.body));
     }
   },
 });
