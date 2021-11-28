@@ -42,7 +42,7 @@
     "@types/jest": "27.0.3",
     "@graphql-tools/schema": "8.3.1",
     "chance": "1.1.8",
-    "chalk": "4.1.2",
+    "chalk": "5.0.0",
     "cpy-cli": "3.1.1",
     "cross-undici-fetch": "0.0.26",
     "del-cli": "4.0.1",
