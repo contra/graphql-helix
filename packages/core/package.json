@@ -36,6 +36,12 @@
     "test": "jest",
     "esm:test": "node scripts/test-esm.mjs"
   },
+  "denoify": {
+    "replacer": "scripts/denoify-replacer.js"
+  },
+  "dependencies": {
+    "cross-undici-fetch": "0.1.1"
+  },
   "devDependencies": {
     "@babel/core": "7.16.0",
     "@babel/plugin-proposal-class-properties": "7.16.0",
@@ -78,9 +84,9 @@
       "require": "./dist/*.js",
       "import": "./dist-esm/*.mjs"
     },
-    "./send-result/node-http": {
-      "require": "./dist/send-result/node-http.js",
-      "import": "./dist-esm/send-result/node-http.mjs"
+    "./util/node-http": {
+      "require": "./dist/util/node-http.js",
+      "import": "./dist-esm/util/node-http.mjs"
     }
   }
 }

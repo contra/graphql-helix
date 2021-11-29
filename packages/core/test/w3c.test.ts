@@ -1,7 +1,7 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { getGraphQLParameters, processRequest } from "../lib";
 import { stringify as qsStringify } from "qs";
-import { Request } from "../lib/util/w3-ponyfills/Request";
+import { Request } from "cross-undici-fetch";
 
 const schema = makeExecutableSchema({
   typeDefs: /* GraphQL */ `

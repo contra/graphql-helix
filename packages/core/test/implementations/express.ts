@@ -22,8 +22,6 @@ const graphiqlMiddleware: RequestHandler = async (_req, res) => {
 
 const app = express();
 
-app.use(express.json());
-
 app.use("/graphql", graphqlMiddleware);
 
 app.get("/graphiql", graphiqlMiddleware);

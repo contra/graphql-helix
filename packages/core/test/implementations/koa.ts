@@ -27,8 +27,6 @@ const graphiqlHandler = async (ctx: Context) => {
 
 const app = new Koa();
 
-app.use(bodyParser());
-
 app.use(async (ctx) => {
   if (ctx.path === "/graphql") {
     await graphqlHandler(ctx);

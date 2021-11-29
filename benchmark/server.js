@@ -1,6 +1,5 @@
 /// @ts-check
-const { fastify } = require("fastify");
-const { Readable } = require("stream");
+const { createServer } = require("http");
 const schema = require("./schema");
 const {
   getGraphQLParameters,
@@ -8,19 +7,15 @@ const {
   renderGraphiQL,
   shouldRenderGraphiQL,
   getNodeRequest,
+  sendNodeResponse,
 } = require("../packages/core");
 
-const app = fastify();
-
-app.route({
-  method: ["GET", "POST"],
-  url: "/graphql",
-  async handler(req, reply) {
+const server = createServer(async (req, res) => {
     const request = await getNodeRequest(req);
 
     if (shouldRenderGraphiQL(request)) {
-      reply.type("text/html");
-      reply.send(renderGraphiQL({}));
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(renderGraphiQL());
     } else {
       const { operationName, query, variables } = await getGraphQLParameters(request);
       const response = await processRequest({
@@ -31,17 +26,11 @@ app.route({
         schema,
       });
 
-      response.headers.forEach((value, key) => {
-        reply.header(key, value);
-      });
-
-      reply.status(response.status);
-      reply.send(response.body);
+      await sendNodeResponse(response, res);
     }
-  },
 });
 
-app.listen(5000, '0.0.0.0', () => {
+server.listen(5000, "0.0.0.0", () => {
   // eslint-disable-next-line no-console
   console.log(`GraphQL Test Server is running... Ready for K6!`);
 });

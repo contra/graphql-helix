@@ -1,10 +1,8 @@
 // @denoify-ignore
-import type { ServerResponse } from "http";
+import type { IncomingMessage, ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
 import { isAsyncIterable } from "./is-async-iterable";
-import { Request } from "./w3-ponyfills/Request";
-import { ReadableStream } from "./w3-ponyfills/ReadableStream";
-import { Body } from "./w3-ponyfills/Body";
+import { Request, ReadableStream } from "cross-undici-fetch";
 
 interface NodeRequest {
   protocol?: string;
@@ -13,18 +11,22 @@ interface NodeRequest {
   url?: string;
   method?: string;
   headers: any;
+  req?: IncomingMessage;
+  raw?: IncomingMessage;
 }
 
 export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request> {
   const fullUrl = `${nodeRequest.protocol || "http"}://${nodeRequest.hostname || nodeRequest.headers.host || "localhost"}${
     nodeRequest.url || '/graphql'
   }`;
+  const maybeParsedBody = nodeRequest.body;
+  const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
   if (nodeRequest.method !== "POST") {
     return new Request(fullUrl, {
       headers: nodeRequest.headers,
       method: nodeRequest.method,
     });
-  } else if (nodeRequest.body) {
+  } else if (maybeParsedBody) {
     const request = new Request(fullUrl, {
       headers: nodeRequest.headers,
       method: nodeRequest.method,
@@ -37,17 +39,21 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
         value: async () => JSON.stringify(nodeRequest.body),
       },
       body: {
-        get: () => new Body(JSON.stringify(nodeRequest.body)),
+        get: () => new Request(JSON.stringify(nodeRequest.body)).body,
       }
     });
     return request;
-  } else if (isAsyncIterable(nodeRequest)) {
+  } else if (isAsyncIterable(rawRequest)) {
     const body = new ReadableStream({
       async start(controller) {
-        for await (const chunk of nodeRequest) {
-          controller.enqueue(chunk);
+        try {
+          for await (const chunk of rawRequest) {
+            controller.enqueue(chunk);
+          }
+          controller.close();
+        } catch(e) {
+          controller.error(e);
         }
-        controller.close();
       },
     });
     return new Request(fullUrl, {

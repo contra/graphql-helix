@@ -34,6 +34,9 @@ const graphiqlHandler = async (reply: FastifyReply) => {
 };
 
 const app = fastify();
+app.addContentTypeParser('multipart/form-data', (request, body, done) => {
+  done(null)
+})
 app.route({
   method: ["GET", "POST", "PUT"],
   url: "/graphql",

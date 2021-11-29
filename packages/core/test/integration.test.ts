@@ -5,6 +5,11 @@ import got from "got";
 import puppeteer from "puppeteer";
 import { getIntrospectionQuery } from "graphql";
 import implementations from "./implementations";
+import { Request, fetch, FormData } from "cross-undici-fetch";
+import { Blob as BlobPonyfill } from "formdata-node";
+import { Blob as NodeBlob } from "buffer";
+
+const Blob = NodeBlob || BlobPonyfill;
 
 const chance = Chance();
 
@@ -472,6 +477,45 @@ implementations.forEach((implementation) => {
         expect(data?.echo).toBeDefined();
       });
 
+      test("POST file upload", async () => {
+        const form = new FormData();
+        form.append(
+          "operations",
+          JSON.stringify({
+            query: `
+                mutation($file: Upload!) {
+                  uploadFile(file: $file) {
+                    filename
+                    mimetype
+                    content
+                  }
+                }
+              `,
+            variables: {
+              file: null,
+            },
+          })
+        );
+        form.append(
+          "map",
+          JSON.stringify({
+            "0": ["variables.file"],
+          })
+        );
+        const content = "hello world";
+        form.append("0", new Blob([content]) as any, "test.txt");
+        const response = await fetch(
+          new Request(`http://localhost:${port}/graphql`, {
+            method: "POST",
+            body: form,
+          })
+        );
+        const responseJson = await response.json();
+        expect(responseJson.errors).toBeFalsy();
+        expect(responseJson.data.uploadFile.filename).toEqual("test.txt");
+        expect(responseJson.data.uploadFile.content).toEqual(content);
+      });
+
       test("GET GraphiQL interface", async () => {
         const { body } = await got.get<any>(`http://localhost:${port}/graphiql`, {
           headers: {
@@ -616,11 +660,17 @@ implementations.forEach((implementation) => {
           // @ts-ignore
           return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(stopButtonSelector)];
         }, stopButtonSelector);
-        expect(resultContents).toEqual(JSON.stringify({
-          data: {
-            count: 1,
-          },
-        }, null, 2));
+        expect(resultContents).toEqual(
+          JSON.stringify(
+            {
+              data: {
+                count: 1,
+              },
+            },
+            null,
+            2
+          )
+        );
         expect(isShowingStopButton).toEqual(true);
         await new Promise((resolve) => setTimeout(resolve, 3000));
         const [resultContents1, isShowingPlayButton] = await page.evaluate((playButtonSelector) => {
@@ -628,11 +678,17 @@ implementations.forEach((implementation) => {
           // @ts-ignore
           return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(playButtonSelector)];
         }, playButtonSelector);
-        expect(resultContents1).toEqual(JSON.stringify({
-          data: {
-            count: 2,
-          },
-        }, null, 2));
+        expect(resultContents1).toEqual(
+          JSON.stringify(
+            {
+              data: {
+                count: 2,
+              },
+            },
+            null,
+            2
+          )
+        );
         expect(isShowingPlayButton).toEqual(true);
       });
     });
