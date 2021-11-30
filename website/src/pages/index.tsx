@@ -10,7 +10,7 @@ export default function Index() {
         link={{
           href: "/docs",
           children: "Get Started",
-          title: "Get started with The Guild Docs",
+          title: "Get started with GraphQL Helix",
           onClick: (e) => handlePushRoute("/docs", e),
         }}
         version={<NPMBadge name="graphql-helix" />}

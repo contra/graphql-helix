@@ -62,7 +62,6 @@ function AppContent(appProps: AppProps) {
 
   return (
     <>
-      <Header accentColor={accentColor} activeLink="/open-source" themeSwitch />
       <Subheader
         activeLink={router.asPath}
         product={{
@@ -103,7 +102,6 @@ function AppContent(appProps: AppProps) {
         }}
       />
       {isDocs ? <DocsPage appProps={appProps} accentColor={accentColor} mdxRoutes={mdxRoutes} /> : <Component {...pageProps} />}
-      <Footer />
     </>
   );
 }
