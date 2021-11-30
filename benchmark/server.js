@@ -28,6 +28,7 @@ async function handleReqRes(req, res) {
 
     await sendNodeResponse(response, res);
   }
+}
 
   const server = createServer(function (req, res) {
     handleReqRes(req, res)
