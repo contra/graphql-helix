@@ -1,5 +1,25 @@
 # graphql-helix
 
+## 1.10.3
+
+### Patch Changes
+
+- d6071a1: Set content-length header on sendResponseResult
+
+## 1.10.2
+
+### Patch Changes
+
+- ea28821: fix missing context in subscribe function
+
+## 1.10.1
+
+### Patch Changes
+
+- b6eff48: Handle errors thrown by subscribe handlers.
+
+  Previously any error raised with a `subscribe` handler on the `Subscription` root type was not handled and forwarded to `formatPayload`, which could potentially lead to error message leaking to clients.
+
 ## 1.10.0
 
 ### Minor Changes

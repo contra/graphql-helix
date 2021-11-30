@@ -86,6 +86,7 @@ implementations.forEach((implementation) => {
       test("POST basic query", async () => {
         const {
           body: { data, errors },
+          headers,
         } = await post({
           path: "/graphql",
           port,
@@ -97,6 +98,7 @@ implementations.forEach((implementation) => {
         });
         expect(errors).toBeUndefined();
         expect(data?.echo).toBeDefined();
+        expect(headers['content-length']).toBeDefined();
       });
 
       test("POST query with variables", async () => {
@@ -249,6 +251,7 @@ implementations.forEach((implementation) => {
       test("GET basic query", async () => {
         const {
           body: { data, errors },
+          headers,
         } = await get({
           path: "/graphql",
           port,
@@ -260,6 +263,7 @@ implementations.forEach((implementation) => {
         });
         expect(errors).toBeUndefined();
         expect(data?.echo).toBeDefined();
+        expect(headers['content-length']).toBeDefined();
       });
 
       test("GET query with variables", async () => {
@@ -634,6 +638,25 @@ implementations.forEach((implementation) => {
           data: {
             count: 2,
           },
+        });
+        expect(isShowingPlayButton).toEqual(true);
+      });
+
+      test("should fail with GraphQL error as subscription response", async () => {
+        page = await browser.newPage();
+        const operation = `subscription { error }`;
+        await page.goto(`http://localhost:${port}/graphiql?query=${operation}`);
+        await page.click(".execute-button");
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+        const [resultContents, isShowingPlayButton] = await page.evaluate((playButtonSelector) => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          return [window.g.resultComponent.viewer.getValue(), !!window.document.querySelector(playButtonSelector)];
+        }, playButtonSelector);
+
+        expect(JSON.parse(resultContents)).toEqual({
+          errors: [{ message: "This is not okay" }],
         });
         expect(isShowingPlayButton).toEqual(true);
       });

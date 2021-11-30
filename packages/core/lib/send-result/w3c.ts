@@ -49,6 +49,9 @@ export function getMultipartResponse<TResponse extends Response, TReadableStream
             })
             controller.enqueue('\r\n-----\r\n');
             controller.close();
+        },
+        cancel() {
+            multipartResult.unsubscribe();
         }
     });
     return new Response(readableStream, responseInit);
@@ -76,6 +79,9 @@ export function getPushResponse<TResponse extends Response, TReadableStream exte
                 controller.enqueue(`data: ${JSON.stringify(transformResult(result))}\n\n`);
             })
             controller.close();
+        },
+        cancel() {
+            pushResult.unsubscribe();
         }
     });
     return new Response(readableStream, responseInit);

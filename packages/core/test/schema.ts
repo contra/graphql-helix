@@ -69,6 +69,13 @@ export const schema = new GraphQLSchema({
   subscription: new GraphQLObjectType({
     name: "Subscription",
     fields: () => ({
+      error: {
+        type: GraphQLBoolean,
+        // eslint-disable-next-line require-yield
+        subscribe: async function* () {
+          throw new Error("This is not okay");
+        },
+      },
       eventEmitted: {
         type: GraphQLFloat,
         subscribe: async function* () {
