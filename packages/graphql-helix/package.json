@@ -1,6 +1,6 @@
 {
   "name": "graphql-helix",
-  "version": "1.10.0",
+  "version": "1.10.3",
   "description": "A highly evolved GraphQL HTTP Server 🧬",
   "keywords": [
     "graphql",
@@ -38,7 +38,7 @@
     "esm:test": "node scripts/test-esm.mjs"
   },
   "dependencies": {
-    "@graphql-helix/core": "1.10.0",
+    "@graphql-helix/core": "1.10.3",
     "@graphql-helix/graphiql": "1.1.0"
   },
   "devDependencies": {
