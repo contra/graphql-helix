@@ -26,7 +26,7 @@ npm install graphql-helix
 
 ## Basic Usage
 
-The following example shows how to integrate GraphQL Helix with Node.js using Express. This example shows how to implement all the basic features, including a GraphiQL interface, subscriptions and support for `@stream` and `@defer`. See the rest of the [examples](./examples) for implementations using other frameworks and runtimes. For implementing additional features, see the [Recipes](#Recipes) section below.
+The following example shows how to integrate GraphQL Helix with Node.js using Express. This example shows how to implement all the basic features, including a GraphiQL interface, subscriptions and support for `@stream` and `@defer`. See the rest of the [examples](https://github.com/contra/graphql-helix/tree/master/examples) for implementations using other frameworks and runtimes. For implementing additional features, see the [Recipes](#Recipes) section below.
 
 ```js
 import express, { RequestHandler } from "express";
