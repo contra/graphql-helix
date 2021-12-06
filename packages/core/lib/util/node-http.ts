@@ -39,7 +39,10 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
         value: async () => JSON.stringify(nodeRequest.body),
       },
       body: {
-        get: () => new Request(JSON.stringify(nodeRequest.body)).body,
+        get: () => new Request(fullUrl, {
+          method: 'POST',
+          body: JSON.stringify(nodeRequest.body),
+        }).body,
       }
     });
     return request;
