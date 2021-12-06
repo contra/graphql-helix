@@ -40,7 +40,7 @@
     "replacer": "scripts/denoify-replacer.js"
   },
   "dependencies": {
-    "cross-undici-fetch": "0.1.1"
+    "cross-undici-fetch": "0.1.4"
   },
   "devDependencies": {
     "@babel/core": "7.16.0",
