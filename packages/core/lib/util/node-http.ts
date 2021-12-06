@@ -15,6 +15,13 @@ interface NodeRequest {
   raw?: IncomingMessage;
 }
 
+function isIterableOrAsyncIterable<T>(obj: any): obj is Iterable<T> | AsyncIterable<T> {
+  if (obj == null || typeof obj !== 'object') {
+    return false;
+  }
+  return typeof obj[Symbol.asyncIterator] === "function" || typeof obj[Symbol.iterator] === "function";
+}
+
 export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request> {
   const fullUrl = `${nodeRequest.protocol || "http"}://${nodeRequest.hostname || nodeRequest.headers.host || "localhost"}${
     nodeRequest.url || '/graphql'
@@ -33,20 +40,20 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
     });
     Object.defineProperties(request, {
       json: {
-        value: async () => nodeRequest.body,
+        value: async () => maybeParsedBody,
       },
       text: {
-        value: async () => JSON.stringify(nodeRequest.body),
+        value: async () => JSON.stringify(maybeParsedBody),
       },
       body: {
         get: () => new Request(fullUrl, {
           method: 'POST',
-          body: JSON.stringify(nodeRequest.body),
+          body: JSON.stringify(maybeParsedBody),
         }).body,
       }
     });
     return request;
-  } else if (isAsyncIterable(rawRequest)) {
+  } else if (isIterableOrAsyncIterable(rawRequest)) {
     const body = new ReadableStream({
       async start(controller) {
         try {
@@ -69,13 +76,6 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
 }
 
 export type NodeResponse = ServerResponse | Http2ServerResponse;
-
-function isIterableOrAsyncIterable<T>(obj: any): obj is Iterable<T> | AsyncIterable<T> {
-  if (obj == null || typeof obj !== 'object') {
-    return false;
-  }
-  return typeof obj[Symbol.asyncIterator] === "function" || typeof obj[Symbol.iterator] === "function";
-}
 
 export async function sendNodeResponse(responseResult: Response, nodeResponse: NodeResponse): Promise<void> {
   const headersObj: any = {};
