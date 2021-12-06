@@ -70,6 +70,13 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
 
 export type NodeResponse = ServerResponse | Http2ServerResponse;
 
+function isIterableOrAsyncIterable<T>(obj: any): obj is Iterable<T> | AsyncIterable<T> {
+  if (obj == null || typeof obj !== 'object') {
+    return false;
+  }
+  return typeof obj[Symbol.asyncIterator] === "function" || typeof obj[Symbol.iterator] === "function";
+}
+
 export async function sendNodeResponse(responseResult: Response, nodeResponse: NodeResponse): Promise<void> {
   const headersObj: any = {};
   responseResult.headers.forEach((value, name) => {
@@ -81,17 +88,14 @@ export async function sendNodeResponse(responseResult: Response, nodeResponse: N
   if (responseBody == null) {
     throw new Error("Response body is not supported");
   }
-  if (responseBody instanceof Uint8Array) {
-    (nodeResponse as any).write(responseBody);
-    nodeResponse.end();
-  } else if (isAsyncIterable(responseBody)) {
+  if (isIterableOrAsyncIterable(responseBody)) {
     for await (const chunk of responseBody) {
       if (chunk) {
         (nodeResponse as any).write(chunk);
       }
     }
     nodeResponse.end();
-  } else if ("getReader" in responseBody) {
+  } else if (typeof responseBody.getReader === 'function') {
     const reader = responseBody.getReader();
     while (true) {
       const { done, value } = await reader.read();
