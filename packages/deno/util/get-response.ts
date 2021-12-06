@@ -1,7 +1,7 @@
 import { ExecutionResult } from "https://cdn.skypack.dev/graphql@16.0.0-experimental-stream-defer.5?dts";
 import { ExecutionPatchResult } from "../types.ts";
 import { calculateByteLength } from "./calculate-byte-length.ts";
-import { ReadableStream, Response } from "./w3-ponyfills.ts";
+import { ReadableStream, Response } from "https://cdn.skypack.dev/cross-undici-fetch@0.1.1?dts";
 
 export type TransformResultFn = (result: ExecutionResult | ExecutionPatchResult) => any;
 export const DEFAULT_TRANSFORM_RESULT_FN: TransformResultFn = (result: ExecutionResult) => result;
@@ -97,7 +97,6 @@ export function getPushResponse(
           const chunk = JSON.stringify(transformedResult);
           controller.enqueue(`data: ${chunk}\n\n`);
         }
-        controller.close();
       } catch (e) {
         controller.error(e);
       }

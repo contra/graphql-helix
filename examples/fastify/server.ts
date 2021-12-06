@@ -1,5 +1,6 @@
 import fastify from "fastify";
 import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "graphql-helix";
+import { Readable } from "stream";
 import { schema } from "./schema";
 
 const app = fastify();

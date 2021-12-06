@@ -1,4 +1,5 @@
 import fastify, { FastifyReply } from "fastify";
+import { Readable } from "stream";
 import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 
@@ -26,7 +27,9 @@ const graphiqlHandler = async (reply: FastifyReply) => {
 };
 
 const app = fastify();
-
+app.addContentTypeParser('multipart/form-data', (request, body, done) => {
+  done(null)
+})
 app.route({
   method: ["GET", "POST", "PUT"],
   url: "/graphql",

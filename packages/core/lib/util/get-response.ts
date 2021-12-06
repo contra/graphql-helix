@@ -1,8 +1,7 @@
 import { ExecutionResult } from "graphql";
 import { ExecutionPatchResult } from "../types";
 import { calculateByteLength } from "./calculate-byte-length";
-import { ReadableStream } from "./w3-ponyfills/ReadableStream";
-import { Response } from "./w3-ponyfills/Response";
+import { ReadableStream, Response } from "cross-undici-fetch";
 
 export type TransformResultFn = (result: ExecutionResult | ExecutionPatchResult) => any;
 export const DEFAULT_TRANSFORM_RESULT_FN: TransformResultFn = (result: ExecutionResult) => result;
@@ -98,7 +97,6 @@ export function getPushResponse(
           const chunk = JSON.stringify(transformedResult);
           controller.enqueue(`data: ${chunk}\n\n`);
         }
-        controller.close();
       } catch (e) {
         controller.error(e);
       }

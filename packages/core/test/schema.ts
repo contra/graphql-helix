@@ -5,6 +5,7 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
+  GraphQLScalarType,
   GraphQLSchema,
   GraphQLString,
 } from "graphql";
@@ -23,6 +24,39 @@ export const schema = new GraphQLSchema({
         resolve: (_root, args) => {
           return args.number;
         },
+      },
+      uploadFile: {
+        type: new GraphQLObjectType({
+          name: 'FileDetails',
+          fields: () => ({
+            filename: {
+              type: GraphQLString,
+            },
+            mimetype: {
+              type: GraphQLString,
+            },
+            content: {
+              type: GraphQLString,
+            }
+          })
+        }),
+        args: {
+          file: {
+            type: new GraphQLScalarType({
+              name: "Upload",
+              description: "The `Upload` scalar type represents a file upload.",
+              serialize: (value) => value,
+              parseValue: (value) => value,
+            })
+          }
+        },
+        resolve: async (_root, args: { file: File }) => {
+          return {
+            filename: args.file.name,
+            mimetype: args.file.type,
+            content: await args.file.text(),
+          }
+        }
       },
     }),
   }),
@@ -88,7 +122,7 @@ export const schema = new GraphQLSchema({
             await new Promise((resolve) => setTimeout(resolve, 1000));
           }
         },
-      },
+      }
     }),
   }),
 });
