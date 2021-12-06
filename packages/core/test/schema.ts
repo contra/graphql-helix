@@ -43,8 +43,8 @@ export const schema = new GraphQLSchema({
         args: {
           file: {
             type: new GraphQLScalarType({
-              name: "Upload",
-              description: "The `Upload` scalar type represents a file upload.",
+              name: "File",
+              description: "The `File` scalar type represents a file upload.",
               serialize: (value) => value,
               parseValue: (value) => value,
             })

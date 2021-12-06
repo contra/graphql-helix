@@ -1,7 +1,11 @@
 ---
-title: File uploads
+title: Multipart Request (File Upload)
 ---
 
-File uploads, like serving static content, are generally best handled outside of your GraphQL schema. However, if you want to add support for uploads to your server, you can use the [graphql-upload](https://github.com/jaydenseric/graphql-upload) package. You need to add the Upload scalar to your schema and then add the appropriate middleware to your server.
+GraphQL Helix implements [GraphQL Multipart specification](https://github.com/jaydenseric/graphql-multipart-request-spec). So file uploads are supported by GraphQL Helix out-of-box.
+
+All you need to do is to add a scalar type specific for Blob/File.
+
+This special type implements both W3 [File](https://developer.mozilla.org/en-US/docs/Web/API/File), [Blob](https://developer.mozilla.org/en-US/docs/Web/API/Blob) and `graphql-upload`'s [FileUpload](https://www.npmjs.com/package/graphql-upload) type;
 
 See [here](https://github.com/contrawork/graphql-helix/tree/master/examples/file-upload) for an example.

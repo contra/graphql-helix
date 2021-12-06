@@ -1,13 +1,10 @@
 import express from "express";
 import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "graphql-helix";
-import { graphqlUploadExpress } from "graphql-upload";
 import { schema } from "./schema";
 
 const app = express();
 
-app.use(express.json());
-
-app.use("/graphql", graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }), async (req, res) => {
+app.use("/graphql", async (req, res) => {
   const request = await getNodeRequest(req);
 
   if (shouldRenderGraphiQL(request)) {
