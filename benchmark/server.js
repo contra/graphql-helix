@@ -34,7 +34,7 @@ const server = createServer(function (req, res) {
   handleReqRes(req, res);
 });
 
-server.listen(5000, "0.0.0.0", () => {
+server.listen(5000, () => {
   // eslint-disable-next-line no-console
   console.log(`GraphQL Test Server is running... Ready for K6!`);
 });
