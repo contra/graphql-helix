@@ -1,7 +1,6 @@
 // @denoify-ignore
 import type { IncomingMessage, ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
-import { isAsyncIterable } from "./is-async-iterable";
 import { Request, ReadableStream } from "cross-undici-fetch";
 
 interface NodeRequest {
