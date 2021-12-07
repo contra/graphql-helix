@@ -15,7 +15,7 @@ interface NodeRequest {
 }
 
 function isIterableOrAsyncIterable<T>(obj: any): obj is Iterable<T> | AsyncIterable<T> {
-  if (obj == null || typeof obj !== 'object') {
+  if (obj == null || typeof obj !== "object") {
     return false;
   }
   return typeof obj[Symbol.asyncIterator] === "function" || typeof obj[Symbol.iterator] === "function";
@@ -23,7 +23,7 @@ function isIterableOrAsyncIterable<T>(obj: any): obj is Iterable<T> | AsyncItera
 
 export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request> {
   const fullUrl = `${nodeRequest.protocol || "http"}://${nodeRequest.hostname || nodeRequest.headers.host || "localhost"}${
-    nodeRequest.url || '/graphql'
+    nodeRequest.url || "/graphql"
   }`;
   const maybeParsedBody = nodeRequest.body;
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
@@ -45,11 +45,12 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
         value: async () => JSON.stringify(maybeParsedBody),
       },
       body: {
-        get: () => new Request(fullUrl, {
-          method: 'POST',
-          body: JSON.stringify(maybeParsedBody),
-        }).body,
-      }
+        get: () =>
+          new Request(fullUrl, {
+            method: "POST",
+            body: JSON.stringify(maybeParsedBody),
+          }).body,
+      },
     });
     return request;
   } else if (isIterableOrAsyncIterable(rawRequest)) {
@@ -60,7 +61,7 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
             controller.enqueue(chunk);
           }
           controller.close();
-        } catch(e) {
+        } catch (e) {
           controller.error(e);
         }
       },
@@ -77,39 +78,36 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
 export type NodeResponse = ServerResponse | Http2ServerResponse;
 
 export async function sendNodeResponse(responseResult: Response, nodeResponse: NodeResponse): Promise<void> {
-  const headersObj: any = {};
+  const serverResponse = nodeResponse as ServerResponse;
   responseResult.headers.forEach((value, name) => {
-    headersObj[name] = headersObj[name] || [];
-    headersObj[name].push(value);
+    serverResponse.setHeader(name, value);
   });
-  nodeResponse.writeHead(responseResult.status, headersObj);
-  const responseBody: ReadableStream | null = await responseResult.body;
-  if (responseBody == null) {
-    throw new Error("Response body is not supported");
-  }
-  if (isIterableOrAsyncIterable(responseBody)) {
-    for await (const chunk of responseBody) {
-      if (chunk) {
-        (nodeResponse as any).write(chunk);
+  serverResponse.statusCode = responseResult.status;
+  serverResponse.statusMessage = responseResult.statusText;
+  const responseBody = await (responseResult.body as unknown as Promise<ReadableStream<Uint8Array> | AsyncIterable<Uint8Array> | null>);
+  if (responseBody != null) {
+    if (isIterableOrAsyncIterable(responseBody)) {
+      for await (const chunk of responseBody) {
+        if (chunk) {
+          serverResponse.write(chunk);
+        }
       }
+    } else if (typeof responseBody.getReader === "function") {
+      const reader = responseBody.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (value) {
+          serverResponse.write(value);
+        }
+        if (done) {
+          break;
+        }
+      }
+      nodeResponse.on("close", () => {
+        reader.releaseLock();
+      });
     }
-    nodeResponse.end();
-  } else if (typeof responseBody.getReader === 'function') {
-    const reader = responseBody.getReader();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (value) {
-        (nodeResponse as any).write(value);
-      }
-      if (done) {
-        nodeResponse.end();
-        break;
-      }
-    }
-    nodeResponse.on("close", () => {
-      reader.releaseLock();
-    });
-  } else {
-    throw new Error(`Unrecognized Response type provided`);
   }
+
+  nodeResponse.end();
 }
