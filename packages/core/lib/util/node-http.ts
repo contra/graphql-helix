@@ -2,6 +2,7 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
 import { Request, ReadableStream } from "cross-undici-fetch";
+import { isAsyncIterable } from "./is-async-iterable";
 
 interface NodeRequest {
   protocol?: string;
@@ -12,13 +13,6 @@ interface NodeRequest {
   headers: any;
   req?: IncomingMessage;
   raw?: IncomingMessage;
-}
-
-function isIterableOrAsyncIterable<T>(obj: any): obj is Iterable<T> | AsyncIterable<T> {
-  if (obj == null || typeof obj !== "object") {
-    return false;
-  }
-  return typeof obj[Symbol.asyncIterator] === "function" || typeof obj[Symbol.iterator] === "function";
 }
 
 export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request> {
@@ -53,7 +47,7 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
       },
     });
     return request;
-  } else if (isIterableOrAsyncIterable(rawRequest)) {
+  } else if (isAsyncIterable(rawRequest)) {
     const body = new ReadableStream({
       async start(controller) {
         try {
@@ -86,12 +80,15 @@ export async function sendNodeResponse(responseResult: Response, nodeResponse: N
   serverResponse.statusMessage = responseResult.statusText;
   const responseBody = await (responseResult.body as unknown as Promise<ReadableStream<Uint8Array> | AsyncIterable<Uint8Array> | null>);
   if (responseBody != null) {
-    if (isIterableOrAsyncIterable(responseBody)) {
+    if (responseBody instanceof Uint8Array) {
+      serverResponse.write(responseBody);
+    } else if (isAsyncIterable(responseBody)) {
       for await (const chunk of responseBody) {
         if (chunk) {
           serverResponse.write(chunk);
         }
       }
+      nodeResponse.end();
     } else if (typeof responseBody.getReader === "function") {
       const reader = responseBody.getReader();
       while (true) {
@@ -100,6 +97,7 @@ export async function sendNodeResponse(responseResult: Response, nodeResponse: N
           serverResponse.write(value);
         }
         if (done) {
+          nodeResponse.end();
           break;
         }
       }
@@ -108,6 +106,5 @@ export async function sendNodeResponse(responseResult: Response, nodeResponse: N
       });
     }
   }
-
-  nodeResponse.end();
+  serverResponse.end();
 }
