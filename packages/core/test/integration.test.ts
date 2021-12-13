@@ -5,11 +5,7 @@ import got from "got";
 import puppeteer from "puppeteer";
 import { getIntrospectionQuery } from "graphql";
 import implementations from "./implementations";
-import { Request, fetch, FormData } from "cross-undici-fetch";
-import { Blob as BlobPonyfill } from "formdata-node";
-import { Blob as NodeBlob } from "buffer";
-
-const Blob = NodeBlob || BlobPonyfill;
+import { Request, fetch, FormData, File } from "cross-undici-fetch";
 
 const chance = Chance();
 
@@ -483,7 +479,7 @@ implementations.forEach((implementation) => {
           "operations",
           JSON.stringify({
             query: `
-                mutation($file: Upload!) {
+                mutation($file: File!) {
                   uploadFile(file: $file) {
                     filename
                     mimetype
@@ -503,7 +499,7 @@ implementations.forEach((implementation) => {
           })
         );
         const content = "hello world";
-        form.append("0", new Blob([content]) as any, "test.txt");
+        form.append("0", new File([content], 'test.txt'));
         const response = await fetch(
           new Request(`http://localhost:${port}/graphql`, {
             method: "POST",

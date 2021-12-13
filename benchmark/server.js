@@ -30,11 +30,11 @@ async function handleReqRes(req, res) {
   }
 }
 
-  const server = createServer(function (req, res) {
-    handleReqRes(req, res)
-  });
+const server = createServer(function (req, res) {
+  handleReqRes(req, res);
+});
 
-  server.listen(5000, "0.0.0.0", () => {
-    // eslint-disable-next-line no-console
-    console.log(`GraphQL Test Server is running... Ready for K6!`);
-  });
+server.listen(5000, () => {
+  // eslint-disable-next-line no-console
+  console.log(`GraphQL Test Server is running... Ready for K6!`);
+});
