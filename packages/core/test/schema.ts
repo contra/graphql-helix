@@ -10,6 +10,7 @@ import {
 } from "graphql";
 
 export const schema = new GraphQLSchema({
+  enableDeferStream: true,
   mutation: new GraphQLObjectType({
     name: "Mutation",
     fields: () => ({
