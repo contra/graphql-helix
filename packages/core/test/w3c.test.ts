@@ -107,17 +107,26 @@ describe("W3 Compatibility", () => {
     });
   });
   it("should handle push responses", async () => {
-    const request = new Request("http://localhost:3000/graphql", {
-      method: "POST",
+    const queryParams = new URLSearchParams();
+    queryParams.set(
+      "query",
+      /* GraphQL */ `
+        subscription Countdown($from: Int!) {
+          countdown(from: $from)
+        }
+      `
+    );
+    queryParams.set(
+      "variables",
+      JSON.stringify({
+        from: 3,
+      })
+    );
+    const request = new Request("http://localhost:3000/graphql?" + queryParams.toString(), {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        query: "subscription Countdown($from: Int!) { countdown(from: $from) }",
-        variables: {
-          from: 3,
-        },
-      }),
     });
     const helixRequest = await prepareHelixRequestFromW3CRequest(request);
 
