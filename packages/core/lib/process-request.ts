@@ -96,7 +96,7 @@ const getRankedProtocols = (accept: unknown, contentType: unknown) => {
     return rankedProtocols;
   }
 
-  const supportedProtocols = accept.split(",").map((str) => str.trim());
+  const supportedProtocols = accept.split(",").map((str) => str.split(";")[0].trim());
 
   let index = 0;
   for (const protocol of supportedProtocols) {
