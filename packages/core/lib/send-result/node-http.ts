@@ -29,18 +29,22 @@ export async function sendMultipartResponseResult(
   rawResponse: RawResponse,
   transformResult: TransformResultFn = DEFAULT_TRANSFORM_RESULT_FN
 ): Promise<void> {
-  rawResponse.writeHead(200, {
+  /**
+   * TypeScript complains because of function call signature mismatches.
+   * The signatures, however, are identical, thus we cas this here to suppress warnings,
+   */
+  const response: ServerResponse = rawResponse as ServerResponse;
+  response.writeHead(200, {
     // prettier-ignore
     "Connection": "keep-alive",
     "Content-Type": 'multipart/mixed; boundary="-"',
     "Transfer-Encoding": "chunked",
   });
 
-  rawResponse.on("close", () => {
+  response.on("close", () => {
     multipartResult.unsubscribe();
   });
-  // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
-  rawResponse.write("---");
+  response.write("---");
 
   await multipartResult.subscribe((result) => {
     const chunk = JSON.stringify(transformResult(result));
@@ -55,13 +59,11 @@ export async function sendMultipartResponseResult(
     if (result.hasNext) {
       data.push("---");
     }
-    // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
-    rawResponse.write(data.join("\r\n"));
+    response.write(data.join("\r\n"));
   });
 
-  // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
-  rawResponse.write("\r\n-----\r\n");
-  rawResponse.end();
+  response.write("\r\n-----\r\n");
+  response.end();
 }
 
 export async function sendPushResult(
@@ -69,22 +71,26 @@ export async function sendPushResult(
   rawResponse: RawResponse,
   transformResult: TransformResultFn = DEFAULT_TRANSFORM_RESULT_FN
 ): Promise<void> {
-  rawResponse.writeHead(200, {
+  /**
+   * TypeScript complains because of function call signature mismatches.
+   * The signatures, however, are identical, thus we cas this here to suppress warnings,
+   */
+  const response: ServerResponse = rawResponse as ServerResponse;
+  response.writeHead(200, {
     "Content-Type": "text/event-stream",
     // prettier-ignore
     "Connection": "keep-alive",
     "Cache-Control": "no-cache",
   });
 
-  rawResponse.on("close", () => {
+  response.on("close", () => {
     pushResult.unsubscribe();
   });
 
   await pushResult.subscribe((result) => {
-    // @ts-expect-error - Different Signature between ServerResponse and Http2ServerResponse but still compatible.
-    rawResponse.write(`data: ${JSON.stringify(transformResult(result))}\n\n`);
+    response.write(`data: ${JSON.stringify(transformResult(result))}\n\n`);
   });
-  rawResponse.end();
+  response.end();
 }
 
 export async function sendResult(
