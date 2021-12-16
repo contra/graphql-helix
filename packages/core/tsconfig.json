@@ -15,12 +15,6 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true
   },
-  "exclude": [
-    "deno_dist",
-    "dist",
-    "examples",
-    "node_modules",
-    "packages/graphql-helix/test"
-  ],
+  "exclude": ["deno_dist", "dist", "examples", "node_modules", "packages/graphql-helix/test", "**/*.spec.ts"],
   "include": ["lib", "declarations.d.ts"]
 }
