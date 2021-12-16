@@ -21,6 +21,7 @@ import {
   ProcessRequestResult,
   Request,
 } from "./types";
+import { getRankedResponseProtocols, RankedResponseProtocols } from "./util/get-ranked-response-protocols";
 
 const parseQuery = (query: string | DocumentNode, parse: typeof defaultParse): DocumentNode | Promise<DocumentNode> => {
   if (typeof query !== "string" && query.kind === "Document") {
@@ -68,55 +69,11 @@ const getExecutableOperation = (document: DocumentNode, operationName?: string):
   return operation;
 };
 
-type AcceptedProtocols = "application/graphql+json" | /* LEGACY */ "application/json" | "text/event-stream" | "multipart/mixed";
-
-type RankedProtocols = Record<AcceptedProtocols, number>;
-
-/**
- * Returns a map of ranked protocols. Use it for determining which protocol should be used
- * @param accept Accept header string
- * @returns
- */
-const getRankedProtocols = (accept: unknown, contentType: unknown) => {
-  const rankedProtocols: RankedProtocols = {
-    "application/graphql+json": -1,
-    "application/json": -1 /* LEGACY */,
-    "text/event-stream": -1,
-    "multipart/mixed": -1,
-  };
-
-  if (typeof accept !== "string") {
-    // if no accept is provided we rank up the content-type
-    if (typeof contentType === "string" && contentType in rankedProtocols) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      rankedProtocols[contentType]++;
-    }
-
-    return rankedProtocols;
-  }
-
-  const supportedProtocols = accept.split(",").map((str) => str.split(";")[0].trim());
-
-  let index = 0;
-  for (const protocol of supportedProtocols) {
-    if (protocol in rankedProtocols) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      rankedProtocols[protocol] = index;
-      index++;
-    }
-  }
-
-  return rankedProtocols;
-};
-
-// If clients does not accept application/graphql+json use application/json - otherwise respect the order in the accept header
-const getSingleResponseContentType = (protocols: RankedProtocols): "application/graphql+json" | "application/json" => {
+// If clients do not accept application/graphql+json use application/json - otherwise respect the order in the accept header
+const getSingleResponseContentType = (protocols: RankedResponseProtocols): "application/graphql+json" | "application/json" => {
   if (protocols["application/graphql+json"] === -1) {
     return "application/json";
   }
-  // TODO: spec ambiguity with https://github.com/graphql/graphql-over-http
   return protocols["application/graphql+json"] > protocols["application/json"] ? "application/graphql+json" : "application/json";
 };
 
@@ -151,7 +108,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
     const accept: unknown = getHeader(request, "accept");
     const contentType: unknown = getHeader(request, "contentType");
 
-    const rankedProtocols = getRankedProtocols(accept, contentType);
+    const rankedProtocols = getRankedResponseProtocols(accept, contentType);
 
     const isEventStreamAccepted = rankedProtocols["text/event-stream"] !== -1;
 
