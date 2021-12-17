@@ -11,8 +11,8 @@ export function getRegularResponse(executionResult: ExecutionResult, transformRe
   const responseBody = JSON.stringify(transformedResult);
   const contentLength = calculateByteLength(responseBody);
   const headersInit: HeadersInit = {
-    "Content-Type": 'application/json',
-    "Content-Length": contentLength.toString()
+    "Content-Type": "application/json",
+    "Content-Length": contentLength.toString(),
   };
   const responseInit: ResponseInit = {
     headers: headersInit,
@@ -38,14 +38,7 @@ export function getMultipartResponse(
     async start(controller) {
       try {
         controller.enqueue(`---`);
-        const iterator = asyncExecutionResult[Symbol.asyncIterator]();
-        while (true) {
-          const { done, value } = await iterator.next();
-          if (done) {
-            controller.enqueue("\r\n-----\r\n");
-            controller.close();
-            break;
-          }
+        for await (const value of asyncExecutionResult) {
           const transformedResult = transformResult(value);
           const chunk = JSON.stringify(transformedResult);
           const contentLength = calculateByteLength(chunk);
@@ -61,6 +54,8 @@ export function getMultipartResponse(
           }
           controller.enqueue(data.join("\r\n"));
         }
+        controller.enqueue("\r\n-----\r\n");
+        controller.close();
       } catch (e) {
         controller.error(e);
       }
@@ -86,17 +81,12 @@ export function getPushResponse(
   const readableStream = new ReadableStream({
     async start(controller) {
       try {
-        const iterator = asyncExecutionResult[Symbol.asyncIterator]();
-        while (true) {
-          const { done, value } = await iterator.next();
-          if (done) {
-            controller.close();
-            break;
-          }
+        for await (const value of asyncExecutionResult) {
           const transformedResult = transformResult(value);
           const chunk = JSON.stringify(transformedResult);
           controller.enqueue(`data: ${chunk}\n\n`);
         }
+        controller.close();
       } catch (e) {
         controller.error(e);
       }
@@ -109,7 +99,7 @@ interface ErrorResponseParams {
   message: string;
   status?: number;
   headers?: any;
-  errors?: { message: string }[] | readonly { message: string }[];
+  errors?: Error[];
   transformResult?: typeof DEFAULT_TRANSFORM_RESULT_FN;
   isEventStream: boolean;
 }
@@ -122,12 +112,12 @@ export function getErrorResponse({
   message,
   status = 500,
   headers = {},
-  errors = [{ message }],
+  errors = [new Error(message)],
   transformResult = DEFAULT_TRANSFORM_RESULT_FN,
   isEventStream,
 }: ErrorResponseParams): Response {
   const payload: any = {
-    errors,
+    errors: errors.map((error) => ({ name: error.name, message: error.message, stack: error.stack })),
   };
   if (isEventStream) {
     return getPushResponse(getSingleResult(payload), transformResult);
