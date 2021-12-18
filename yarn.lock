@@ -5043,6 +5043,17 @@ cross-undici-fetch@^0.1.4:
     node-fetch "^2.6.5"
     undici "^4.9.3"
 
+cross-undici-fetch@^0.1.8:
+  version "0.1.8"
+  resolved "https://registry.yarnpkg.com/cross-undici-fetch/-/cross-undici-fetch-0.1.8.tgz#2df68f50eeac32b8a8fb4856d8491e148c1222d1"
+  integrity sha512-mJmzyt7GYFlSiDOJ0pQYj2YHIpeLSqO4TfsTQWYxfwPueKHbCzWFunfe2zcsEtGISAcR3EfZMB89aDzYXlb8Yg==
+  dependencies:
+    abort-controller "^3.0.0"
+    form-data-encoder "^1.7.1"
+    formdata-node "^4.3.1"
+    node-fetch "^2.6.5"
+    undici "^4.9.3"
+
 crypto-browserify@3.12.0, crypto-browserify@^3.11.0:
   version "3.12.0"
   resolved "https://registry.yarnpkg.com/crypto-browserify/-/crypto-browserify-3.12.0.tgz#396cf9f3137f03e4b8e532c58f698254e00f80ec"
