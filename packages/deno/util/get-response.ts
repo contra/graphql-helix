@@ -1,7 +1,7 @@
 import { ExecutionResult } from "https://cdn.skypack.dev/graphql@16.0.0-experimental-stream-defer.5?dts";
 import { ExecutionPatchResult } from "../types.ts";
-import { calculateByteLength } from "./calculate-byte-length.ts";
 import { ReadableStream, Response } from "https://cdn.skypack.dev/cross-undici-fetch@0.1.10?dts";
+import { encodeString } from "./encode-string.ts";
 
 export type TransformResultFn = (result: ExecutionResult | ExecutionPatchResult) => any;
 export const DEFAULT_TRANSFORM_RESULT_FN: TransformResultFn = (result: ExecutionResult) => result;
@@ -9,16 +9,16 @@ export const DEFAULT_TRANSFORM_RESULT_FN: TransformResultFn = (result: Execution
 export function getRegularResponse(executionResult: ExecutionResult, transformResult = DEFAULT_TRANSFORM_RESULT_FN): Response {
   const transformedResult = transformResult(executionResult);
   const responseBody = JSON.stringify(transformedResult);
-  const contentLength = calculateByteLength(responseBody);
+  const decodedString = encodeString(responseBody);
   const headersInit: HeadersInit = {
     "Content-Type": "application/json",
-    "Content-Length": contentLength.toString(),
+    "Content-Length": decodedString.byteLength.toString(),
   };
   const responseInit: ResponseInit = {
     headers: headersInit,
     status: 200,
   };
-  return new Response(responseBody, responseInit);
+  return new Response(decodedString, responseInit);
 }
 
 export function getMultipartResponse(
@@ -52,18 +52,15 @@ export function getMultipartResponse(
       } else {
         const transformedResult = transformResult(value);
         const chunk = JSON.stringify(transformedResult);
-        const contentLength = calculateByteLength(chunk);
-        const data = [
-          "",
-          "Content-Type: application/json; charset=utf-8",
-          "Content-Length: " + contentLength.toString(),
-          "",
-          chunk,
-        ];
+        const encodedChunk = encodeString(chunk);
+        controller.enqueue('\r\n');
+        controller.enqueue('Content-Type: application/json; charset=utf-8\r\n');
+        controller.enqueue('Content-Length: ' + encodedChunk.byteLength + '\r\n');
+        controller.enqueue('\r\n');
+        controller.enqueue(encodedChunk);
         if (value.hasNext) {
-          data.push("---");
+          controller.enqueue("\r\n---");
         }
-        controller.enqueue(data.join("\r\n"));
       }
     },
     async cancel() {
