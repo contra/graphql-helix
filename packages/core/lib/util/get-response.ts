@@ -34,33 +34,43 @@ export function getMultipartResponse(
     headers: headersInit,
     status: 200,
   };
+
+  let iterator: AsyncIterator<ExecutionResult<any>>;
+
   const readableStream = new ReadableStream({
     async start(controller) {
-      try {
-        controller.enqueue(`---`);
-        for await (const value of asyncExecutionResult) {
-          const transformedResult = transformResult(value);
-          const chunk = JSON.stringify(transformedResult);
-          const contentLength = calculateByteLength(chunk);
-          const data = [
-            "",
-            "Content-Type: application/json; charset=utf-8",
-            "Content-Length: " + contentLength.toString(),
-            "",
-            chunk,
-          ];
-          if (value.hasNext) {
-            data.push("---");
-          }
-          controller.enqueue(data.join("\r\n"));
+      iterator = asyncExecutionResult[Symbol.asyncIterator]();
+      controller.enqueue(`---`);
+    },
+    async pull(controller) {
+      const { done, value } = await iterator.next();
+      if (done) {
+        queueMicrotask(() => {
+          controller.enqueue("\r\n-----\r\n");
+          controller.close();
+        });
+      } else {
+        const transformedResult = transformResult(value);
+        const chunk = JSON.stringify(transformedResult);
+        const contentLength = calculateByteLength(chunk);
+        const data = [
+          "",
+          "Content-Type: application/json; charset=utf-8",
+          "Content-Length: " + contentLength.toString(),
+          "",
+          chunk,
+        ];
+        if (value.hasNext) {
+          data.push("---");
         }
-        controller.enqueue("\r\n-----\r\n");
-        controller.close();
-      } catch (e) {
-        controller.error(e);
+        controller.enqueue(data.join("\r\n"));
       }
     },
+    async cancel() {
+      await iterator.return?.()
+    }
   });
+
   return new Response(readableStream, responseInit);
 }
 
@@ -78,19 +88,27 @@ export function getPushResponse(
     status: 200,
   };
 
+  let iterator: AsyncIterator<ExecutionResult<any>>;
+
   const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const value of asyncExecutionResult) {
-          const transformedResult = transformResult(value);
-          const chunk = JSON.stringify(transformedResult);
-          controller.enqueue(`data: ${chunk}\n\n`);
-        }
-        controller.close();
-      } catch (e) {
-        controller.error(e);
+    async start() {
+      iterator = asyncExecutionResult[Symbol.asyncIterator]();
+    },
+    async pull(controller) {
+      const { done, value } = await iterator.next();
+      if (done) {
+        queueMicrotask(() => {
+          controller.close();
+        });
+      } else {
+        const transformedResult = transformResult(value);
+        const chunk = JSON.stringify(transformedResult);
+        controller.enqueue(`data: ${chunk}\n\n`);
       }
     },
+    async cancel() {
+      await iterator.return?.()
+    }
   });
   return new Response(readableStream, responseInit);
 }

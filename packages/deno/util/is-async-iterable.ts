@@ -1,7 +1,4 @@
-export const isAsyncIterable = <T>(maybeAsyncIterable: unknown): maybeAsyncIterable is AsyncIterable<T> => {
-  if (maybeAsyncIterable == null || typeof maybeAsyncIterable !== "object") {
-    return false;
-  }
-
-  return typeof (maybeAsyncIterable as any)[Symbol.asyncIterator] === "function";
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export const isAsyncIterable = <T>(maybeAsyncIterable: any): maybeAsyncIterable is AsyncIterable<T> => {
+  return !!maybeAsyncIterable?.[Symbol.asyncIterator];
 };
