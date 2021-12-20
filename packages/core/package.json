@@ -1,6 +1,6 @@
 {
-  "name": "@ardatan/graphql-helix",
-  "version": "0.1.12",
+  "name": "graphql-helix",
+  "version": "1.10.0",
   "description": "A highly evolved GraphQL HTTP Server 🧬",
   "keywords": [
     "graphql",
