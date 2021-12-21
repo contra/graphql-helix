@@ -13,7 +13,15 @@ import {
 } from "graphql";
 import { stopAsyncIteration, isAsyncIterable, isHttpMethod } from "./util/index";
 import { HttpError } from "./errors";
-import { ExecutionContext, ExecutionPatchResult, MultipartResponse, ProcessRequestOptions, ProcessRequestResult } from "./types";
+import {
+  ExecutionContext,
+  ExecutionPatchResult,
+  MultipartResponse,
+  ProcessRequestOptions,
+  ProcessRequestResult,
+  Request,
+} from "./types";
+import { getRankedResponseProtocols, RankedResponseProtocols } from "./util/get-ranked-response-protocols";
 
 const parseQuery = (query: string | DocumentNode, parse: typeof defaultParse): DocumentNode | Promise<DocumentNode> => {
   if (typeof query !== "string" && query.kind === "Document") {
@@ -61,6 +69,17 @@ const getExecutableOperation = (document: DocumentNode, operationName?: string):
   return operation;
 };
 
+// If clients do not accept application/graphql+json use application/json - otherwise respect the order in the accept header
+const getSingleResponseContentType = (protocols: RankedResponseProtocols): "application/graphql+json" | "application/json" => {
+  if (protocols["application/graphql+json"] === -1) {
+    return "application/json";
+  }
+  return protocols["application/graphql+json"] > protocols["application/json"] ? "application/graphql+json" : "application/json";
+};
+
+const getHeader = (request: Request, headerName: string): unknown =>
+  typeof request.headers.get === "function" ? request.headers.get(headerName) : (request.headers as any)[headerName];
+
 export const processRequest = async <TContext = {}, TRootValue = {}>(
   options: ProcessRequestOptions<TContext, TRootValue>
 ): Promise<ProcessRequestResult<TContext, TRootValue>> => {
@@ -86,18 +105,29 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
   let operation: OperationDefinitionNode | undefined;
 
   const result = await (async (): Promise<ProcessRequestResult<TContext, TRootValue>> => {
-    const accept = typeof request.headers.get === "function" ? request.headers.get("accept") : (request.headers as any).accept;
-    const isEventStream = accept === "text/event-stream";
+    const accept: unknown = getHeader(request, "accept");
+    const contentType: unknown = getHeader(request, "contentType");
+
+    const rankedProtocols = getRankedResponseProtocols(accept, contentType);
+
+    const isEventStreamAccepted = rankedProtocols["text/event-stream"] !== -1;
+
+    const defaultSingleResponseHeaders = [
+      {
+        name: "Content-Type",
+        value: getSingleResponseContentType(rankedProtocols),
+      },
+    ];
 
     try {
       if (!isHttpMethod("GET", request.method) && !isHttpMethod("POST", request.method)) {
         throw new HttpError(405, "GraphQL only supports GET and POST requests.", {
-          headers: [{ name: "Allow", value: "GET, POST" }],
+          headers: [...defaultSingleResponseHeaders, { name: "Allow", value: "GET, POST" }],
         });
       }
 
       if (query == null) {
-        throw new HttpError(400, "Must provide query string.");
+        throw new HttpError(400, "Must provide query string.", { headers: defaultSingleResponseHeaders });
       }
 
       document = await parseQuery(query, parse);
@@ -108,7 +138,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
 
       if (operation.operation === "mutation" && isHttpMethod("GET", request.method)) {
         throw new HttpError(405, "Can only perform a mutation operation from a POST request.", {
-          headers: [{ name: "Allow", value: "POST" }],
+          headers: [...defaultSingleResponseHeaders, { name: "Allow", value: "POST" }],
         });
       }
 
@@ -119,7 +149,9 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           variableValues = typeof variables === "string" ? JSON.parse(variables) : variables;
         }
       } catch (_error) {
-        throw new HttpError(400, "Variables are invalid JSON.");
+        throw new HttpError(400, "Variables are invalid JSON.", {
+          headers: defaultSingleResponseHeaders,
+        });
       }
 
       try {
@@ -133,6 +165,11 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         rootValue = rootValueFactory ? await rootValueFactory(executionContext) : ({} as TRootValue);
 
         if (operation.operation === "subscription") {
+          if (!isHttpMethod("GET", request.method)) {
+            throw new HttpError(405, "Can only perform subscription operation from a GET request.", {
+              headers: [...defaultSingleResponseHeaders, { name: "Allow", value: "GET" }],
+            });
+          }
           const result = await subscribe({
             schema,
             document,
@@ -183,38 +220,22 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
                 stopAsyncIteration(result);
               },
             };
-          } else {
-            if (isEventStream) {
-              return {
-                type: "PUSH",
-                subscribe: async (onResult) => {
-                  onResult(
-                    formatPayload({
-                      payload: result,
-                      context,
-                      rootValue,
-                      document,
-                      operation,
-                    })
-                  );
-                },
-                unsubscribe: () => undefined,
-              };
-            } else {
-              return {
-                type: "RESPONSE",
-                payload: formatPayload({
+          }
+          return {
+            type: "PUSH",
+            subscribe: async (onResult) => {
+              onResult(
+                formatPayload({
                   payload: result,
                   context,
                   rootValue,
                   document,
                   operation,
-                }),
-                status: 200,
-                headers: [],
-              };
-            }
-          }
+                })
+              );
+            },
+            unsubscribe: () => undefined,
+          };
         } else {
           const result = await execute({
             schema,
@@ -229,7 +250,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           // execution result.
           if (isAsyncIterable<ExecutionPatchResult>(result)) {
             return {
-              type: isEventStream ? "PUSH" : "MULTIPART_RESPONSE",
+              type: isHttpMethod("GET", request.method) ? "PUSH" : "MULTIPART_RESPONSE",
               subscribe: async (onResult) => {
                 for await (const payload of result) {
                   onResult(
@@ -251,7 +272,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             return {
               type: "RESPONSE",
               status: 200,
-              headers: [],
+              headers: defaultSingleResponseHeaders,
               payload: formatPayload({
                 payload: result,
                 context,
@@ -266,12 +287,14 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         if (executionError instanceof GraphQLError) {
           throw new HttpError(200, "GraphQLError encountered white executed GraphQL request.", {
             graphqlErrors: [executionError],
+            headers: defaultSingleResponseHeaders,
           });
         } else if (executionError instanceof HttpError) {
           throw executionError;
         } else {
           throw new HttpError(500, "Unexpected error encountered while executing GraphQL request.", {
             graphqlErrors: [new GraphQLError((executionError as Error).message)],
+            headers: defaultSingleResponseHeaders,
           });
         }
       }
@@ -280,7 +303,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         errors: ((error as HttpError).graphqlErrors as GraphQLError[]) || [new GraphQLError((error as Error).message)],
       };
 
-      if (isEventStream) {
+      if (isEventStreamAccepted) {
         return {
           type: "PUSH",
           subscribe: async (onResult) => {
