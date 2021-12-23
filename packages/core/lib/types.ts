@@ -121,6 +121,10 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
    * Values for any Variables defined by the Operation.
    */
   variables?: string | { [name: string]: any };
+  /**
+   * HTTP methods that are allowed for subscriptions.
+   */
+  allowedSubscriptionHttpMethods?: ReadonlyArray<"POST" | "GET">;
 }
 
 export interface FormatPayloadParams<TContext, TRootValue> {

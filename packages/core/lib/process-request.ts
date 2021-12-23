@@ -97,6 +97,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
     validate = defaultValidate,
     validationRules,
     variables,
+    allowedSubscriptionHttpMethods = ["GET"],
   } = options;
 
   let context: TContext | undefined;
@@ -165,10 +166,20 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         rootValue = rootValueFactory ? await rootValueFactory(executionContext) : ({} as TRootValue);
 
         if (operation.operation === "subscription") {
-          if (!isHttpMethod("GET", request.method)) {
-            throw new HttpError(405, "Can only perform subscription operation from a GET request.", {
-              headers: [...defaultSingleResponseHeaders, { name: "Allow", value: "GET" }],
-            });
+          if (!allowedSubscriptionHttpMethods.some((method) => isHttpMethod(method, request.method))) {
+            throw new HttpError(
+              405,
+              `Can only perform subscription operation from a ${allowedSubscriptionHttpMethods.join(" or ")} request.`,
+              {
+                headers: [
+                  ...defaultSingleResponseHeaders,
+                  {
+                    name: "Allow",
+                    value: allowedSubscriptionHttpMethods.join(", "),
+                  },
+                ],
+              }
+            );
           }
           const result = await subscribe({
             schema,
