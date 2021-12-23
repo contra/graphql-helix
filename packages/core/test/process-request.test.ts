@@ -1,4 +1,4 @@
-import { getGraphQLParameters, processRequest } from "./index";
+import { getGraphQLParameters, processRequest } from "../lib";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { GraphQLError } from "graphql";
 
