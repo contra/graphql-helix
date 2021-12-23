@@ -234,12 +234,14 @@ describe.only("W3 Subscription Node.js", () => {
       await sendNodeResponse(response, res);
     });
 
+    const port = 8081;
+
     await new Promise<void>((resolve) => {
-      httpServer.listen(8084, () => resolve());
+      httpServer.listen(port, () => resolve());
     });
 
     const abort = new AbortController();
-    const res = await fetch("http://127.0.0.1:8084/graphql", {
+    const res = await fetch(`http://127.0.0.1:${port}/graphql`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
