@@ -48,17 +48,24 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
     });
     return request;
   } else if (isAsyncIterable(rawRequest)) {
+    let iterator: AsyncIterator<any>;
     const body = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of rawRequest) {
-            controller.enqueue(chunk);
-          }
-          controller.close();
-        } catch (e) {
-          controller.error(e);
+      async start() {
+        iterator = rawRequest[Symbol.asyncIterator]();
+      },
+      async pull(controller) {
+        const { done, value } = await iterator.next();
+        if (done) {
+          queueMicrotask(() => {
+            controller.close();
+          })
+        } else {
+          controller.enqueue(value);
         }
       },
+      async cancel() {
+        await iterator.return?.()
+      }
     });
     return new Request(fullUrl, {
       headers: nodeRequest.headers,
@@ -69,42 +76,58 @@ export async function getNodeRequest(nodeRequest: NodeRequest): Promise<Request>
   throw new Error(`Unknown request`);
 }
 
-export type NodeResponse = ServerResponse | Http2ServerResponse;
+export type ServerResponseOrHttp2ServerResponse = ServerResponse | Http2ServerResponse;
 
-export async function sendNodeResponse(responseResult: Response, nodeResponse: NodeResponse): Promise<void> {
-  const serverResponse = nodeResponse as ServerResponse;
+export async function sendNodeResponse(
+  responseResult: Response,
+  serverResponseOrHttp2Response: ServerResponseOrHttp2ServerResponse
+): Promise<void> {
+  const serverResponse = serverResponseOrHttp2Response as ServerResponse;
   responseResult.headers.forEach((value, name) => {
     serverResponse.setHeader(name, value);
   });
   serverResponse.statusCode = responseResult.status;
   serverResponse.statusMessage = responseResult.statusText;
-  const responseBody = await (responseResult.body as unknown as Promise<ReadableStream<Uint8Array> | AsyncIterable<Uint8Array> | null>);
+  // Some fetch implementations like `node-fetch`, return `Response.body` as Promise
+  const responseBody = await (responseResult.body as unknown as Promise<
+    ReadableStream<Uint8Array> | AsyncIterable<Uint8Array> | null
+  >);
   if (responseBody != null) {
-    if (responseBody instanceof Uint8Array) {
-      serverResponse.write(responseBody);
-    } else if (isAsyncIterable(responseBody)) {
-      for await (const chunk of responseBody) {
-        if (chunk) {
-          serverResponse.write(chunk);
+    // If the response body is a NodeJS Readable stream, we can pipe it to the response directly
+    if (typeof (responseBody as any).pipe === "function") {
+      (responseBody as any).pipe(serverResponse);
+    } else {
+      // If it is a buffer
+      if (responseBody instanceof Uint8Array) {
+        serverResponse.write(responseBody);
+      // If it is an AsyncIterable
+      } else if (isAsyncIterable(responseBody)) {
+        for await (const chunk of responseBody) {
+          if (chunk) {
+            serverResponse.write(chunk);
+          }
         }
+      // If it is a real ReadableStream
+      } else if (typeof responseBody.getReader === "function") {
+        const reader = responseBody.getReader();
+        const asyncIterable: AsyncIterable<Uint8Array> = {
+          [Symbol.asyncIterator]: () => {
+            const reader = responseBody.getReader();
+            return {
+              next: () => reader.read() as Promise<IteratorResult<Uint8Array>>,
+            };
+          },
+        };
+        for await (const chunk of asyncIterable) {
+          if (chunk) {
+            serverResponse.write(chunk);
+          }
+        }
+        serverResponse.on("close", () => {
+          reader.releaseLock();
+        });
       }
-      nodeResponse.end();
-    } else if (typeof responseBody.getReader === "function") {
-      const reader = responseBody.getReader();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (value) {
-          serverResponse.write(value);
-        }
-        if (done) {
-          nodeResponse.end();
-          break;
-        }
-      }
-      nodeResponse.on("close", () => {
-        reader.releaseLock();
-      });
+      serverResponse.end();
     }
   }
-  serverResponse.end();
 }

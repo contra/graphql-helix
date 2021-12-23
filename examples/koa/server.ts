@@ -1,7 +1,8 @@
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
-import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "graphql-helix";
+import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "graphql-helix";
 import { schema } from "./schema";
+import { Readable } from "stream";
 
 declare module "koa" {
   interface Request {
@@ -22,7 +23,7 @@ app.use(async (ctx) => {
   } else {
     const { operationName, query, variables } = await getGraphQLParameters(request);
 
-    const result = await processRequest({
+    const response = await processRequest({
       operationName,
       query,
       variables,
@@ -30,7 +31,13 @@ app.use(async (ctx) => {
       schema,
     });
 
-    await sendNodeResponse(result, ctx.res);
+    ctx.status = response.status;
+
+    response.headers.forEach((value, key) => {
+      ctx.set(key, value)
+    });
+
+    ctx.body = Readable.from(response.body as any);
   }
 });
 

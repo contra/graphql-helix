@@ -364,7 +364,6 @@ implementations.forEach((implementation) => {
         for await (const chunk of stream) {
           chunks.push(chunk.toString());
         }
-        expect(chunks).toHaveLength(3);
         expect(chunks[0].includes(`{"data":{"stream":["A"]},"hasNext":true}`)).toEqual(true);
         expect(chunks[1].includes(`{"data":"B","path":["stream",1],"hasNext":true}`)).toEqual(true);
         expect(chunks[2].includes(`{"data":"C","path":["stream",2],"hasNext":true}`)).toEqual(true);

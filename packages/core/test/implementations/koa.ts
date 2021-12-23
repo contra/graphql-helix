@@ -1,9 +1,13 @@
 import Koa, { Context } from "koa";
-import bodyParser from "koa-bodyparser";
+import { Readable } from "stream";
 import { getGraphQLParameters, getNodeRequest, processRequest, renderGraphiQL, sendNodeResponse, shouldRenderGraphiQL } from "../../lib";
 import { schema } from "../schema";
 
 const graphqlHandler = async (ctx: Context) => {
+  ctx.req.socket.setTimeout(0);
+  ctx.req.socket.setNoDelay(true);
+  ctx.req.socket.setKeepAlive(true);
+
   const request = await getNodeRequest(ctx.request);
   const { operationName, query, variables } = await getGraphQLParameters(request);
   const response = await processRequest({
@@ -14,11 +18,13 @@ const graphqlHandler = async (ctx: Context) => {
     schema,
   });
 
-  ctx.req.socket.setTimeout(0);
-  ctx.req.socket.setNoDelay(true);
-  ctx.req.socket.setKeepAlive(true);
+  ctx.status = response.status;
 
-  await sendNodeResponse(response, ctx.res);
+  response.headers.forEach((value, key) => {
+    ctx.set(key, value)
+  });
+
+  ctx.body = Readable.from(response.body as any);
 };
 
 const graphiqlHandler = async (ctx: Context) => {

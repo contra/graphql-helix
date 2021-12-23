@@ -1,7 +1,7 @@
 import { ExecutionResult } from "graphql";
 import { ExecutionPatchResult } from "../types";
-import { calculateByteLength } from "./calculate-byte-length";
 import { ReadableStream, Response } from "cross-undici-fetch";
+import { encodeString } from "./encode-string";
 
 export type TransformResultFn = (result: ExecutionResult | ExecutionPatchResult) => any;
 export const DEFAULT_TRANSFORM_RESULT_FN: TransformResultFn = (result: ExecutionResult) => result;
@@ -9,16 +9,16 @@ export const DEFAULT_TRANSFORM_RESULT_FN: TransformResultFn = (result: Execution
 export function getRegularResponse(executionResult: ExecutionResult, transformResult = DEFAULT_TRANSFORM_RESULT_FN): Response {
   const transformedResult = transformResult(executionResult);
   const responseBody = JSON.stringify(transformedResult);
-  const contentLength = calculateByteLength(responseBody);
+  const decodedString = encodeString(responseBody);
   const headersInit: HeadersInit = {
-    "Content-Type": 'application/json',
-    "Content-Length": contentLength.toString()
+    "Content-Type": "application/json",
+    "Content-Length": decodedString.byteLength.toString(),
   };
   const responseInit: ResponseInit = {
     headers: headersInit,
     status: 200,
   };
-  return new Response(responseBody, responseInit);
+  return new Response(decodedString, responseInit);
 }
 
 export function getMultipartResponse(
@@ -34,38 +34,40 @@ export function getMultipartResponse(
     headers: headersInit,
     status: 200,
   };
+
+  let iterator: AsyncIterator<ExecutionResult<any>>;
+
   const readableStream = new ReadableStream({
     async start(controller) {
-      try {
-        controller.enqueue(`---`);
-        const iterator = asyncExecutionResult[Symbol.asyncIterator]();
-        while (true) {
-          const { done, value } = await iterator.next();
-          if (done) {
-            controller.enqueue("\r\n-----\r\n");
-            controller.close();
-            break;
-          }
-          const transformedResult = transformResult(value);
-          const chunk = JSON.stringify(transformedResult);
-          const contentLength = calculateByteLength(chunk);
-          const data = [
-            "",
-            "Content-Type: application/json; charset=utf-8",
-            "Content-Length: " + contentLength.toString(),
-            "",
-            chunk,
-          ];
-          if (value.hasNext) {
-            data.push("---");
-          }
-          controller.enqueue(data.join("\r\n"));
+      iterator = asyncExecutionResult[Symbol.asyncIterator]();
+      controller.enqueue(`---`);
+    },
+    async pull(controller) {
+      const { done, value } = await iterator.next();
+      if (done) {
+        queueMicrotask(() => {
+          controller.enqueue("\r\n-----\r\n");
+          controller.close();
+        });
+      } else {
+        const transformedResult = transformResult(value);
+        const chunk = JSON.stringify(transformedResult);
+        const encodedChunk = encodeString(chunk);
+        controller.enqueue('\r\n');
+        controller.enqueue('Content-Type: application/json; charset=utf-8\r\n');
+        controller.enqueue('Content-Length: ' + encodedChunk.byteLength + '\r\n');
+        controller.enqueue('\r\n');
+        controller.enqueue(encodedChunk);
+        if (value.hasNext) {
+          controller.enqueue("\r\n---");
         }
-      } catch (e) {
-        controller.error(e);
       }
     },
+    async cancel() {
+      await iterator.return?.()
+    }
   });
+
   return new Response(readableStream, responseInit);
 }
 
@@ -83,24 +85,27 @@ export function getPushResponse(
     status: 200,
   };
 
+  let iterator: AsyncIterator<ExecutionResult<any>>;
+
   const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        const iterator = asyncExecutionResult[Symbol.asyncIterator]();
-        while (true) {
-          const { done, value } = await iterator.next();
-          if (done) {
-            controller.close();
-            break;
-          }
-          const transformedResult = transformResult(value);
-          const chunk = JSON.stringify(transformedResult);
-          controller.enqueue(`data: ${chunk}\n\n`);
-        }
-      } catch (e) {
-        controller.error(e);
+    async start() {
+      iterator = asyncExecutionResult[Symbol.asyncIterator]();
+    },
+    async pull(controller) {
+      const { done, value } = await iterator.next();
+      if (done) {
+        queueMicrotask(() => {
+          controller.close();
+        });
+      } else {
+        const transformedResult = transformResult(value);
+        const chunk = JSON.stringify(transformedResult);
+        controller.enqueue(`data: ${chunk}\n\n`);
       }
     },
+    async cancel() {
+      await iterator.return?.()
+    }
   });
   return new Response(readableStream, responseInit);
 }
@@ -109,7 +114,7 @@ interface ErrorResponseParams {
   message: string;
   status?: number;
   headers?: any;
-  errors?: { message: string }[] | readonly { message: string }[];
+  errors?: Error[];
   transformResult?: typeof DEFAULT_TRANSFORM_RESULT_FN;
   isEventStream: boolean;
 }
@@ -122,12 +127,12 @@ export function getErrorResponse({
   message,
   status = 500,
   headers = {},
-  errors = [{ message }],
+  errors = [new Error(message)],
   transformResult = DEFAULT_TRANSFORM_RESULT_FN,
   isEventStream,
 }: ErrorResponseParams): Response {
   const payload: any = {
-    errors,
+    errors: errors.map((error) => ({ name: error.name, message: error.message, stack: error.stack })),
   };
   if (isEventStream) {
     return getPushResponse(getSingleResult(payload), transformResult);
