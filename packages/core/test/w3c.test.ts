@@ -1,7 +1,7 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { getGraphQLParameters, getNodeRequest, processRequest, sendNodeResponse } from "../lib";
 import { stringify as qsStringify } from "qs";
-import fetch, { Request } from "node-fetch";
+import { Request, fetch } from "cross-undici-fetch";
 import { createServer, Server } from "http";
 import { PassThrough } from "stream";
 
@@ -270,6 +270,9 @@ describe.only("W3 Subscription Node.js", () => {
             resolve();
           }, 300);
         }
+      });
+      response.on("error", () => {
+        // this is just here so we dont get unhandled promise rejection stuff
       });
     });
 
