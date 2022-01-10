@@ -81,6 +81,14 @@
     "./send-result/node-http": {
       "require": "./dist/send-result/node-http.js",
       "import": "./dist-esm/send-result/node-http.mjs"
+    },
+    "./payload/to-response-payload": {
+      "require": "./dist/send-result/to-response-payload.js",
+      "import": "./dist/send-result/to-response-payload.mjs"
+    },
+    "./node/to-readable": {
+      "require": "./dist/send-result/to-readable.js",
+      "import": "./dist/send-result/to-readable.mjs"
     }
   }
 }

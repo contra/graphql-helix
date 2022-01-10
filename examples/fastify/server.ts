@@ -1,5 +1,10 @@
 import fastify from "fastify";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "graphql-helix";
+import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "graphql-helix";
+// @ts-ignore
+import { toResponsePayload } from "graphql-helix/send-result/to-response-payload";
+// @ts-ignore
+import { toReadable } from "graphql-helix/node/to-readable";
+
 import { schema } from "./schema";
 
 const app = fastify();
@@ -7,7 +12,7 @@ const app = fastify();
 app.route({
   method: ["GET", "POST"],
   url: "/graphql",
-  async handler(req, res) {
+  async handler(req, reply) {
     const request = {
       body: req.body,
       headers: req.headers,
@@ -16,8 +21,8 @@ app.route({
     };
 
     if (shouldRenderGraphiQL(request)) {
-      res.type("text/html");
-      res.send(renderGraphiQL({}));
+      reply.type("text/html");
+      reply.send(renderGraphiQL({}));
     } else {
       const request = {
         body: req.body,
@@ -34,7 +39,9 @@ app.route({
         schema,
       });
 
-      sendResult(result, res.raw);
+      const responsePayload = toResponsePayload(result);
+      reply.headers(responsePayload.headers);
+      reply.send(toReadable(responsePayload.source));
     }
   },
 });

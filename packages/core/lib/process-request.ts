@@ -115,7 +115,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
 
     const defaultSingleResponseHeaders = [
       {
-        name: "Content-Type",
+        name: "content-type",
         value: getSingleResponseContentType(rankedProtocols),
       },
     ];
@@ -123,7 +123,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
     try {
       if (!isHttpMethod("GET", request.method) && !isHttpMethod("POST", request.method)) {
         throw new HttpError(405, "GraphQL only supports GET and POST requests.", {
-          headers: [...defaultSingleResponseHeaders, { name: "Allow", value: "GET, POST" }],
+          headers: [...defaultSingleResponseHeaders, { name: "allow", value: "GET, POST" }],
         });
       }
 
@@ -139,7 +139,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
 
       if (operation.operation === "mutation" && isHttpMethod("GET", request.method)) {
         throw new HttpError(405, "Can only perform a mutation operation from a POST request.", {
-          headers: [...defaultSingleResponseHeaders, { name: "Allow", value: "POST" }],
+          headers: [...defaultSingleResponseHeaders, { name: "allow", value: "POST" }],
         });
       }
 
@@ -168,7 +168,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
         if (operation.operation === "subscription") {
           if (!isHttpMethod("GET", request.method)) {
             throw new HttpError(405, "Can only perform subscription operation from a GET request.", {
-              headers: [...defaultSingleResponseHeaders, { name: "Allow", value: "GET" }],
+              headers: [...defaultSingleResponseHeaders, { name: "allow", value: "GET" }],
             });
           }
           const result = await subscribe({
