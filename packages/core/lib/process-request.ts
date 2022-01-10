@@ -22,6 +22,7 @@ import {
   Request,
 } from "./types";
 import { getRankedResponseProtocols, RankedResponseProtocols } from "./util/get-ranked-response-protocols";
+import { asyncGeneratorOf } from "./util/async-generator-of";
 
 const parseQuery = (query: string | DocumentNode, parse: typeof defaultParse): DocumentNode | Promise<DocumentNode> => {
   if (typeof query !== "string" && query.kind === "Document") {
@@ -219,6 +220,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
               unsubscribe: () => {
                 stopAsyncIteration(result);
               },
+              [Symbol.asyncIterator]: () => result[Symbol.asyncIterator](),
             };
           }
           return {
@@ -235,6 +237,16 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
               );
             },
             unsubscribe: () => undefined,
+            [Symbol.asyncIterator]: () =>
+              asyncGeneratorOf(
+                formatPayload({
+                  payload: result,
+                  context,
+                  rootValue,
+                  document,
+                  operation,
+                })
+              ),
           };
         } else {
           const result = await execute({
@@ -267,6 +279,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
               unsubscribe: () => {
                 stopAsyncIteration(result);
               },
+              [Symbol.asyncIterator]: () => result[Symbol.asyncIterator](),
             } as MultipartResponse<TContext, TRootValue>;
           } else {
             return {
@@ -318,6 +331,16 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
             );
           },
           unsubscribe: () => undefined,
+          [Symbol.asyncIterator]: () =>
+            asyncGeneratorOf(
+              formatPayload({
+                payload,
+                context,
+                rootValue,
+                document,
+                operation,
+              })
+            ),
         };
       } else {
         return {
