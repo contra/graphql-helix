@@ -70,6 +70,7 @@
     "replacer": "scripts/denoify-replacer.js"
   },
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "require": "./dist/index.js",
       "import": "./dist-esm/index.mjs"
@@ -78,17 +79,17 @@
       "require": "./dist/*.js",
       "import": "./dist-esm/*.mjs"
     },
-    "./send-result/node-http": {
-      "require": "./dist/send-result/node-http.js",
-      "import": "./dist-esm/send-result/node-http.mjs"
-    },
-    "./payload/to-response-payload": {
-      "require": "./dist/send-result/to-response-payload.js",
-      "import": "./dist/send-result/to-response-payload.mjs"
-    },
     "./node/to-readable": {
-      "require": "./dist/send-result/to-readable.js",
-      "import": "./dist/send-result/to-readable.mjs"
+      "require": "./dist/node/to-readable.js",
+      "import": "./dist-esm/node/to-readable.mjs"
+    },
+    "./node/send-result": {
+      "require": "./dist/node/send-result.js",
+      "import": "./dist-esm/node/send-result.mjs"
+    },
+    "./send-result/node-http": {
+      "require": "./dist/node/send-result.js",
+      "import": "./dist-esm/node/send-result.mjs"
     }
   }
 }

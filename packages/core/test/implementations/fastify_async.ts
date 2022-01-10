@@ -1,11 +1,13 @@
 import fastify, { RouteHandlerMethod } from "fastify";
 import { parse as graphqlParse } from "graphql";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "../../lib";
+import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
+import { toResponsePayload } from "../../lib/to-response-payload";
+import { toReadable } from "../../lib/node/to-readable";
 import { schema } from "../schema";
 
 const sleep = (time: number) => new Promise<void>((resolve) => setTimeout(resolve, time));
 
-const graphqlHandler: RouteHandlerMethod = async (req, res) => {
+const graphqlHandler: RouteHandlerMethod = async (req, reply) => {
   const request = {
     body: req.body,
     headers: req.headers,
@@ -25,9 +27,10 @@ const graphqlHandler: RouteHandlerMethod = async (req, res) => {
     },
   });
 
-  await sendResult(result, res.raw);
-  // Tell fastify a response was sent
-  res.sent = true;
+  const responsePayload = toResponsePayload(result);
+  reply.status(responsePayload.status);
+  reply.headers(responsePayload.headers);
+  reply.send(toReadable(responsePayload.source));
 };
 
 const graphiqlHandler: RouteHandlerMethod = async (_req, res) => {

@@ -1,5 +1,6 @@
 import express, { RequestHandler } from "express";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "../../lib";
+import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
+import { sendResult } from "../../lib/node/send-result";
 import { schema } from "../schema";
 
 const graphqlMiddleware: RequestHandler = async (req, res) => {

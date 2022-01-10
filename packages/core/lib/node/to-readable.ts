@@ -1,5 +1,11 @@
 import { Readable } from "stream";
 
+/**
+ * Transform an AsyncGenerator to a Readable.
+ *
+ * This helper is useful especially for fastify as the Reply.send method has support for consuming streams,
+ * but not async iterable sources.
+ */
 export function toReadable<T>(source: AsyncGenerator<T, void>): Readable {
   const readable = new Readable({
     encoding: "utf-8",

@@ -7,11 +7,7 @@ export function asyncGeneratorOf<T>(...source: Array<T>): AsyncGenerator<T> {
       return this;
     },
     next() {
-      if (source.length === 0) {
-        return Promise.resolve({ done: true, value: undefined });
-      }
-
-      return Promise.resolve({ done: false, value: source.shift()! });
+      return Promise.resolve(source.length === 0 ? { done: true, value: undefined } : { done: false, value: source.shift()! });
     },
     throw(err) {
       throw err;

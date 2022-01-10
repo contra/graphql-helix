@@ -1,5 +1,5 @@
 /**
- * Chain async generators in sequence
+ * Chain AsyncIterable in sequence.
  */
 export function asyncIterableChain<T>(...subjects: Array<AsyncIterable<T>>): AsyncGenerator<T, void> {
   const iterators = subjects.map((subject) => subject[Symbol.asyncIterator]());

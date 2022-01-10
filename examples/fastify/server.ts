@@ -1,8 +1,6 @@
 import fastify from "fastify";
 import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "graphql-helix";
-// @ts-ignore
-import { toResponsePayload } from "graphql-helix/send-result/to-response-payload";
-// @ts-ignore
+import { toResponsePayload } from "graphql-helix/to-response-payload";
 import { toReadable } from "graphql-helix/node/to-readable";
 
 import { schema } from "./schema";
