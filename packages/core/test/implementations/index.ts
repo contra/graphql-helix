@@ -3,4 +3,4 @@ import fastify from "./fastify";
 import asyncFastify from "./fastify_async";
 import koa from "./koa";
 
-export default [express, fastify, koa, asyncFastify];
+export default [express, fastify, koa, asyncFastify] as const;

@@ -1,4 +1,5 @@
 import fastify, { RouteHandlerMethod } from "fastify";
+import fastifyCookie from "fastify-cookie";
 import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
 import { toResponsePayload } from "../../lib/to-response-payload";
 import { toReadable } from "../../lib/node/to-readable";
@@ -19,6 +20,7 @@ const graphqlHandler: RouteHandlerMethod = async (req, reply) => {
     variables,
     request,
     schema,
+    contextFactory: () => ({ fastifyReply: reply }),
   });
 
   const responsePayload = toResponsePayload(result);
@@ -33,6 +35,11 @@ const graphiqlHandler: RouteHandlerMethod = async (_req, res) => {
 };
 
 const app = fastify();
+
+app.register(fastifyCookie, {
+  secret: "my-secret",
+  parseOptions: {},
+});
 
 app.route({
   method: ["GET", "POST", "PUT"],
