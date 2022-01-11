@@ -4,8 +4,7 @@ import type { Http2ServerResponse } from "http2";
 import { HttpError } from "../errors";
 import type { Response, MultipartResponse, Push, ProcessRequestResult } from "../types";
 import { TransformResultFn, DEFAULT_TRANSFORM_RESULT_FN } from "../transform-result";
-import { toResponseResponsePayload } from "../to-response-payload";
-import { toMultiPartResponsePayload, toPushResponsePayload } from "..";
+import { toResponseResponsePayload, toMultiPartResponsePayload, toPushResponsePayload } from "../to-response-payload";
 
 export type RawResponse = ServerResponse | Http2ServerResponse;
 
