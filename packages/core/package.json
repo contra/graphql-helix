@@ -80,10 +80,6 @@
       "require": "./dist/*.js",
       "import": "./dist-esm/*.mjs"
     },
-    "./node/to-readable": {
-      "require": "./dist/node/to-readable.js",
-      "import": "./dist-esm/node/to-readable.mjs"
-    },
     "./node/send-result": {
       "require": "./dist/node/send-result.js",
       "import": "./dist-esm/node/send-result.mjs"

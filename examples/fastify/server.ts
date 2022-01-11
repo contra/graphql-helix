@@ -1,7 +1,7 @@
 import fastify from "fastify";
 import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "graphql-helix";
 import { toResponsePayload } from "graphql-helix/to-response-payload";
-import { toReadable } from "graphql-helix/node/to-readable";
+import { Readable } from "stream";
 
 import { schema } from "./schema";
 
@@ -40,7 +40,7 @@ app.route({
       const responsePayload = toResponsePayload(result);
       reply.status(responsePayload.status);
       reply.headers(responsePayload.headers);
-      reply.send(toReadable(responsePayload.source));
+      reply.send(Readable.from(responsePayload.source));
     }
   },
 });

@@ -1,8 +1,8 @@
 import fastify, { RouteHandlerMethod } from "fastify";
 import fastifyCookie from "fastify-cookie";
+import { Readable } from "stream";
 import { getGraphQLParameters, processRequest, renderGraphiQL, shouldRenderGraphiQL } from "../../lib";
 import { toResponsePayload } from "../../lib/to-response-payload";
-import { toReadable } from "../../lib/node/to-readable";
 
 import { schema } from "../schema";
 
@@ -27,7 +27,7 @@ const create = () => {
     const responsePayload = toResponsePayload(result);
     reply.status(responsePayload.status);
     reply.headers(responsePayload.headers);
-    reply.send(toReadable(responsePayload.source));
+    reply.send(Readable.from(responsePayload.source));
   };
 
   const graphiqlHandler: RouteHandlerMethod = async (_req, res) => {
