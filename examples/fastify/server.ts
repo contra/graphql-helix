@@ -38,6 +38,7 @@ app.route({
       });
 
       const responsePayload = toResponsePayload(result);
+      reply.status(responsePayload.status);
       reply.headers(responsePayload.headers);
       reply.send(toReadable(responsePayload.source));
     }

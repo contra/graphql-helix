@@ -8,6 +8,7 @@ import { toResponseResponsePayload, toMultiPartResponsePayload, toPushResponsePa
 
 export type RawResponse = ServerResponse | Http2ServerResponse;
 
+/** @deprecated */
 export async function sendResponseResult(
   responseResult: Response<any, any>,
   rawResponse: RawResponse,
@@ -33,6 +34,7 @@ export async function sendResponseResult(
   response.end();
 }
 
+/** @deprecated */
 export async function sendMultipartResponseResult(
   multipartResult: MultipartResponse<any, any>,
   rawResponse: RawResponse,
@@ -57,6 +59,7 @@ export async function sendMultipartResponseResult(
   response.end();
 }
 
+/** @deprecated */
 export async function sendPushResult(
   pushResult: Push<any, any>,
   rawResponse: RawResponse,
@@ -81,6 +84,7 @@ export async function sendPushResult(
   response.end();
 }
 
+/** @deprecated */
 export async function sendResult(
   result: ProcessRequestResult<any, any>,
   rawResponse: RawResponse,
