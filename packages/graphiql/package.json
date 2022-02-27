@@ -14,9 +14,9 @@
     "build": "node build.js"
   },
   "dependencies": {
-    "@graphql-tools/utils": "8.5.3",
+    "@graphql-tools/utils": "8.6.2",
     "@n1ru4l/graphql-live-query": "0.9.0",
-    "@graphql-tools/url-loader": "7.5.2",
+    "@graphql-tools/url-loader": "7.7.2",
     "copy-to-clipboard": "3.3.1",
     "graphiql": "1.4.6",
     "graphql": "16.0.0-experimental-stream-defer.5",
