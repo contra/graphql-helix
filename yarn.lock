@@ -1667,23 +1667,23 @@
   resolved "https://registry.yarnpkg.com/@graphql-typed-document-node/core/-/core-3.1.0.tgz#0eee6373e11418bfe0b5638f654df7a4ca6a3950"
   integrity sha512-wYn6r8zVZyQJ6rQaALBEln5B1pzxb9shV5Ef97kTvn6yVGrqyXVnDqnU24MXnFubR+rZjBY9NWuxX3FB2sTsjg==
 
-"@guild-docs/client@1.3.2":
-  version "1.3.2"
-  resolved "https://registry.yarnpkg.com/@guild-docs/client/-/client-1.3.2.tgz#660b367ebaabd65f6f84316d4a32da75cb93834e"
-  integrity sha512-IrYoqtx08n3xhegBNbiSHqoB2o5ECU3tih7uKvjqoMIDz+EiBdqjRwHh0ME/H4C2zc167irj6QErcwNSHjaVXA==
+"@guild-docs/client@1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@guild-docs/client/-/client-1.4.0.tgz#da852d87315fe9ae4708f934823b4c39db7816ff"
+  integrity sha512-xDkFoT5dbTUQodSpNP4IMRhv7HHcN2bhig5HGu61H3khKEo5Pjdyyhu/w3QdQjVQGfDZQoU7ceiyxrKGXa9+hQ==
   dependencies:
-    "@guild-docs/mdx-remote" "^1.0.1"
+    "@guild-docs/mdx-remote" "^1.0.2"
     "@guild-docs/types" "^1.1.0"
-    immer "^9.0.7"
-    next-seo "^4.28.1"
+    immer "^9.0.12"
+    next-seo "^5.0.0"
     nprogress "^0.2.0"
     react-icons "4.3.1"
-    react-intersection-observer "^8.32.5"
+    react-intersection-observer "^8.33.1"
     react-sticky-box "0.9.3"
-    react-use "^17.3.1"
+    react-use "^17.3.2"
     remove-markdown "^0.3.0"
     use-immer "^0.6.0"
-    zustand "^3.6.5"
+    zustand "^3.6.9"
 
 "@guild-docs/mdx-remote@^1.0.1":
   version "1.0.1"
@@ -1694,6 +1694,17 @@
     "@mdx-js/mdx" "^1.6.22"
     "@mdx-js/react" "^1.6.22"
     unified "^10.1.0"
+    unist-util-remove "^3.1.0"
+
+"@guild-docs/mdx-remote@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@guild-docs/mdx-remote/-/mdx-remote-1.0.2.tgz#c9e69e8c032d6d7da900ba9b45965140f1d7748a"
+  integrity sha512-1wQBiZwm8o2AS2fW8cGh5Kwvl371PFt+tnvzB5umO3zV5eVdKtbdYe0ukMLcPxy9He5YOnAyceQ/hGaSjbIyww==
+  dependencies:
+    "@guild-docs/types" "^1.1.0"
+    "@mdx-js/mdx" "^1.6.22"
+    "@mdx-js/react" "^1.6.22"
+    unified "^10.1.1"
     unist-util-remove "^3.1.0"
 
 "@guild-docs/server@2.1.4":
@@ -6545,10 +6556,10 @@ ignore@^5.1.1, ignore@^5.1.4, ignore@^5.1.8:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.1.9.tgz#9ec1a5cbe8e1446ec60d4420060d43aa6e7382fb"
   integrity sha512-2zeMQpbKz5dhZ9IwL0gbxSW5w0NK/MSAMtNuhgIHEPmaU3vPdKPL0UdvUCXs5SS4JAwsBxysK5sFMW8ocFiVjQ==
 
-immer@^9.0.7:
-  version "9.0.7"
-  resolved "https://registry.yarnpkg.com/immer/-/immer-9.0.7.tgz#b6156bd7db55db7abc73fd2fdadf4e579a701075"
-  integrity sha512-KGllzpbamZDvOIxnmJ0jI840g7Oikx58lBPWV0hUh7dtAyZpFqqrBZdKka5GlTwMTZ1Tjc/bKKW4VSFAt6BqMA==
+immer@^9.0.12:
+  version "9.0.12"
+  resolved "https://registry.yarnpkg.com/immer/-/immer-9.0.12.tgz#2d33ddf3ee1d247deab9d707ca472c8c942a0f20"
+  integrity sha512-lk7UNmSbAukB5B6dh9fnh5D0bJTOFKxVg2cyJWTYrWRfhLrLMBquONcUs3aFq507hNoIZEDDh8lb8UtOizSMhA==
 
 import-cwd@^3.0.0:
   version "3.0.0"
@@ -8396,10 +8407,15 @@ next-remote-watch@1.0.0:
     commander "^5.0.0"
     express "^4.17.1"
 
-next-seo@4.28.1, next-seo@^4.28.1:
+next-seo@4.28.1:
   version "4.28.1"
   resolved "https://registry.yarnpkg.com/next-seo/-/next-seo-4.28.1.tgz#c98ee559c8ab7196c62d0f6903afd7a8cde47a03"
   integrity sha512-WZgwdM+UhpNF3A37zFllzmPhnOVJ9vYeYlc0n3Z/kYfz/QQgy8NEdncNNggS9dU4JD8xriaCcyknhy5OsrFsJw==
+
+next-seo@^5.0.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/next-seo/-/next-seo-5.1.0.tgz#aa9fd6249a11bf93e6da06fa2a6bc89268936edf"
+  integrity sha512-ampuQfNTOi1x+xtRIb6CZGunIo6rQXtMo2Tyu861d5GjJFIwfOXsA4lzCa4+e2rLkyXDyVpavNNUZWa3US9ELw==
 
 next@12.1.0:
   version "12.1.0"
@@ -9403,10 +9419,10 @@ react-instantsearch-dom@^6.11.0:
     react-fast-compare "^3.0.0"
     react-instantsearch-core "^6.15.0"
 
-react-intersection-observer@^8.32.5:
-  version "8.32.5"
-  resolved "https://registry.yarnpkg.com/react-intersection-observer/-/react-intersection-observer-8.32.5.tgz#92e8d8888b0b43a5c10c398e0d483d574bce7f3e"
-  integrity sha512-4xKdUWRNdPueXXxTyMOV41w6qIa4tsV7BbWOW+IYsvGPP7wxOj9V6o3cKywie+/VDr5Qs7pCzi5Wom78dUxj1w==
+react-intersection-observer@^8.33.1:
+  version "8.33.1"
+  resolved "https://registry.yarnpkg.com/react-intersection-observer/-/react-intersection-observer-8.33.1.tgz#8e6442cac7052ed63056e191b7539e423e7d5c64"
+  integrity sha512-3v+qaJvp3D1MlGHyM+KISVg/CMhPiOlO6FgPHcluqHkx4YFCLuyXNlQ/LE6UkbODXlQcLOppfX6UMxCEkUhDLw==
 
 react-is@^16.7.0, react-is@^16.8.1:
   version "16.13.1"
@@ -9477,10 +9493,30 @@ react-universal-interface@^0.6.2:
   resolved "https://registry.yarnpkg.com/react-universal-interface/-/react-universal-interface-0.6.2.tgz#5e8d438a01729a4dbbcbeeceb0b86be146fe2b3b"
   integrity sha512-dg8yXdcQmvgR13RIlZbTRQOoUrDciFVoSBZILwjE2LFISxZZ8loVJKAkuzswl5js8BHda79bIb2b84ehU8IjXw==
 
-react-use@17.3.1, react-use@^17.3.1:
+react-use@17.3.1:
   version "17.3.1"
   resolved "https://registry.yarnpkg.com/react-use/-/react-use-17.3.1.tgz#12b248555775519aa2b900b22f1928d029bf99d1"
   integrity sha512-hs7+tS4rRm1QLHPfanLCqXIi632tP4V7Sai1ENUP2WTufU6am++tU9uSw9YrNCFqbABiEv0ndKU1XCUcfu2tXA==
+  dependencies:
+    "@types/js-cookie" "^2.2.6"
+    "@xobotyi/scrollbar-width" "^1.9.5"
+    copy-to-clipboard "^3.3.1"
+    fast-deep-equal "^3.1.3"
+    fast-shallow-equal "^1.0.0"
+    js-cookie "^2.2.1"
+    nano-css "^5.3.1"
+    react-universal-interface "^0.6.2"
+    resize-observer-polyfill "^1.5.1"
+    screenfull "^5.1.0"
+    set-harmonic-interval "^1.0.1"
+    throttle-debounce "^3.0.1"
+    ts-easing "^0.2.0"
+    tslib "^2.1.0"
+
+react-use@^17.3.2:
+  version "17.3.2"
+  resolved "https://registry.yarnpkg.com/react-use/-/react-use-17.3.2.tgz#448abf515f47c41c32455024db28167cb6e53be8"
+  integrity sha512-bj7OD0/1wL03KyWmzFXAFe425zziuTf7q8olwCYBfOeFHY1qfO1FAMjROQLsLZYwG4Rx63xAfb7XAbBrJsZmEw==
   dependencies:
     "@types/js-cookie" "^2.2.6"
     "@xobotyi/scrollbar-width" "^1.9.5"
@@ -11899,10 +11935,10 @@ yocto-queue@^0.1.0:
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zustand@^3.6.5:
-  version "3.6.5"
-  resolved "https://registry.yarnpkg.com/zustand/-/zustand-3.6.5.tgz#42a459397907d6bf0e2375351394733b2f83ee44"
-  integrity sha512-/WfLJuXiEJimt61KGMHebrFBwckkCHGhAgVXTgPQHl6IMzjqm6MREb1OnDSnCRiSmRdhgdFCctceg6tSm79hiw==
+zustand@^3.6.9:
+  version "3.7.0"
+  resolved "https://registry.yarnpkg.com/zustand/-/zustand-3.7.0.tgz#a5c68fb06bdee9c63ad829de2432635be6d0ce69"
+  integrity sha512-USzVzLGrvZ8VK1/sEsOAmeqa8N7D3OBdZskVaL7DL89Q4QLTYD053iIlZ5KDidyZ+Od80Dttin/f8ZulOLFFDQ==
 
 zwitch@^1.0.0:
   version "1.0.5"
