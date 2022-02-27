@@ -98,7 +98,7 @@ implementations.forEach((implementation) => {
         });
         expect(errors).toBeUndefined();
         expect(data?.echo).toBeDefined();
-        expect(headers['content-length']).toBeDefined();
+        expect(headers["content-length"]).toBeDefined();
       });
 
       test("POST query with variables", async () => {
@@ -263,7 +263,7 @@ implementations.forEach((implementation) => {
         });
         expect(errors).toBeUndefined();
         expect(data?.echo).toBeDefined();
-        expect(headers['content-length']).toBeDefined();
+        expect(headers["content-length"]).toBeDefined();
       });
 
       test("GET query with variables", async () => {
@@ -661,5 +661,43 @@ implementations.forEach((implementation) => {
         expect(isShowingPlayButton).toEqual(true);
       });
     });
+  });
+});
+
+describe("fastify plugin compat", () => {
+  const [, implementation] = implementations;
+  let port: number;
+  let stopServer: () => Promise<void>;
+
+  beforeAll(async () => {
+    port = await getPort();
+    stopServer = await implementation.start(port);
+  });
+
+  afterAll(async () => {
+    await stopServer();
+  });
+
+  test("set cookies with fastify-cookie", async () => {
+    const operation = /* GraphQL */ `
+      mutation {
+        fastifyOnlyCookie
+      }
+    `;
+
+    const { body, headers } = await post({
+      path: "/graphql",
+      port,
+      query: operation,
+    });
+
+    expect(body).toEqual({
+      data: {
+        fastifyOnlyCookie: null,
+      },
+    });
+
+    expect(headers["set-cookie"]).toBeDefined();
+    expect(headers["set-cookie"]).toEqual(["it=works"]);
   });
 });

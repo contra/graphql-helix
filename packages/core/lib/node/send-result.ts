@@ -3,27 +3,38 @@ import type { ServerResponse } from "http";
 import type { Http2ServerResponse } from "http2";
 import { HttpError } from "../errors";
 import type { Response, MultipartResponse, Push, ProcessRequestResult } from "../types";
-import { calculateByteLength } from "../util/calculate-byte-length";
-import { TransformResultFn, DEFAULT_TRANSFORM_RESULT_FN } from "./utils";
+import { TransformResultFn, DEFAULT_TRANSFORM_RESULT_FN } from "../transform-result";
+import { toResponseResponsePayload, toMultiPartResponsePayload, toPushResponsePayload } from "../to-response-payload";
 
 export type RawResponse = ServerResponse | Http2ServerResponse;
 
+/** @deprecated */
 export async function sendResponseResult(
   responseResult: Response<any, any>,
   rawResponse: RawResponse,
   transformResult: TransformResultFn = DEFAULT_TRANSFORM_RESULT_FN
 ): Promise<void> {
-  for (const { name, value } of responseResult.headers) {
-    rawResponse.setHeader(name, value);
+  /**
+   * TypeScript complains because of function call signature mismatches.
+   * The signatures, however, are identical, thus we cas this here to suppress warnings,
+   */
+  const response: ServerResponse = rawResponse as ServerResponse;
+  const responsePayload = toResponseResponsePayload(responseResult, transformResult);
+  for (const [name, value] of Object.entries(responsePayload.headers)) {
+    response.setHeader(name, value);
   }
-  const data = JSON.stringify(transformResult(responseResult.payload));
-  rawResponse.writeHead(responseResult.status, {
-    "content-type": "application/json",
-    "content-length": calculateByteLength(data),
+  response.statusCode = responsePayload.status;
+  response.on("close", () => {
+    responsePayload.source.return();
   });
-  rawResponse.end(data);
+  for await (const value of responsePayload.source) {
+    response.write(value);
+  }
+
+  response.end();
 }
 
+/** @deprecated */
 export async function sendMultipartResponseResult(
   multipartResult: MultipartResponse<any, any>,
   rawResponse: RawResponse,
@@ -34,38 +45,21 @@ export async function sendMultipartResponseResult(
    * The signatures, however, are identical, thus we cas this here to suppress warnings,
    */
   const response: ServerResponse = rawResponse as ServerResponse;
-  response.writeHead(200, {
-    // prettier-ignore
-    "Connection": "keep-alive",
-    "Content-Type": 'multipart/mixed; boundary="-"',
-    "Transfer-Encoding": "chunked",
-  });
-
+  const responsePayload = toMultiPartResponsePayload(multipartResult, transformResult);
+  for (const [name, value] of Object.entries(responsePayload.headers)) {
+    response.setHeader(name, value);
+  }
+  response.statusCode = responsePayload.status;
   response.on("close", () => {
-    multipartResult.unsubscribe();
+    responsePayload.source.return();
   });
-  response.write("---");
-
-  await multipartResult.subscribe((result) => {
-    const chunk = JSON.stringify(transformResult(result));
-    const data = [
-      "",
-      "Content-Type: application/json; charset=utf-8",
-      "Content-Length: " + calculateByteLength(chunk),
-      "",
-      chunk,
-    ];
-
-    if (result.hasNext) {
-      data.push("---");
-    }
-    response.write(data.join("\r\n"));
-  });
-
-  response.write("\r\n-----\r\n");
+  for await (const value of responsePayload.source) {
+    response.write(value);
+  }
   response.end();
 }
 
+/** @deprecated */
 export async function sendPushResult(
   pushResult: Push<any, any>,
   rawResponse: RawResponse,
@@ -76,23 +70,21 @@ export async function sendPushResult(
    * The signatures, however, are identical, thus we cas this here to suppress warnings,
    */
   const response: ServerResponse = rawResponse as ServerResponse;
-  response.writeHead(200, {
-    "Content-Type": "text/event-stream",
-    // prettier-ignore
-    "Connection": "keep-alive",
-    "Cache-Control": "no-cache",
-  });
-
+  const responsePayload = toPushResponsePayload(pushResult, transformResult);
+  for (const [name, value] of Object.entries(responsePayload.headers)) {
+    response.setHeader(name, value);
+  }
+  response.statusCode = responsePayload.status;
   response.on("close", () => {
-    pushResult.unsubscribe();
+    responsePayload.source.return();
   });
-
-  await pushResult.subscribe((result) => {
-    response.write(`data: ${JSON.stringify(transformResult(result))}\n\n`);
-  });
+  for await (const value of responsePayload.source) {
+    response.write(value);
+  }
   response.end();
 }
 
+/** @deprecated */
 export async function sendResult(
   result: ProcessRequestResult<any, any>,
   rawResponse: RawResponse,

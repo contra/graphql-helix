@@ -13,6 +13,11 @@
     "noUnusedParameters": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "paths": {
+      "graphql-helix": ["./../../packages/core/lib/index.ts"],
+      "graphql-helix/to-response-payload": ["./../../packages/core/lib/to-response-payload.ts"],
+      "graphql-helix/node/to-readable": ["./../../packages/core/lib/node/to-readable.ts"]
+    }
   }
 }

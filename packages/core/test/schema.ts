@@ -24,6 +24,15 @@ export const schema = new GraphQLSchema({
           return args.number;
         },
       },
+      fastifyOnlyCookie: {
+        type: GraphQLInt,
+        resolve: (_, __, context) => {
+          if (!context.fastifyReply) {
+            throw new Error("This resolver should only be called for the Fastify integration.");
+          }
+          context.fastifyReply.cookie("it", "works");
+        },
+      },
     }),
   }),
   query: new GraphQLObjectType({

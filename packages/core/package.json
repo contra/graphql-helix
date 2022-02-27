@@ -48,6 +48,7 @@
     "del-cli": "4.0.1",
     "denoify": "0.10.5",
     "eventsource": "1.1.0",
+    "fastify-cookie": "5.5.0",
     "get-port": "5.1.1",
     "glob": "7.2.0",
     "globby": "12.0.2",
@@ -70,6 +71,7 @@
     "replacer": "scripts/denoify-replacer.js"
   },
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "require": "./dist/index.js",
       "import": "./dist-esm/index.mjs"
@@ -78,9 +80,13 @@
       "require": "./dist/*.js",
       "import": "./dist-esm/*.mjs"
     },
+    "./node/send-result": {
+      "require": "./dist/node/send-result.js",
+      "import": "./dist-esm/node/send-result.mjs"
+    },
     "./send-result/node-http": {
-      "require": "./dist/send-result/node-http.js",
-      "import": "./dist-esm/send-result/node-http.mjs"
+      "require": "./dist/node/send-result.js",
+      "import": "./dist-esm/node/send-result.mjs"
     }
   }
 }
