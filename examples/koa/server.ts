@@ -35,6 +35,7 @@ app.use(async (ctx) => {
       schema,
     });
 
+    ctx.respond = false;
     sendResult(result, ctx.res);
   }
 });
