@@ -2,8 +2,8 @@
 const { build } = require("esbuild");
 const { readFileSync, writeFileSync } = require("fs");
 
-const templateFile = "../core/lib/render-graphiql.template.ts";
-const outputFile = "../core/lib/render-graphiql.ts";
+const templateFile = "../graphql-helix/lib/render-graphiql.template.ts";
+const outputFile = "../graphql-helix/lib/render-graphiql.ts";
 
 function escapeString(str) {
   return JSON.stringify(str);

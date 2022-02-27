@@ -18,6 +18,7 @@ export const renderGraphiQL = (options: RenderGraphiQLOptions = {}): string => {
     shouldPersistHeaders,
   } = options;
   const nonceAttribute = nonce ? `nonce="${nonce}"` : "";
+  // eslint-disable-next-line no-template-curly-in-string
   const js = "{JS}"; // Will be replaced by esbuild during build
   const css = "{CSS}"; // Will be replaced by esbuild during build
 

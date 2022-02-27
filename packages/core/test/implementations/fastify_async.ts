@@ -1,6 +1,6 @@
 import fastify, { RouteHandlerMethod } from "fastify";
 import { parse as graphqlParse } from "graphql";
-import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "../../lib";
+import { getGraphQLParameters, processRequest, renderGraphiQL, sendResult, shouldRenderGraphiQL } from "../../../graphql-helix";
 import { schema } from "../schema";
 
 const sleep = (time: number) => new Promise<void>((resolve) => setTimeout(resolve, time));
