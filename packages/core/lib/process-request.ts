@@ -97,7 +97,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
     validate = defaultValidate,
     validationRules,
     variables,
-    allowedSubscriptionHttpMethods = ["GET"],
+    allowedSubscriptionHttpMethods = ["GET", "POST"],
   } = options;
 
   let context: TContext | undefined;
