@@ -1,5 +1,11 @@
 # graphql-helix
 
+## 1.12.0
+
+### Minor Changes
+
+- baf0b15: Enable to configure allowed HTTP methods for subscriptions.
+
 ## 1.11.0
 
 ### Minor Changes
