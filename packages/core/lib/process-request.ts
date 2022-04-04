@@ -160,6 +160,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           request,
           document,
           operation,
+          operationName,
           variables: variableValues,
         };
         context = contextFactory ? await contextFactory(executionContext) : ({} as TContext);
