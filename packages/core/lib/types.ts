@@ -122,6 +122,10 @@ export interface ProcessRequestOptions<TContext, TRootValue> {
    */
   variables?: string | { [name: string]: any };
   /**
+   * 
+   */
+  extensions?: Record<string, unknown>;
+  /**
    * HTTP methods that are allowed for subscriptions.
    */
   allowedSubscriptionHttpMethods?: ReadonlyArray<"POST" | "GET">;
@@ -140,6 +144,7 @@ export interface ExecutionContext {
   document: DocumentNode;
   operation: OperationDefinitionNode;
   operationName?: string;
+  extensions?: Record<string, unknown>;
   variables?: { readonly [name: string]: unknown };
 }
 
