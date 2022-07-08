@@ -139,6 +139,7 @@ export interface ExecutionContext {
   request: Request;
   document: DocumentNode;
   operation: OperationDefinitionNode;
+  operationName?: string;
   variables?: { readonly [name: string]: unknown };
 }
 
