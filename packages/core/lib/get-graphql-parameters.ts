@@ -7,20 +7,24 @@ export const getGraphQLParameters = (request: Request): GraphQLParams => {
   let operationName;
   let query;
   let variables;
+  let extensions;
 
   if (isHttpMethod("GET", method)) {
     operationName = queryParams.operationName;
     query = queryParams.query;
     variables = queryParams.variables;
+    extensions = queryParams.extensions;
   } else if (isHttpMethod("POST", method)) {
     operationName = body?.operationName;
     query = body?.query;
     variables = body?.variables;
+    extensions = body?.extension
   }
 
   return {
     operationName,
     query,
     variables,
+    extensions,
   };
 };

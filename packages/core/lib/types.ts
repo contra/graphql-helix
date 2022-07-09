@@ -13,6 +13,7 @@ export interface GraphQLParams {
   operationName?: string;
   query?: string;
   variables?: string | { [name: string]: any };
+  extensions?: Record<string, unknown>;
 }
 
 export type HybridSubscriptionTransportConfig = {
