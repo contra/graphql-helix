@@ -1,5 +1,12 @@
 # graphql-helix
 
+## 1.13.0
+
+### Minor Changes
+
+- 4d9ec82: Include `extensions` within the `ExecutionContext`.
+- 4d9ec82: Include `operationName` within the `ExecutionContext`.
+
 ## 1.12.0
 
 ### Minor Changes
