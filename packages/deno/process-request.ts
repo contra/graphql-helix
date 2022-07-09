@@ -88,6 +88,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
     execute = defaultExecute,
     formatPayload = ({ payload }) => payload,
     operationName,
+    extensions,
     parse = defaultParse,
     query,
     request,
@@ -161,6 +162,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           document,
           operation,
           operationName,
+          extensions,
           variables: variableValues,
         };
         context = contextFactory ? await contextFactory(executionContext) : ({} as TContext);
