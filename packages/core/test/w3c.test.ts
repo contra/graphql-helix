@@ -1,3 +1,4 @@
+import { GraphQLSchema } from "graphql";
 import { Request, Response, ReadableStream } from "cross-undici-fetch";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { getGraphQLParameters, processRequest, getResponse } from "../lib";
@@ -7,7 +8,7 @@ declare module "stream/web" {
   export const ReadableStream: any;
 }
 
-const schema = makeExecutableSchema({
+const executableSchema = makeExecutableSchema({
   typeDefs: /* GraphQL */ `
     type Query {
       hello: String
@@ -34,6 +35,8 @@ const schema = makeExecutableSchema({
     },
   },
 });
+
+const schema = new GraphQLSchema({ ...executableSchema.toConfig(), enableDeferStream: true });
 
 async function prepareHelixRequestFromW3CRequest(request: Request) {
   const queryString = request.url.split("?")[1];

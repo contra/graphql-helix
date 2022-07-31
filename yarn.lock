@@ -6219,10 +6219,10 @@ graphql-ws@^5.4.1:
   resolved "https://registry.yarnpkg.com/graphql-ws/-/graphql-ws-5.5.5.tgz#f375486d3f196e2a2527b503644693ae3a8670a9"
   integrity sha512-hvyIS71vs4Tu/yUYHPvGXsTgo0t3arU820+lT5VjZS2go0ewp2LqyCgxEN56CzOG7Iys52eRhHBiD1gGRdiQtw==
 
-graphql@16.0.0-experimental-stream-defer.5, graphql@^15.3.0:
-  version "16.0.0-experimental-stream-defer.5"
-  resolved "https://registry.yarnpkg.com/graphql/-/graphql-16.0.0-experimental-stream-defer.5.tgz#d668566fd33053a054dc5367c38c20a4ac4e4224"
-  integrity sha512-bluMjYpxh3a1lwZuNP+FAaEDMWzccVhkv+STcw0ckB2EPtLRTYUdXQhF9YBbUHd3tZSAR7LXzsxIw2GZXhg5rw==
+graphql@16.0.0-experimental-stream-defer.5, graphql@16.1.0-experimental-stream-defer.6, graphql@^15.3.0:
+  version "16.1.0-experimental-stream-defer.6"
+  resolved "https://registry.yarnpkg.com/graphql/-/graphql-16.1.0-experimental-stream-defer.6.tgz#8f00e27b11cf2c71ddec0350c663270cd3230659"
+  integrity sha512-qNedUtVDai94Ptxz7IXHoQR/GU27cuC/SfAU2CogIEfOflr7tW52GTnAF9SDa2i8gneowK0Ye5vyeQUJpGRvAQ==
 
 gray-matter@^4.0.3:
   version "4.0.3"
