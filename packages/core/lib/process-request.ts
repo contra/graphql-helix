@@ -21,6 +21,7 @@ import {
   ProcessRequestResult,
   Push,
   Request,
+  SubscribeFunction,
 } from "./types";
 import { getRankedResponseProtocols, RankedResponseProtocols } from "./util/get-ranked-response-protocols";
 
@@ -264,7 +265,7 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
           // execution result.
           if (isAsyncIterable<ExecutionPatchResult>(result)) {
-            const asyncSubscribe = async (onResult: Function) => {
+            const asyncSubscribe: SubscribeFunction<unknown> = async (onResult) => {
               for await (const payload of result) {
                 onResult(
                   formatPayload({
