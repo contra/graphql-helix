@@ -172,16 +172,19 @@ export interface Response<TContext, TRootValue> extends Result<TContext, TRootVa
   payload: ExecutionResult;
 }
 
+export type SubscribeFunction<TResult> = (onResult: (result: TResult) => void) => Promise<void>;
+
 export interface MultipartResponse<TContext, TRootValue> extends Result<TContext, TRootValue> {
   type: "MULTIPART_RESPONSE";
-  subscribe: (onResult: (result: ExecutionPatchResult) => void) => Promise<void>;
-  unsubscribe: () => void;
+  subscribe: SubscribeFunction<ExecutionPatchResult>;
+  unsubscribe: VoidFunction;
 }
 
+export type PushSubscribe = SubscribeFunction<ExecutionResult>;
 export interface Push<TContext, TRootValue> extends Result<TContext, TRootValue> {
   type: "PUSH";
-  subscribe: (onResult: (result: ExecutionResult) => void) => Promise<void>;
-  unsubscribe: () => void;
+  subscribe: SubscribeFunction<ExecutionResult>;
+  unsubscribe: VoidFunction;
 }
 
 export type ProcessRequestResult<TContext, TRootValue> =

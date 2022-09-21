@@ -19,7 +19,9 @@ import {
   MultipartResponse,
   ProcessRequestOptions,
   ProcessRequestResult,
+  Push,
   Request,
+  SubscribeFunction,
 } from "./types";
 import { getRankedResponseProtocols, RankedResponseProtocols } from "./util/get-ranked-response-protocols";
 
@@ -263,25 +265,39 @@ export const processRequest = async <TContext = {}, TRootValue = {}>(
           // Operations that use @defer, @stream and @live will return an `AsyncIterable` instead of an
           // execution result.
           if (isAsyncIterable<ExecutionPatchResult>(result)) {
-            return {
-              type: isHttpMethod("GET", request.method) ? "PUSH" : "MULTIPART_RESPONSE",
-              subscribe: async (onResult) => {
-                for await (const payload of result) {
-                  onResult(
-                    formatPayload({
-                      payload,
-                      context,
-                      rootValue,
-                      document,
-                      operation,
-                    })
-                  );
+            const asyncSubscribe: SubscribeFunction<unknown> = async (onResult) => {
+              for await (const payload of result) {
+                onResult(
+                  formatPayload({
+                    payload,
+                    context,
+                    rootValue,
+                    document,
+                    operation,
+                  })
+                );
+              }
+            };
+
+            if (isHttpMethod("GET", request.method)) {
+              return {
+                type: 'PUSH',
+                subscribe: asyncSubscribe,
+                unsubscribe: () => {
+                  stopAsyncIteration(result);
                 }
-              },
-              unsubscribe: () => {
-                stopAsyncIteration(result);
-              },
-            } as MultipartResponse<TContext, TRootValue>;
+              } as Push<TContext, TRootValue>;
+            }
+            
+            if (isHttpMethod("POST", request.method)) {
+              return {
+                type: "MULTIPART_RESPONSE",
+                subscribe: asyncSubscribe,
+                unsubscribe: () => {
+                  stopAsyncIteration(result);
+                },
+              } as MultipartResponse<TContext, TRootValue>;
+            }
           } else {
             return {
               type: "RESPONSE",
