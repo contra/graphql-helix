@@ -44,20 +44,20 @@
   },
   "devDependencies": {
     "@changesets/cli": "2.18.1",
-    "@types/k6": "0.35.2",
-    "@typescript-eslint/eslint-plugin": "5.12.1",
-    "@typescript-eslint/parser": "5.12.1",
-    "eslint": "8.4.0",
-    "eslint-config-prettier": "8.3.0",
+    "@types/k6": "0.39.1",
+    "@typescript-eslint/eslint-plugin": "5.38.0",
+    "@typescript-eslint/parser": "5.38.0",
+    "eslint": "8.24.0",
+    "eslint-config-prettier": "8.5.0",
     "eslint-config-standard": "16.0.3",
-    "eslint-plugin-import": "2.25.3",
+    "eslint-plugin-import": "2.26.0",
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-promise": "5.2.0",
     "husky": "7.0.4",
-    "lint-staged": "12.1.2",
-    "prettier": "2.5.1",
+    "lint-staged": "12.5.0",
+    "prettier": "2.7.1",
     "patch-package": "6.4.7",
-    "wait-on": "6.0.0"
+    "wait-on": "6.0.1"
   },
   "resolutions": {
     "graphql": "16.0.0-experimental-stream-defer.5"
