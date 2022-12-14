@@ -12,7 +12,7 @@
     "@types/ws": "7.4.7"
   },
   "dependencies": {
-    "express": "4.17.1",
+    "express": "4.17.3",
     "graphql-helix": "^1.13.0",
     "graphql": "16.0.0-experimental-stream-defer.5",
     "graphql-ws": "5.5.0",
