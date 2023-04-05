@@ -18,7 +18,7 @@ export const getGraphQLParameters = (request: Request): GraphQLParams => {
     operationName = body?.operationName;
     query = body?.query;
     variables = body?.variables;
-    extensions = body?.extension
+    extensions = body?.extensions
   }
 
   return {
